@@ -143,12 +143,6 @@ export function Profile() {
           </button>
           <br />
 
-          <button
-            className="profile-page-btn"
-            onClick={() => navigate("/TOS")}
-          >
-            Terms of Service
-          </button>
           <br />
           <button
             className="profile-page-btn"
