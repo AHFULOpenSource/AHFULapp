@@ -101,13 +101,6 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
 
   return (
     <nav className={`sidebar ${isOpen ? "open" : "closed"}`} style={{ minHeight }}>
-      <NavLink
-        to="/Dashboard"
-        className={({ isActive }) => (isActive ? "active" : "")}
-        onClick={handleNavClick}
-      >
-        Dashboard Home
-      </NavLink>
 
       {(!isAuthenticated || !user.email_verified) ? (
         <>
@@ -127,8 +120,19 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
             Terms of Service
           </button>
         </>
+
       ):(
+
         <>
+
+          <NavLink
+            to="/Dashboard"
+            className={({ isActive }) => (isActive ? "active" : "")}
+            onClick={handleNavClick}
+          >
+            Dashboard Home
+          </NavLink>
+
           <NavLink
             to="/Favorites"
             className={({ isActive }) => (isActive ? "active" : "")}
@@ -150,7 +154,7 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
-            Workout Logger
+            Log a Workout
           </NavLink>
 
           <NavLink
@@ -158,7 +162,7 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
-            Food Log
+            Log Food
           </NavLink>
 
           <NavLink
@@ -166,7 +170,7 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
-            Measurement Logger
+            Log a Measurement 
           </NavLink>
 
           <NavLink
@@ -174,7 +178,23 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
-            Explore Workouts
+            My Workouts
+          </NavLink>
+
+          <NavLink
+            to="/WorkoutLogger"
+            className={({ isActive }) => (isActive ? "active" : "")}
+            onClick={handleNavClick}
+          >
+            My Templates
+          </NavLink>
+
+          <NavLink
+            to="/ExploreTasks"
+            className={({ isActive }) => (isActive ? "active" : "")}
+            onClick={handleNavClick}
+          >
+            My Tasks
           </NavLink>
 
           <NavLink
@@ -186,27 +206,11 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
           </NavLink>
 
           <NavLink
-            to="/ExploreTasks"
-            className={({ isActive }) => (isActive ? "active" : "")}
-            onClick={handleNavClick}
-          >
-            Explore Tasks
-          </NavLink>
-
-          <NavLink
             to="/Map"
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
             Gym's & Map
-          </NavLink>
-
-          <NavLink
-            to="/MeasurementLogger"
-            className={({ isActive }) => (isActive ? "active" : "")}
-            onClick={handleNavClick}
-          >
-            Measurement Logger
           </NavLink>
 
           <button
@@ -226,7 +230,7 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
         target="_blank"
         rel="noreferrer"
         onClick={handleNavClick}>
-        Documentation
+        API Documentation
       </a>)}
     </nav>
   );
