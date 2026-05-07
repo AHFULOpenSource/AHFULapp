@@ -86,3 +86,64 @@ def delete_friendship(friendship_id):
     if error:
         return jsonify({"error": error}), 404
     return jsonify(result), 200
+
+
+@socialRouteBlueprint.route("/shared-workouts", methods=["GET"])
+@login_required_user
+def get_shared_workouts_for_user():
+    workouts, error = SocialDriver.get_shared_workouts_for_user(g.user_id)
+    if error:
+        return jsonify({"error": error}), 400
+    return jsonify(workouts), 200
+
+
+@socialRouteBlueprint.route("/shared-workouts", methods=["POST"])
+@login_required_user
+def create_shared_workout():
+    data = request.get_json() or {}
+    workout_id = data.get("workout_id")
+    to_user_email = data.get("to_user_email")
+
+    if not workout_id or not to_user_email:
+        return jsonify({"error": "workout_id and to_user_email are required"}), 400
+
+    shared, error = SocialDriver.create_shared_workout(
+        from_user_id=g.user_id,
+        workout_id=workout_id,
+        to_user_email=to_user_email,
+        acting_role=g.role,
+    )
+    if error:
+        return jsonify({"error": error}), 400
+    return jsonify(shared), 201
+
+
+@socialRouteBlueprint.route("/wall-posts", methods=["GET"])
+@login_required_user
+def get_wall_posts_for_user():
+    posts, error = SocialDriver.get_wall_posts_for_user(g.user_id)
+    if error:
+        return jsonify({"error": error}), 400
+    return jsonify(posts), 200
+
+
+@socialRouteBlueprint.route("/wall-posts", methods=["POST"])
+@login_required_user
+def create_wall_post():
+    data = request.get_json() or {}
+    notes = data.get("notes")
+    is_public = data.get("is_public", False)
+    shared_to_user_email = data.get("shared_to_user_email")
+
+    if not notes:
+        return jsonify({"error": "notes is required"}), 400
+
+    post, error = SocialDriver.create_wall_post(
+        owner_user_id=g.user_id,
+        notes=notes,
+        is_public=is_public,
+        shared_to_user_email=shared_to_user_email,
+    )
+    if error:
+        return jsonify({"error": error}), 400
+    return jsonify(post), 201

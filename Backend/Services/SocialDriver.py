@@ -3,7 +3,10 @@ import re
 from bson import ObjectId, errors as bson_errors
 
 from DataModels.SocialObject import SocialObject
+from DataModels.SocialPostsObject import SocialPostsObject
+from DataModels.SocialSharedWorkoutsObject import SocialSharedWorkoutsObject
 from DataModels.UserObject import UserObject
+from DataModels.WorkoutObject import WorkoutObject
 from Services.MongoDriver import get_collection
 
 
@@ -21,6 +24,24 @@ class SocialDriver:
             return None
         normalized = email.strip().lower()
         return normalized if normalized else None
+
+    @staticmethod
+    def _build_user_summary(user):
+        if not user:
+            return None
+        name = user.get("name")
+        if not name:
+            first = user.get("first_name") or user.get("firstName") or user.get("first")
+            last = user.get("last_name") or user.get("lastName") or user.get("last")
+            if first or last:
+                name = " ".join([part for part in [first, last] if part])
+        if not name:
+            name = user.get("email")
+        return {
+            "_id": user.get("_id"),
+            "email": user.get("email"),
+            "name": name,
+        }
 
     @staticmethod
     def _find_user_by_email_case_insensitive(email):
@@ -268,5 +289,170 @@ class SocialDriver:
 
             deleted = SocialObject.delete(friendship_oid)
             return {"deleted": deleted}, None
+        except Exception as e:
+            return None, str(e)
+
+    @staticmethod
+    def get_shared_workouts_for_user(user_id):
+        if not user_id:
+            return None, "user_id is required"
+        oid, err = SocialDriver._validate_obj_id(user_id, "user_id")
+        if err:
+            return None, err
+        try:
+            user = UserObject.find_by_id(oid)
+            if not user:
+                return None, "User not found"
+
+            shared_workouts = SocialSharedWorkoutsObject.find_by_to_user(user_id)
+            enriched = []
+
+            for shared in shared_workouts or []:
+                workout = None
+                if shared.get("workout_id"):
+                    workout = WorkoutObject.find_by_id(shared.get("workout_id"))
+
+                from_user = None
+                if shared.get("from_user"):
+                    from_user = UserObject.find_by_id(shared.get("from_user"))
+
+                entry = {}
+                if workout:
+                    entry.update(workout)
+
+                entry.update(
+                    {
+                        "shared_id": shared.get("_id"),
+                        "workout_id": shared.get("workout_id"),
+                        "from_user": shared.get("from_user"),
+                        "to_user": shared.get("to_user"),
+                        "sharedBy": SocialDriver._build_user_summary(from_user),
+                    }
+                )
+                enriched.append(entry)
+
+            return enriched, None
+        except Exception as e:
+            return None, str(e)
+
+    @staticmethod
+    def get_wall_posts_for_user(user_id):
+        if not user_id:
+            return None, "user_id is required"
+        oid, err = SocialDriver._validate_obj_id(user_id, "user_id")
+        if err:
+            return None, err
+        try:
+            user = UserObject.find_by_id(oid)
+            if not user:
+                return None, "User not found"
+
+            posts = SocialPostsObject.find_for_wall(user_id)
+            enriched = []
+
+            for post in posts or []:
+                owner = None
+                if post.get("owner_user_id"):
+                    owner = UserObject.find_by_id(post.get("owner_user_id"))
+
+                post_entry = dict(post)
+                post_entry["owner"] = SocialDriver._build_user_summary(owner)
+                enriched.append(post_entry)
+
+            return enriched, None
+        except Exception as e:
+            return None, str(e)
+
+    @staticmethod
+    def create_shared_workout(from_user_id, workout_id, to_user_email, acting_role=None):
+        if not from_user_id:
+            return None, "from_user_id is required"
+        if not workout_id:
+            return None, "workout_id is required"
+        normalized_email = SocialDriver._normalize_email(to_user_email)
+        if not normalized_email:
+            return None, "to_user_email is required"
+
+        from_oid, err = SocialDriver._validate_obj_id(from_user_id, "from_user_id")
+        if err:
+            return None, err
+
+        workout_oid, err = SocialDriver._validate_obj_id(workout_id, "workout_id")
+        if err:
+            return None, err
+
+        try:
+            from_user = UserObject.find_by_id(from_oid)
+            if not from_user:
+                return None, "Requesting user not found"
+
+            to_user = SocialDriver._find_user_by_email_case_insensitive(normalized_email)
+            if not to_user:
+                return None, "User with that email was not found"
+
+            if str(from_user.get("_id")) == str(to_user.get("_id")):
+                return None, "You cannot share a workout with yourself"
+
+            friendship = SocialObject.find_between_emails(
+                SocialDriver._normalize_email(from_user.get("email")),
+                SocialDriver._normalize_email(to_user.get("email")),
+            )
+            if not friendship or friendship.get("ConfirmedSince") is None:
+                return None, "You can only share workouts with confirmed friends"
+
+            workout = WorkoutObject.find_by_id(workout_oid)
+            if not workout:
+                return None, "Workout not found"
+
+            if acting_role not in ("Developer", "Admin") and str(workout.get("user_id")) != str(from_user_id):
+                return None, "You may only share your own workouts"
+
+            shared_id = SocialSharedWorkoutsObject.create(workout_oid, from_oid, to_user.get("_id"))
+            shared = SocialSharedWorkoutsObject.find_by_id(shared_id)
+            return shared, None
+        except Exception as e:
+            return None, str(e)
+
+    @staticmethod
+    def create_wall_post(owner_user_id, notes, is_public=False, shared_to_user_email=None):
+        if not owner_user_id:
+            return None, "owner_user_id is required"
+        if not notes:
+            return None, "notes is required"
+
+        owner_oid, err = SocialDriver._validate_obj_id(owner_user_id, "owner_user_id")
+        if err:
+            return None, err
+
+        try:
+            owner_user = UserObject.find_by_id(owner_oid)
+            if not owner_user:
+                return None, "Owner user not found"
+
+            to_user = None
+            if shared_to_user_email:
+                normalized_email = SocialDriver._normalize_email(shared_to_user_email)
+                if not normalized_email:
+                    return None, "shared_to_user_email is invalid"
+
+                to_user = SocialDriver._find_user_by_email_case_insensitive(normalized_email)
+                if not to_user:
+                    return None, "User with that email was not found"
+
+                friendship = SocialObject.find_between_emails(
+                    SocialDriver._normalize_email(owner_user.get("email")),
+                    SocialDriver._normalize_email(to_user.get("email")),
+                )
+                if not friendship or friendship.get("ConfirmedSince") is None:
+                    return None, "You can only share posts with confirmed friends"
+
+            post_id = SocialPostsObject.create(
+                notes=notes,
+                owner_user_id=owner_oid,
+                is_public=is_public,
+                shared_to_user_id=to_user.get("_id") if to_user else None,
+            )
+            post = SocialPostsObject.find_by_id(post_id)
+            return post, None
         except Exception as e:
             return None, str(e)

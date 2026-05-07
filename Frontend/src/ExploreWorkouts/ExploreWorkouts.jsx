@@ -33,15 +33,22 @@ export function ExploreWorkouts() {
   const [exerciseNames, setExerciseNames] = useState({});
   const [gymInfo, setGymInfo] = useState(null);
   const [gymLoading, setGymLoading] = useState(false);
+  const [friends, setFriends] = useState([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
+  const [friendsError, setFriendsError] = useState(null);
+  const [shareTargetEmail, setShareTargetEmail] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [shareError, setShareError] = useState(null);
 
   const getUserId = () => {
     if (user?._id) return user._id;
-    try {
-      const stored = JSON.parse(localStorage.getItem("user_data"));
-      return stored?._id || null;
-    } catch { return null; }
   };
   const userId = getUserId();
+
+  const getUserEmail = () => {
+    if (user?.email) return user.email;
+  };
+  const userEmail = (getUserEmail() || "").toLowerCase();
 
   // ─── Fetch Workouts from Backend ─────────────────────────────────────────────
   const fetchExercises = async () => {
@@ -79,6 +86,49 @@ export function ExploreWorkouts() {
   // ─── Load Workouts on Mount ───────────────────────────────────────────────────
   useEffect(() => {
     fetchExercises();
+  }, [userId]);
+
+  const fetchFriends = async () => {
+    setFriendsLoading(true);
+    setFriendsError(null);
+    try {
+      const res = await fetch(`http://localhost:5000/api/AHFULsocial/user`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status} ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        setFriends([]);
+        return;
+      }
+
+      const friendEmails = data
+        .map((friendship) => {
+          const email1 = (friendship?.User1Email || "").toLowerCase();
+          const email2 = (friendship?.User2Email || "").toLowerCase();
+          if (email1 && email1 !== userEmail) return email1;
+          if (email2 && email2 !== userEmail) return email2;
+          return null;
+        })
+        .filter(Boolean);
+
+      setFriends([...new Set(friendEmails)]);
+    } catch (err) {
+      console.warn("fetchFriends failed:", err);
+      setFriendsError("Unable to load friends.");
+      setFriends([]);
+    } finally {
+      setFriendsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFriends();
   }, [userId]);
 
   // ─── Fetch Personal Exercises when Workout is Selected ────────────────────────
@@ -187,6 +237,38 @@ export function ExploreWorkouts() {
     const seconds = duration % 60;
     if (minutes === 0) return `${seconds}s`;
     return `${minutes}m ${seconds}s`;
+  };
+
+  const shareWorkout = async () => {
+    if (!selectedWorkout) return;
+    if (!shareTargetEmail) {
+      setShareError("Please select a friend to share with.");
+      return;
+    }
+
+    setSharing(true);
+    setShareError(null);
+    try {
+      const workoutId = selectedWorkout._id;
+      const res = await fetch(`http://localhost:5000/api/AHFULsocial/shared-workouts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ workout_id: workoutId, to_user_email: shareTargetEmail }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.error || `Server returned ${res.status} ${res.statusText}`);
+      }
+
+      await res.json().catch(() => ({}));
+      setShareTargetEmail("");
+    } catch (err) {
+      setShareError(String(err));
+    } finally {
+      setSharing(false);
+    }
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -355,6 +437,30 @@ export function ExploreWorkouts() {
                   <p className="workout-detail-value">{selectedWorkout.instructions}</p>
                 </div>
               )}
+
+              <div className="workout-detail-section">
+                <label className="workout-detail-label">Share this workout</label>
+                <div className="task-form" style={{ gap: 8 }}>
+                  <select
+                    className="task-input"
+                    value={shareTargetEmail}
+                    onChange={(e) => setShareTargetEmail(e.target.value)}
+                    disabled={friendsLoading}
+                  >
+                    <option value="">Select a friend</option>
+                    {friends.map((email) => (
+                      <option key={email} value={email}>
+                        {email}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="refresh-btn" onClick={shareWorkout} disabled={sharing}>
+                    {sharing ? "Sharing..." : "Share"}
+                  </button>
+                </div>
+                {friendsError && <div className="explore-error">{friendsError}</div>}
+                {shareError && <div className="explore-error">{shareError}</div>}
+              </div>
 
               {/* Personal Exercises */}
               <div className="workout-detail-section">

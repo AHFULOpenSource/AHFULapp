@@ -1,31 +1,30 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import "../ExploreWorkouts/ExploreWorkouts.css";
 import "../siteStyles.css";
 
-// SocialWorkouts - mock social page that resembles ExploreWorkouts
-// Left: Shared workouts list
-// Right: Wall posts (friends' shared posts) + a small shared-workout summary area
+// SocialWorkouts - social page that resembles ExploreWorkouts what is the Shared workouts a User and their friends have shared
+// Left: Shared workouts list from friends.
+// Right: Wall posts (friends' shared posts or public Posts)
 
 export function SocialWorkouts() {
   const user = useSelector((s) => s.auth.user);
+  const userId = user?.id;
+  const userEmail = user?.email.toLowerCase();
+``
   const [sharedWorkouts, setSharedWorkouts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [wallPosts, setWallPosts] = useState([]);
-
-  const getUserId = () => {
-    if (user?._id) return user._id;
-    try {
-      const stored = JSON.parse(localStorage.getItem("user_data"));
-      return stored?._id || null;
-    } catch {
-      return null;
-    }
-  };
-
-  const userId = getUserId();
+  const [friends, setFriends] = useState([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
+  const [friendsError, setFriendsError] = useState(null);
+  const [postNotes, setPostNotes] = useState("");
+  const [postIsPublic, setPostIsPublic] = useState(false);
+  const [postTargetEmail, setPostTargetEmail] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState(null);
 
   const formatDate = (ts) => {
     if (!ts) return "N/A";
@@ -41,13 +40,13 @@ export function SocialWorkouts() {
     return m === 0 ? `${sec}s` : `${m}m ${sec}s`;
   };
 
-  // Try fetching shared workouts from backend, fall back to mock data
+  // Try fetching shared workouts from backend
   const fetchShared = async () => {
     setLoading(true);
     setError(null);
     try {
       // Attempt a sensible endpoint; if your backend differs update this URL
-      const res = await fetch(`http://localhost:5000/api/AHFULworkouts/shared`, {
+      const res = await fetch(`http://localhost:5000/api/AHFULsocial/shared-workouts`, {
         method: "GET",
         credentials: "include",
       });
@@ -58,67 +57,129 @@ export function SocialWorkouts() {
 
       const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) {
-        // fallback to mock
-        setSharedWorkouts(mockSharedWorkouts());
+        setSharedWorkouts([]);
       } else {
         setSharedWorkouts(data);
       }
     } catch (err) {
-      console.warn("fetchShared failed, using mock data:", err);
+      console.warn("fetchShared failed:", err);
       setError(String(err));
-      setSharedWorkouts(mockSharedWorkouts());
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchWallPosts = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/AHFULsocial/wall-posts`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status} ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        setWallPosts([]);
+      } else {
+        setWallPosts(data);
+      }
+    } catch (err) {
+      console.warn("fetchWallPosts failed:", err);
+    }
+  };
+
+  const fetchFriends = async () => {
+    setFriendsLoading(true);
+    setFriendsError(null);
+    try {
+      const res = await fetch(`http://localhost:5000/api/AHFULsocial/user`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status} ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        setFriends([]);
+        return;
+      }
+
+      const friendEmails = data
+        .map((friendship) => {
+          const email1 = (friendship?.User1Email || "").toLowerCase();
+          const email2 = (friendship?.User2Email || "").toLowerCase();
+          if (email1 && email1 !== userEmail) return email1;
+          if (email2 && email2 !== userEmail) return email2;
+          return null;
+        })
+        .filter(Boolean);
+
+      setFriends([...new Set(friendEmails)]);
+    } catch (err) {
+      console.warn("fetchFriends failed:", err);
+      setFriendsError("Unable to load friends.");
+      setFriends([]);
+    } finally {
+      setFriendsLoading(false);
+    }
+  };
+
+
+  const createWallPost = async () => {
+    if (!postNotes.trim()) {
+      setPostError("Please enter post notes.");
+      return;
+    }
+
+    if (!postIsPublic && !postTargetEmail) {
+      setPostError("Select a friend or mark the post as public.");
+      return;
+    }
+
+    setPosting(true);
+    setPostError(null);
+    try {
+      const res = await fetch(`http://localhost:5000/api/AHFULsocial/wall-posts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          notes: postNotes.trim(),
+          is_public: postIsPublic,
+          shared_to_user_email: postIsPublic ? null : postTargetEmail,
+        }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.error || `Server returned ${res.status} ${res.statusText}`);
+      }
+
+      await res.json().catch(() => ({}));
+      setPostNotes("");
+      setPostIsPublic(false);
+      setPostTargetEmail("");
+      fetchWallPosts();
+    } catch (err) {
+      setPostError(String(err));
+    } finally {
+      setPosting(false);
+    }
+  };
+
   useEffect(() => {
     fetchShared();
-    // load mock wall posts
-    setWallPosts(mockWallPosts());
+    fetchWallPosts();
+    fetchFriends();
   }, [userId]);
 
-  function mockSharedWorkouts() {
-    return [
-      {
-        _id: "sw1",
-        title: "Full Body Strength",
-        startTime: Math.floor(Date.now() / 1000) - 86400 * 2,
-        endTime: Math.floor(Date.now() / 1000) - 86400 * 2 + 3600,
-        gymId: null,
-        instructions: "Partner circuit with supersets",
-        sharedBy: { name: "Alex" },
-      },
-      {
-        _id: "sw2",
-        title: "Morning Run",
-        startTime: Math.floor(Date.now() / 1000) - 86400 * 5,
-        endTime: Math.floor(Date.now() / 1000) - 86400 * 5 + 1800,
-        gymId: null,
-        instructions: "Easy 5k with intervals",
-        sharedBy: { name: "Morgan" },
-      },
-    ];
-  }
-
-  function mockWallPosts() {
-    return [
-      {
-        id: "p1",
-        author: "Taylor",
-        ts: Math.floor(Date.now() / 1000) - 3600,
-        text: "Hit a new PR on deadlift today — 315 lbs!🔥",
-        workoutRef: "sw1",
-      },
-      {
-        id: "p2",
-        author: "Jordan",
-        ts: Math.floor(Date.now() / 1000) - 86400,
-        text: "Shared my 5k time — feeling great.",
-        workoutRef: "sw2",
-      },
-    ];
-  }
+  const getPostTimestamp = (post) => post?.created_at || post?.ts || null;
 
   return (
     <div className="explore-root">
@@ -133,7 +194,7 @@ export function SocialWorkouts() {
 
       <div className="explore-content">
         <div className="explore-left">
-          {error && <div className="explore-error">Failed to load shared workouts (showing mock data)</div>}
+          {error && <div className="explore-error">Failed to load shared workouts</div>}
 
           {!error && sharedWorkouts.length === 0 && (
             <div className="explore-empty">No shared workouts yet. When friends share workouts they'll appear here.</div>
@@ -169,17 +230,52 @@ export function SocialWorkouts() {
           {/* Wall Section */}
           <div className="wh-chart-section" style={{ marginBottom: 16 }}>
             <div className="wh-chart-heading">Wall</div>
+            <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              <textarea
+                className="task-input"
+                rows={3}
+                placeholder="Share an update with your friends..."
+                value={postNotes}
+                onChange={(e) => setPostNotes(e.target.value)}
+              />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input type="checkbox" checked={postIsPublic} onChange={(e) => setPostIsPublic(e.target.checked)} />
+                  Make public
+                </label>
+                <select
+                  className="task-input"
+                  value={postTargetEmail}
+                  onChange={(e) => setPostTargetEmail(e.target.value)}
+                  disabled={postIsPublic || friendsLoading}
+                >
+                  <option value="">Share to a friend</option>
+                  {friends.map((email) => (
+                    <option key={email} value={email}>
+                      {email}
+                    </option>
+                  ))}
+                </select>
+                <button className="refresh-btn" onClick={createWallPost} disabled={posting}>
+                  {posting ? "Posting..." : "Post"}
+                </button>
+              </div>
+              {friendsError && <div className="explore-error">{friendsError}</div>}
+              {postError && <div className="explore-error">{postError}</div>}
+            </div>
             {wallPosts.length === 0 ? (
               <div className="wh-status">No posts yet. Your friends' posts will show up here.</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {wallPosts.map((p) => (
-                  <article key={p.id} style={{ background: "var(--color-surface)", padding: 12, borderRadius: 8 }}>
+                  <article key={p._id || p.id} style={{ background: "var(--color-surface)", padding: 12, borderRadius: 8 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <strong>{p.author}</strong>
-                      <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>{formatDate(p.ts)}</span>
+                      <strong>{p?.owner?.name || p.author || "Friend"}</strong>
+                      <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>
+                        {formatDate(getPostTimestamp(p))}
+                      </span>
                     </div>
-                    <p style={{ marginTop: 8 }}>{p.text}</p>
+                    <p style={{ marginTop: 8 }}>{p.notes || p.text}</p>
                     {p.workoutRef && (
                       <button
                         className="retry-btn"
@@ -196,20 +292,6 @@ export function SocialWorkouts() {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Shared summary area (small) */}
-          <div className="wh-chart-section">
-            <div className="wh-chart-heading">Shared Workouts</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {sharedWorkouts.slice(0, 4).map((w) => (
-                <div key={w._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontWeight: 600 }}>{w.title}</div>
-                  <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>{w.sharedBy?.name || "—"}</div>
-                </div>
-              ))}
-              {sharedWorkouts.length === 0 && <div className="wh-status">No shared workouts</div>}
-            </div>
           </div>
         </div>
       </div>
@@ -257,6 +339,7 @@ export function SocialWorkouts() {
                   <p className="workout-detail-value">{selectedWorkout.sharedBy.name}</p>
                 </div>
               )}
+
             </div>
             <div className="workout-modal-actions">
               <button className="workout-modal-btn workout-modal-btn-close" onClick={() => setSelectedWorkout(null)}>
