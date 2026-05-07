@@ -197,20 +197,6 @@ export function SocialWorkouts() {
               </div>
             )}
           </div>
-
-          {/* Shared summary area (small) */}
-          <div className="wh-chart-section">
-            <div className="wh-chart-heading">Shared Workouts</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {sharedWorkouts.slice(0, 4).map((w) => (
-                <div key={w._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontWeight: 600 }}>{w.title}</div>
-                  <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>{w.sharedBy?.name || "—"}</div>
-                </div>
-              ))}
-              {sharedWorkouts.length === 0 && <div className="wh-status">No shared workouts</div>}
-            </div>
-          </div>
         </div>
       </div>
 
