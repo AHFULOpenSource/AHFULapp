@@ -8,7 +8,6 @@ import {
   formatTime as formatTimeFn,
   loadEquipment as loadEquipmentFn,
   loadTargetMuscles,
-  fetchExercisesFromBackend,
   searchExercises,
   fetchWorkout,
   fetchWorkoutById,
@@ -20,7 +19,6 @@ import {
   createPersonalExercise,
   updatePersonalExercise,
   deletePersonalExercise,
-  fetchTemplate,
   createTemplate,
   loadBodyParts,
   createExercise,
@@ -100,6 +98,38 @@ export function WorkoutLogger() {
   const [availableGyms, setAvailableGyms] = useState([]);
   const [selectedGymId, setSelectedGymId] = useState("");
 
+  // ─── Timer State ─────────────────────────────────────────────────────────────
+  const [isRunning, setIsRunning] = useState(false);
+  const [time, setTime] = useState(0);
+
+  // ─── Exercise Selection State ────────────────────────────────────────────────
+  const [exerciseName, setExerciseName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Selected exercise IDs pending to be added to workout
+  const [pendingExercises, setPendingExercises] = useState([]);
+  // Modal visibility for creating new exercises
+  const [showNewExerciseModal, setShowNewExerciseModal] = useState(false);
+
+  // ─── New Exercise Form States
+  const [equipmentOptions, setEquipmentOptions] = useState([]);
+  const [equipmentError, setEquipmentError] = useState(null);
+  const [BodyPartOptions, setBodyPartOptions] = useState([]);
+  const [BodyPartError, setBodyPartError] = useState(null);
+  const [muscleOptions, setMuscleOptions] = useState([]);
+  const [muscleError, setMuscleError] = useState(null);
+  const [newExercise, setNewExercise] = useState(getDefaultNewExercise());
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // ─── Template States
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templatePreview, setTemplatePreview] = useState(null);
+
+  // ─── Favorite Filter State ───────────────────────────────────────────────────
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
   // Load gyms for the select dropdown
   useEffect(() => {
     let mounted = true;
@@ -152,37 +182,6 @@ export function WorkoutLogger() {
     })();
   }, [selectedDate, cachedWorkouts]);
 
-  // ─── Timer State ─────────────────────────────────────────────────────────────
-  const [isRunning, setIsRunning] = useState(false);
-  const [time, setTime] = useState(0);
-
-  // ─── Exercise Selection State ────────────────────────────────────────────────
-  const [exerciseName, setExerciseName] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Selected exercise IDs pending to be added to workout
-  const [pendingExercises, setPendingExercises] = useState([]);
-  // Modal visibility for creating new exercises
-  const [showNewExerciseModal, setShowNewExerciseModal] = useState(false);
-
-  // ─── New Exercise Form States
-  const [equipmentOptions, setEquipmentOptions] = useState([]);
-  const [equipmentError, setEquipmentError] = useState(null);
-  const [BodyPartOptions, setBodyPartOptions] = useState([]);
-  const [BodyPartError, setBodyPartError] = useState(null);
-  const [muscleOptions, setMuscleOptions] = useState([]);
-  const [muscleError, setMuscleError] = useState(null);
-  const [newExercise, setNewExercise] = useState(getDefaultNewExercise());
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // ─── Template States
-  const [templateSearch, setTemplateSearch] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [templatePreview, setTemplatePreview] = useState(null);
-
-  // ─── Favorite Filter State ───────────────────────────────────────────────────
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // ─── Refs ───────────────────────────────────────────────────────────────────
   const searchTimeoutRef = useRef(null);
@@ -323,10 +322,6 @@ export function WorkoutLogger() {
   useEffect(() => {
     fetch_exercises();
   }, []);
-
-  // useEffect(() => {
-  //   location.reload();
-  // }, [selectedDate]);
 
   // ─── Load Workout when selectedDate changes ─────────────────────────────────────
   useEffect(() => {
