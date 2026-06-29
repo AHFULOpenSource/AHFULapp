@@ -1548,8 +1548,9 @@ def test_find_template_by_user():
     oid = "699d0093795741a59fe13616"
     temps, err = WorkoutDriver.get_user_templates(oid)
 
-    if err is not None:
-        print("39.  There was a testing error on Test 39 Object was: ", temps, "Error Was: ", err)
+    # STOP HERE if something went wrong  - replcing print statement. 
+    assert err is None, f"Test 39 setup failed — unexpected error: {err}"
+    assert temps is not None, f"Test 39 setup failed — temps returned None"
     
     tp_oid = "69c19753432188dfcd568ddc"
     filtered = [d for d in temps if d.get("_id") == tp_oid]
@@ -1565,12 +1566,12 @@ def test_find_template_by_user():
     assert filtered[0].get("template") == True
     assert filtered[0].get("startTime") == 0
 
-    # Give a bad _id
+    # Give a invalid format (Non 24-hex string) user_id
     bad_oid = "699d0093795741a59fe1361"
     temps, err = WorkoutDriver.get_user_templates(bad_oid)
 
-    if err is not None:
-        print("40.  There was a testing error on Test 40 Object was: ", temps, "Error Was: ", err)
+    if err is None:
+        print("40.  There should have been an error but wasn't on Test 40. Object was: ", temps, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid user_id format; must be a 24-hex string"
@@ -1579,12 +1580,12 @@ def test_find_template_by_user():
     assert temps is None
     assert err == bad_err_code
 
-    # Give an invalid _id
+    # Give a correctly formatted but non-existent (oid not in DB) user_id
     inv_oid = "000000000000000000000000"
     temps, err = WorkoutDriver.get_user_templates(inv_oid)
 
-    if err is not None:
-        print("41.  There was a testing error on Test 41 Object was: ", temps, "Error Was: ", err)
+    if err is None:
+        print("41.  There should have been an error but wasn't on Test 41. Object was: ", temps, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Templates not found"
