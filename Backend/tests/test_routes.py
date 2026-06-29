@@ -36,7 +36,7 @@ def test_find_food_by_id():
     food, err = FoodDriver.get_food_by_id(bad_oid)
 
     if err is None:
-        print("2.  There was a testing error on Test 2 Object was: ", food, "Error Was: ", err)
+        print("2.  There should have been an error but wasn't on Test 2. Object was: ", food, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid food_id format; must be a 24-hex string"
@@ -50,7 +50,7 @@ def test_find_food_by_id():
     food, err = FoodDriver.get_food_by_id(inv_oid)
 
     if err is None:
-        print("3.  There was a testing error on Test 3 Object was: ", food, "Error Was: ", err)
+        print("3.  There should have been an error but wasn't on Test 3. Object was: ", food, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Food not found"
@@ -80,12 +80,12 @@ def test_find_food_by_user():
     assert food.get("type") == "Lunch"
     assert food.get("time") == 1708473601
 
-   # Give a bad user_id
+    # Give a invalid format (Non 24-hex string) user_id
     bad_user_id = "699d0093795741a59fe1361"
     food, err = FoodDriver.get_food_by_user(bad_user_id)
 
-    if err is not None:
-        print("6.  There was a testing error on Test 6 Object was: ", food, "Error Was: ", err)
+    if err is None:
+        print("6.  There should have been an error but wasn't on Test 6. Object was: ", food, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid food_id format; must be a 24-hex string"
@@ -94,12 +94,12 @@ def test_find_food_by_user():
     assert food is None
     assert err == bad_err_code
 
-    # Give an invalid user_id
+    # Give a correctly formatted but non-existent (oid not in DB) user_id
     inv_oid = "000000000000000000000000"
     food, err = FoodDriver.get_food_by_id(inv_oid)
 
-    if err is not None:
-        print("7.  There was a testing error on Test 7 Object was: ", food, "Error Was: ", err)
+    if err is None:
+        print("7.  There should have been an error but wasn't on Test 7. Object was: ", food, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Food not found"
