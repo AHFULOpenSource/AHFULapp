@@ -85,10 +85,11 @@ export function HeatMap({ data = {} }) {
   const [highlightedMuscles, setHighlightedMuscles] = useState([]);
   //Start of logic to determine which muscles to highlight based on selectedDate and workouts/exercises data
   useEffect(() => {
-    console.log('selectedDate:', selectedDate);
-    console.log('workouts:', workouts);
-    console.log('exercises:', exercises);
-    console.log('personalExercises:', personalExercises);
+    //TODO: Mute Logging. 
+    // console.log('selectedDate:', selectedDate);
+    // console.log('workouts:', workouts);
+    // console.log('exercises:', exercises);
+    // console.log('personalExercises:', personalExercises);
 
     if (!selectedDate) {
       setHighlightedMuscles([]);

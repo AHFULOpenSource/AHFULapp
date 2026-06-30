@@ -31,14 +31,8 @@ class SocialDriver:
             return None
         name = user.get("name")
         if not name:
-            first = user.get("first_name") or user.get("firstName") or user.get("first")
-            last = user.get("last_name") or user.get("lastName") or user.get("last")
-            if first or last:
-                name = " ".join([part for part in [first, last] if part])
-        if not name:
             name = user.get("email")
         return {
-            "_id": user.get("_id"),
             "email": user.get("email"),
             "name": name,
         }
@@ -305,7 +299,7 @@ class SocialDriver:
                 return None, "User not found"
 
             shared_workouts = SocialSharedWorkoutsObject.find_by_to_user(user_id)
-            enriched = []
+            enrichedWorkoutsToReturn = []
 
             for shared in shared_workouts or []:
                 workout = None
@@ -316,22 +310,22 @@ class SocialDriver:
                 if shared.get("from_user"):
                     from_user = UserObject.find_by_id(shared.get("from_user"))
 
-                entry = {}
-                if workout:
-                    entry.update(workout)
-
-                entry.update(
+                sharedWorkoutEntry = {}
+                sharedWorkoutEntry.update(
                     {
                         "shared_id": shared.get("_id"),
                         "workout_id": shared.get("workout_id"),
-                        "from_user": shared.get("from_user"),
-                        "to_user": shared.get("to_user"),
+                        "title": workout.get("title"),
+                        "startTime": workout.get("startTime"),
+                        "endTime": workout.get("endTime"),
+                        "template": workout.get("template"),
+                        "gym_id": workout.get("gym_id"),
                         "sharedBy": SocialDriver._build_user_summary(from_user),
                     }
                 )
-                enriched.append(entry)
+                enrichedWorkoutsToReturn.append(sharedWorkoutEntry)
 
-            return enriched, None
+            return enrichedWorkoutsToReturn, None
         except Exception as e:
             return None, str(e)
 

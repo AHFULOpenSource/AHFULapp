@@ -28,6 +28,7 @@ import { authLogin } from "./Auth/AuthSlice.jsx";
 import { ExploreFriends } from "./Social/ExploreFriends.jsx";
 import { RequireVerifiedEmail } from "./Auth/EnsureEmailVerify.jsx";
 import { SocialWorkouts } from "./Social/SocialWorkouts.jsx";
+import { Templates } from "./WokoutLogger/Templates.jsx";
 
 
 function AHFULApp() {
@@ -88,39 +89,13 @@ function AHFULApp() {
     <>
       <Routes>
         <Route element={<Layout/>}>
-          <Route path="/Dashboard" element={<Dashboard/>}/>
-          <Route path="/WorkoutLogger" element={
-              <WorkoutLogger/>} />
-          <Route path="/ExploreWorkout" element={
-              <ExploreWorkouts/>}/>
-          <Route path="/SocialWorkouts" element={
-              <SocialWorkouts/>}/>
-          <Route path="/FoodLog" element={
-              <FoodLog/>}/>
-          <Route path="/EmailVerification" element={
-              <VerifyEmail/>}/>
-          <Route path="/NotVerified" element={
-              <NotVerified/>}/>
-          <Route path="/AIChat" element={
-              <AIChat/>}/>
-          <Route path="/Map" element={
-              <Map/>}/>
-          <Route path="/ExploreFriends" element={
-              <ExploreFriends/>}/>
-          <Route path="/MeasurementLogger" element={
-              <MeasurementLogger/>}/>
-          <Route path="/Profile" element={
-              <Profile/>}/>
-          <Route path="/ExploreTasks" element={
-              <ExploreTasks/>}/>
-          <Route path="/Favorites" element={
-              <FavoritesHub/>}/>
-          <Route path="Settings" element={
-              <Settings/>} />
           <Route path="/Profile" element={<Profile/>}/>
           <Route path="/NotVerified" element={<NotVerified/>}/>
           <Route element={<RequireVerifiedEmail />}>
+            <Route path="/Dashboard" element={<Dashboard/>}/>
+            <Route path="/Favorites" element={<FavoritesHub/>}/>
             <Route path="/WorkoutLogger" element={<WorkoutLogger/>} />
+            <Route path="/Templates" element={<Templates/>} />
             <Route path="/ExploreWorkout" element={<ExploreWorkouts/>}/>
             <Route path="/FoodLog" element={<FoodLog/>}/>
             <Route path="/EmailVerification" element={<VerifyEmail/>}/>
@@ -130,6 +105,7 @@ function AHFULApp() {
             <Route path="/MeasurementLogger" element={<MeasurementLogger/>}/>
             <Route path="/ExploreTasks" element={<ExploreTasks/>}/>
             <Route path="Settings" element={<Settings/>} />
+            <Route path="/SocialWorkouts" element={<SocialWorkouts/>}/>
             </Route>
         </Route>
         {/* Put outside of the Layout so it doesn't show the header/navbar */}

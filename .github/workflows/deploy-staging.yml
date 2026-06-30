@@ -3,7 +3,7 @@ name: Deploy to Staging
 on:
   push:
     branches:
-      - main          # Step 1 – triggers the PR creation job
+      - main
 
 # ─────────────────────────────────────────────────────────────────────────────
 # JOB 1 — Runs on push to main
@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write        # push the swap branch
-      pull-requests: write   # create the PR
+      contents: write        # Granted to push the swap branch
+      pull-requests: write   # Granted to create the PR
 
     steps:
       - name: Checkout main
@@ -42,12 +42,10 @@ jobs:
 
       # Replace every occurrence of the localhost URLs across all files.
       # Binary files are skipped automatically by grep -rl.
+      # Search for files that contain either localhost:5000 or localhost:5173
       - name: Replace localhost URLs with Production URL
         run: |
           echo ">>> Replacing http://localhost:5000 → https://www.ahful.app and http://localhost:5173 → https://ahful.app"
-          # Search for files that contain either localhost:5000 or localhost:5173 so
-          # files that only reference the dev frontend port (5173) are also found
-          # (for example files under Backend/APIRoutes or Frontend).
           grep -rl \
             --exclude-dir='.git' \
             --exclude-dir='.github' \
@@ -71,9 +69,6 @@ jobs:
       # Opens a PR if one doesn't exist yet; updates it silently if it does.
       # Use the GitHub REST API directly to create or update a PR from
       # `release/staging` -> `Production`. 
-      # This step will only create/update the PR metadata and will NOT
-      # modify any branches on the remote, preserving the pushed
-      # `release/staging` contents.
       - name: Open / update PR to Production (via REST API)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -113,8 +108,3 @@ jobs:
             echo "GitHub API response: $response"
             echo "PR created"
           fi
-
-# JOB 2 has been moved to a dedicated workflow file `deploy-production.yml`.
-# Triggering the deploy on a direct `push` to the `Production` branch is
-# more reliable and simpler: merging the PR into Production performs a
-# push to that branch and will run the production-deploy workflow.

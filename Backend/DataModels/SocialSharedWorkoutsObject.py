@@ -38,8 +38,7 @@ class SocialSharedWorkoutsObject:
             "workout_id": ObjectId(workout_id),
             "from_user": ObjectId(from_user),
             "to_user": ObjectId(to_user),
-            "created_at": now_ts,
-            "updated_at": now_ts,
+            "shared_at": now_ts,
         }
         result = get_collection("socialSharedWorkouts").insert_one(shared_doc)
         return str(result.inserted_id)

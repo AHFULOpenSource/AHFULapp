@@ -225,7 +225,7 @@ export async function whoami() {
 // ──  Template functions ─────────────────────────────────────────────────────────
 export async function fetchTemplate(userId) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULworkouts/templates/user/${userId}`,{
+    `http://localhost:5000/api/AHFULtemplate/user`,{
       credentials: 'include'
     }
   );
@@ -245,7 +245,7 @@ export async function fetchTemplate(userId) {
 export async function createTemplate(templateData) {
   try {
     const res = await fetch(
-      "http://localhost:5000/api/AHFULworkouts/create/template",
+      "http://localhost:5000/api/AHFULtemplate/create",
       {
         method: "POST",
         credentials: 'include',

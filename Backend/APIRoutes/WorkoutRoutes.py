@@ -25,29 +25,6 @@ def get_workouts_by_user(user_id):
         return jsonify({"error": error}), 404
     return jsonify(workouts), 200
 
-# ── GET all templates for a specific user ──────────────────────────────────────
-@workoutRouteBlueprint.route("/templates/user/<user_id>", methods=["GET"])
-@login_required_user
-def get_templates(user_id):
-    # Own user request, devs or admins only
-    if (user_id != g.user_id) and (g.role != "Developer") and (g.role != "Admin"):
-        return jsonify({"error": "You may only access your own data"}), 403
-    workouts, error = WorkoutDriver.get_user_templates(user_id)
-    if error:
-        return jsonify({"error": error}), 404
-    return jsonify(workouts), 200
-
-# ── GET template by id ──────────────────────────────────────
-@workoutRouteBlueprint.route("/templates/<id>", methods=["GET"])
-@login_required_user
-def get_template(template_id):
-    res, err = WorkoutDriver.verify_operation(g.user_id, template_id)
-    if err:
-        return jsonify({"error": err}), 400
-    workouts, error = WorkoutDriver.get_template(template_id)
-    if error:
-        return jsonify({"error": error}), 404
-    return jsonify(workouts), 200
 
 # ── GET single workout ────────────────────────────────────────────────────────
 @workoutRouteBlueprint.route("/id/<workout_id>", methods=["GET"])
@@ -80,23 +57,6 @@ def create_workout():
     if error:
         return jsonify({"error": error}), 400
     return jsonify({"workout_id": workout_id, "message": "Workout created"}), 201
-
-# ── CREATE template ────────────────────────────────────────────────────────────
-@workoutRouteBlueprint.route("/create/template", methods=["POST"])
-@login_required_user
-def create_template():
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-
-    workout_id, error = WorkoutDriver.create_template(
-        user_id=g.user_id,
-        title=data.get("title")
-    )
-
-    if error:
-        return jsonify({"error": error}), 400
-    return jsonify({"workout_id": workout_id, "message": "Template created"}), 201
 
 # Only update own? dev for now
 # ── UPDATE personalEx ───────────────────────────────────────────────────────────

@@ -31,12 +31,12 @@ def test_find_food_by_id():
     assert food.get("type") == "Lunch"
     assert food.get("time") == 1708473601
 
-    # Give a bad user_id
+    # Give a invalid format (Non 24-hex string) user_id
     bad_oid = "699d0f5f888d8f649698307"
     food, err = FoodDriver.get_food_by_id(bad_oid)
 
-    if err is not None:
-        print("2.  There was a testing error on Test 2 Object was: ", food, "Error Was: ", err)
+    if err is None:
+        print("2.  There should have been an error but wasn't on Test 2. Object was: ", food, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid food_id format; must be a 24-hex string"
@@ -45,15 +45,12 @@ def test_find_food_by_id():
     assert food is None
     assert err == bad_err_code
 
-    # Give an invalid user_id
+    # Give a correctly formatted but non-existent (oid not in DB) user_id
     inv_oid = "000000000000000000000000"
     food, err = FoodDriver.get_food_by_id(inv_oid)
 
-    if err is not None:
-        print("3.  There was a testing error on Test 3 Object was: ", food, "Error Was: ", err)
-
-    if err is not None:
-        print("4.  There was a testing error on Test 4 Object was: ", food, "Error Was: ", err)
+    if err is None:
+        print("3.  There should have been an error but wasn't on Test 3. Object was: ", food, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Food not found"
@@ -83,12 +80,12 @@ def test_find_food_by_user():
     assert food.get("type") == "Lunch"
     assert food.get("time") == 1708473601
 
-   # Give a bad user_id
+    # Give a invalid format (Non 24-hex string) user_id
     bad_user_id = "699d0093795741a59fe1361"
     food, err = FoodDriver.get_food_by_user(bad_user_id)
 
-    if err is not None:
-        print("6.  There was a testing error on Test 6 Object was: ", food, "Error Was: ", err)
+    if err is None:
+        print("6.  There should have been an error but wasn't on Test 6. Object was: ", food, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid food_id format; must be a 24-hex string"
@@ -97,12 +94,12 @@ def test_find_food_by_user():
     assert food is None
     assert err == bad_err_code
 
-    # Give an invalid user_id
+    # Give a correctly formatted but non-existent (oid not in DB) user_id
     inv_oid = "000000000000000000000000"
     food, err = FoodDriver.get_food_by_id(inv_oid)
 
-    if err is not None:
-        print("7.  There was a testing error on Test 7 Object was: ", food, "Error Was: ", err)
+    if err is None:
+        print("7.  There should have been an error but wasn't on Test 7. Object was: ", food, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Food not found"
@@ -444,12 +441,12 @@ def test_find_gym_by_id():
     assert gym.get("link") == "https://examplegym.com"
     assert gym.get("isPublic") == True
 
-    # Give a bad gym_id
+    # Give a invalid format (Non 24-hex string) gym_id
     bad_oid = "699cff88400d9d43a32e924"
     gym, err = GymDriver.get_gym_by_id(bad_oid, "699d0093795741a59fe13616")
 
-    if err is not None:
-        print("12.  There was a testing error on Test 12 Object was: ", gym, "Error Was: ", err)
+    if err is None:
+        print("12.  There should have been an error but wasn't on Test 12. Object was: ", gym, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid gym_id format; must be a 24-hex string"
@@ -458,13 +455,13 @@ def test_find_gym_by_id():
     assert gym is None
     assert err == bad_err_code
 
-    # Give an invalid gym_id
+    # Give a correctly formatted but non-existent (oid not in DB) gym_id
     inv_oid = "111111111111111111111111"
     
     gym, err = GymDriver.get_gym_by_id(inv_oid, "699d0093795741a59fe13616")
 
-    if err is not None:
-        print("13.  There was a testing error on Test 13 Object was: ", gym, "Error Was: ", err)
+    if err is None:
+        print("13.  There should have been an error but wasn't on Test 13. Object was: ", gym, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Gym not found"
@@ -739,12 +736,12 @@ def test_find_personal_ex_by_id():
     assert ex.get("weight") == 150
     assert ex.get("workout_id") == "699d05d8f1677119323250bc"
 
-    # Give a bad _id
+    # Give a invalid format (Non 24-hex string) user_id
     bad_oid = "69ab5596dc5dee4f518a01c"
     ex, err = PersonalExDriver.get_personal_ex_by_id(bad_oid)
 
-    if err is not None:
-        print("17.  There was a testing error on Test 17 Object was: ", ex, "Error Was: ", err)
+    if err is None:
+        print("17.  There should have been an error but wasn't on Test 17. Object was: ", ex, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid personal ex id format; must be a 24-hex string"
@@ -753,12 +750,12 @@ def test_find_personal_ex_by_id():
     assert ex is None
     assert err == bad_err_code
 
-    # Give an invalid _id
+    # Give a correctly formatted but non-existent (oid not in DB) user_id
     inv_oid = "000000000000000000000000"
     ex, err = PersonalExDriver.get_personal_ex_by_id(inv_oid)
 
-    if err is not None:
-        print("18.  There was a testing error on Test 18 Object was: ", ex, "Error Was: ", err)
+    if err is None:
+        print("18.  There should have been an error but wasn't on Test 18. Object was: ", ex, "Error Was: ", err)
 
     # Expected
     inv_err_code = "PersonalEx not found"
@@ -794,12 +791,12 @@ def test_find_personal_ex_by_workout():
     assert filtered[0].get("weight") == 150
     assert filtered[0].get("workout_id") == "699d05d8f1677119323250bc"
 
-    # Give a bad _id
+    # Give a invalid format (Non 24-hex string) user_id
     bad_oid = "699d05d8f1677119323250b"
     exs, err = PersonalExDriver.get_personal_exs_by_workout(bad_oid)
 
-    if err is not None:
-        print("20.  There was a testing error on Test 20 Object was: ", exs, "Error Was: ", err)
+    if err is None:
+        print("20.  There should have been an error but wasn't on Test 20. Object was: ", exs, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid workout_id format; must be a 24-hex string"
@@ -808,12 +805,12 @@ def test_find_personal_ex_by_workout():
     assert exs is None
     assert err == bad_err_code
 
-    # Give an invalid _id
+    # Give a correctly formatted but non-existent (oid not in DB) workout_id
     inv_oid = "000000000000000000000000"
     exs, err = PersonalExDriver.get_personal_exs_by_workout(inv_oid)
 
-    if err is not None:
-        print("21.  There was a testing error on Test 21 Object was: ", exs, "Error Was: ", err)
+    if err is None:
+        print("21.  There should have been an error but wasn't on Test 21. Object was: ", exs, "Error Was: ", err)
 
     # Expected
     inv_err_code = "PersonalEx not found"
@@ -849,12 +846,12 @@ def test_find_personal_ex_by_user():
     assert filtered[0].get("weight") == 150
     assert filtered[0].get("workout_id") == "699d05d8f1677119323250bc"
 
-    # Give a bad _id
+    # Give a invalid format (Non 24-hex string) user_id
     bad_oid = "699d0093795741a59fe1361"
     exs, err = PersonalExDriver.get_personal_exs_by_user(bad_oid)
 
-    if err is not None:
-        print("23.  There was a testing error on Test 23 Object was: ", exs, "Error Was: ", err)
+    if err is None:
+        print("23.  There should have been an error but wasn't on Test 23. Object was: ", exs, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid user_id format; must be a 24-hex string"
@@ -863,12 +860,12 @@ def test_find_personal_ex_by_user():
     assert exs is None
     assert err == bad_err_code
 
-    # Give an invalid _id
+    # Give a correctly formatted but non-existent (oid not in DB) user_id
     inv_oid = "000000000000000000000000"
     exs, err = PersonalExDriver.get_personal_exs_by_user(inv_oid)
 
-    if err is not None:
-        print("24.  There was a testing error on Test 24 Object was: ", exs, "Error Was: ", err)
+    if err is None:
+        print("24.  There should have been an error but wasn't on Test 24. Object was: ", exs, "Error Was: ", err)
 
     # Expected
     inv_err_code = "PersonalEx not found"
@@ -1551,8 +1548,9 @@ def test_find_template_by_user():
     oid = "699d0093795741a59fe13616"
     temps, err = WorkoutDriver.get_user_templates(oid)
 
-    if err is not None:
-        print("39.  There was a testing error on Test 39 Object was: ", temps, "Error Was: ", err)
+    # STOP HERE if something went wrong  - replcing print statement. 
+    assert err is None, f"Test 39 setup failed — unexpected error: {err}"
+    assert temps is not None, f"Test 39 setup failed — temps returned None"
     
     tp_oid = "69c19753432188dfcd568ddc"
     filtered = [d for d in temps if d.get("_id") == tp_oid]
@@ -1568,12 +1566,12 @@ def test_find_template_by_user():
     assert filtered[0].get("template") == True
     assert filtered[0].get("startTime") == 0
 
-    # Give a bad _id
+    # Give a invalid format (Non 24-hex string) user_id
     bad_oid = "699d0093795741a59fe1361"
     temps, err = WorkoutDriver.get_user_templates(bad_oid)
 
-    if err is not None:
-        print("40.  There was a testing error on Test 40 Object was: ", temps, "Error Was: ", err)
+    if err is None:
+        print("40.  There should have been an error but wasn't on Test 40. Object was: ", temps, "Error Was: ", err)
 
     # Expected
     bad_err_code = "Invalid user_id format; must be a 24-hex string"
@@ -1582,12 +1580,12 @@ def test_find_template_by_user():
     assert temps is None
     assert err == bad_err_code
 
-    # Give an invalid _id
+    # Give a correctly formatted but non-existent (oid not in DB) user_id
     inv_oid = "000000000000000000000000"
     temps, err = WorkoutDriver.get_user_templates(inv_oid)
 
-    if err is not None:
-        print("41.  There was a testing error on Test 41 Object was: ", temps, "Error Was: ", err)
+    if err is None:
+        print("41.  There should have been an error but wasn't on Test 41. Object was: ", temps, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Templates not found"

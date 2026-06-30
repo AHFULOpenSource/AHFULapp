@@ -8,7 +8,6 @@ import {
   formatTime as formatTimeFn,
   loadEquipment as loadEquipmentFn,
   loadTargetMuscles,
-  fetchExercisesFromBackend,
   searchExercises,
   fetchWorkout,
   fetchWorkoutById,
@@ -20,7 +19,6 @@ import {
   createPersonalExercise,
   updatePersonalExercise,
   deletePersonalExercise,
-  fetchTemplate,
   createTemplate,
   loadBodyParts,
   createExercise,
@@ -29,6 +27,7 @@ import {
 import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout.jsx";
 import { pullTemplates } from "../components/Cache/TemplateCache/PullTemplate.jsx";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
+import { Loading } from "../Loading.jsx";
 
 /**
  * Logger - Main workout tracking page
@@ -52,10 +51,7 @@ export function WorkoutLogger() {
   const userAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const selectedDate = useSelector((state) => state.calendar.selectedDate);
   const cachedWorkouts = useSelector((state) => state.pullWorkout.workouts);
-  const cachedPersonalExercises = useSelector(
-    (state) => state.pullPersonalExercise.personalExercises,
-  );
-  const templates = useSelector((state) => state.pullTemplate.templates);
+  const cachedPersonalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
 
   // ─── Personal Exercise State ──────────────────────────────────────────────────
   // Tracks exercises to be deleted when workout is submitted (removed from UI but need DB deletion)
@@ -89,9 +85,7 @@ export function WorkoutLogger() {
   const [workoutError, setWorkoutError] = useState(null);
 
   // ─── Workout Picker UI State ─────────────────────────────────────────────────
-  // Select Workout Popup visibility
-  const [showWorkoutPicker, setShowWorkoutPicker] = useState(false);
-  // Which workout is selected inside the popup
+  // Which workout is selected inside the picker
   const [selectedWorkoutIdForPicker, setSelectedWorkoutIdForPicker] =
     useState(null);
   // New workout name (for creation)
@@ -99,6 +93,37 @@ export function WorkoutLogger() {
   // Available gyms and selected gym for new workouts
   const [availableGyms, setAvailableGyms] = useState([]);
   const [selectedGymId, setSelectedGymId] = useState("");
+
+  // ─── Timer State ─────────────────────────────────────────────────────────────
+  const [isRunning, setIsRunning] = useState(false);
+  const [time, setTime] = useState(0);
+
+  // ─── Exercise Selection State ────────────────────────────────────────────────
+  const [exerciseName, setExerciseName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Selected exercise IDs pending to be added to workout
+  const [pendingExercises, setPendingExercises] = useState([]);
+  // Modal visibility for creating new exercises
+  const [showNewExerciseModal, setShowNewExerciseModal] = useState(false);
+
+  // ─── New Exercise Form States
+  const [equipmentOptions, setEquipmentOptions] = useState([]);
+  const [equipmentError, setEquipmentError] = useState(null);
+  const [BodyPartOptions, setBodyPartOptions] = useState([]);
+  const [BodyPartError, setBodyPartError] = useState(null);
+  const [muscleOptions, setMuscleOptions] = useState([]);
+  const [muscleError, setMuscleError] = useState(null);
+  const [newExercise, setNewExercise] = useState(getDefaultNewExercise());
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // ─── Favorite Filter State ───────────────────────────────────────────────────
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
+  //Templates
+  const [templatePreview, setTemplatePreview] = useState(null);
+
 
   // Load gyms for the select dropdown
   useEffect(() => {
@@ -152,37 +177,6 @@ export function WorkoutLogger() {
     })();
   }, [selectedDate, cachedWorkouts]);
 
-  // ─── Timer State ─────────────────────────────────────────────────────────────
-  const [isRunning, setIsRunning] = useState(false);
-  const [time, setTime] = useState(0);
-
-  // ─── Exercise Selection State ────────────────────────────────────────────────
-  const [exerciseName, setExerciseName] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Selected exercise IDs pending to be added to workout
-  const [pendingExercises, setPendingExercises] = useState([]);
-  // Modal visibility for creating new exercises
-  const [showNewExerciseModal, setShowNewExerciseModal] = useState(false);
-
-  // ─── New Exercise Form States
-  const [equipmentOptions, setEquipmentOptions] = useState([]);
-  const [equipmentError, setEquipmentError] = useState(null);
-  const [BodyPartOptions, setBodyPartOptions] = useState([]);
-  const [BodyPartError, setBodyPartError] = useState(null);
-  const [muscleOptions, setMuscleOptions] = useState([]);
-  const [muscleError, setMuscleError] = useState(null);
-  const [newExercise, setNewExercise] = useState(getDefaultNewExercise());
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // ─── Template States
-  const [templateSearch, setTemplateSearch] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [templatePreview, setTemplatePreview] = useState(null);
-
-  // ─── Favorite Filter State ───────────────────────────────────────────────────
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // ─── Refs ───────────────────────────────────────────────────────────────────
   const searchTimeoutRef = useRef(null);
@@ -255,13 +249,6 @@ export function WorkoutLogger() {
     setNewExercise((prev) => ({ ...prev, [field]: values }));
   };
 
-  // useEffect 1: cleanup debounced search timer on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    };
-  }, []);
-
   // ─── Load Exercise Options on Mount ──────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
@@ -323,10 +310,6 @@ export function WorkoutLogger() {
   useEffect(() => {
     fetch_exercises();
   }, []);
-
-  // useEffect(() => {
-  //   location.reload();
-  // }, [selectedDate]);
 
   // ─── Load Workout when selectedDate changes ─────────────────────────────────────
   useEffect(() => {
@@ -447,10 +430,26 @@ export function WorkoutLogger() {
         return;
       }
 
-      // 1. Create the template
+      // 1. Create exercises array from Personal Exercises
+      const personalExPayload = [];
+
+      //2. Map exercises in progress to the template format
+      for (const ex of exercisesInProgressTable) {
+        personalExPayload.push({
+          exercise_id: ex.exercise_id,
+          reps: ex.reps,
+          sets: ex.sets,
+          weight: ex.weight,
+          duration: ex.duration,
+          distance: ex.distance,
+        });
+      }
+
+      // 3. Create the template
       const templatePayload = {
         title: workoutTitle,
         user_id: user._id,
+        exercises: personalExPayload,
       };
 
       const template = await createTemplate(templatePayload);
@@ -459,22 +458,7 @@ export function WorkoutLogger() {
         throw new Error("Failed to create template");
       }
 
-      // 2. Create personalExercises using template._id as workoutId
-      for (const ex of exercisesInProgressTable) {
-        const personalExPayload = {
-          exercise_id: ex.exercise_id,
-          reps: ex.reps,
-          sets: ex.sets,
-          weight: ex.weight,
-          duration: ex.duration,
-          distance: ex.distance,
-          complete: false,
-          user_id: user._id,
-          workout_id: template.data.workout_id,
-          template: true,
-        };
-        createPersonalExercise(personalExPayload);
-      }
+
 
       alert("Template has been saved!");
     } catch (err) {
@@ -484,25 +468,6 @@ export function WorkoutLogger() {
     await pullTemplates();
     await pullPersonalExercises();
   };
-
-  async function handleApplyTemplate(template) {
-    try {
-      // Get template exercises from cache (personal exercises with template's workout_id)
-      const templateExercises =
-        cachedPersonalExercises?.filter(
-          (pe) => pe?.workout_id === template._id
-        ) || [];
-
-      // Open popup
-      setTemplatePreview({
-        template,
-        exercises: templateExercises,
-      });
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load template exercises.");
-    }
-  }
 
   async function handleConfirmTemplateApply() {
     console.log("Applying template...");
@@ -764,15 +729,10 @@ export function WorkoutLogger() {
     console.log("Workout updated");
   }, [workout]);
 
-  // ─── Select Workout Popup logic ──────────────────────────────────────────────────────────────
-  function openWorkoutPicker() {
+  // ─── Select Workout Picker logic ──────────────────────────────────────────────────────────────
+  function resetWorkoutPicker() {
     setSelectedWorkoutIdForPicker(null); // reset selection
     setNewWorkoutName(""); // reset input
-    setShowWorkoutPicker(true);
-  }
-
-  function closeWorkoutPicker() {
-    setShowWorkoutPicker(false);
   }
 
   const exitOnEnter = (e) => {
@@ -807,7 +767,7 @@ export function WorkoutLogger() {
         setTime(0);
       }
 
-      closeWorkoutPicker();
+  resetWorkoutPicker();
     } catch (err) {
       console.error("Error loading workout:", err);
     }
@@ -848,7 +808,7 @@ export function WorkoutLogger() {
       setSelectedGymId(persisted.gym_id);
       setTime(0);
 
-      closeWorkoutPicker();
+  resetWorkoutPicker();
     } catch (err) {
       console.error("Error creating workout:", err);
     }
@@ -937,14 +897,8 @@ export function WorkoutLogger() {
   // ─── Loading State ────────────────────────────────────────────────────────────
   if (workoutLoading) {
     return (
-      <div className="page-layout">
-        <div className="center-column">
-          <div className="workout-card">
-            <h2>Loading workout...</h2>
-            <p>Please wait while we set up your workout.</p>
-          </div>
-        </div>
-      </div>
+      <Loading message="Please wait while we set up your workout..." />
+      
     );
   }
 
@@ -967,81 +921,122 @@ export function WorkoutLogger() {
   return (
     <div className="page-layout">
       <CalendarButton />
-      {/* Left Column: Template/History */}
-      <div className="left-column">
-        <div className="template-container">
-          <div className="add-template-form">
-            {/* Search Bar */}
-            <div className="dropdown-wrapper">
-              <input
-                type="text"
-                placeholder="Search templates..."
-                value={templateSearch}
-                onChange={(e) => setTemplateSearch(e.target.value)}
-                onKeyDown={exitOnEnter}
-              />
 
-              <div className="dropdown-instructions">
-                Select a template to apply
-              </div>
+      <div className="workout-picker-panel">
+      <div className="workout-picker-inline">
 
-              {/* Template List */}
-              <div className="dropdown">
-                {templates.length === 0 && (
-                  <div className="dropdown-item">No templates found</div>
-                )}
-
-                {templates
-                  .filter((t) => {
-                    const title = t?.title ?? "";
-
-                    // Keep selected template visible even if search doesn't match
-                    if (selectedTemplate?._id === t._id) return true;
-
-                    return title
-                      .toLowerCase()
-                      .includes(templateSearch.toLowerCase());
-                  })
-                  .map((t, i) => {
-                    const isSelected = selectedTemplate?._id === t._id;
-
-                    return (
-                      <div
-                        key={t._id ?? i}
-                        className={`dropdown-item ${isSelected ? "selected" : ""}`}
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedTemplate(null); // unselect
-                          } else {
-                            setSelectedTemplate(t); // select
-                          }
-                        }}
-                      >
-                        <span>{t.title ?? "Unnamed Template"}</span>
-                        {isSelected && <span className="check">✓</span>}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-
-            <div
-              className="apply-btn-wrapper"
-              style={{ display: "flex", gap: "8px" }}
+        {/* Zone 1 + 2: Filter, scrollable list, load button */}
+        <div className="workout-list">
+          <div className="favorite-filter-section">
+            <button
+              className={`favorite-filter-btn ${showFavoritesOnly ? "active" : ""}`}
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
             >
-              {/* Apply Button */}
-              {selectedTemplate && (
-                <button
-                  className="apply-btn"
-                  onClick={() => handleApplyTemplate(selectedTemplate)}
-                >
-                  Apply Template
-                </button>
-              )}
-            </div>
+              {showFavoritesOnly ? "⭐ Favorites" : "☆ All"}
+            </button>
           </div>
+
+          <div className="workout-scroll-container">
+
+            {(!dailyWorkouts ||
+              (showFavoritesOnly
+                ? dailyWorkouts.filter((w) => w.favorite)
+                : dailyWorkouts
+              ).length === 0) && (
+              <div className="no-workouts">
+                {showFavoritesOnly
+                  ? "No favorite workouts for this day."
+                  : "No workouts for this day."}
+              </div>
+            )}
+
+            {dailyWorkouts &&
+              (showFavoritesOnly
+                ? dailyWorkouts.filter((w) => w.favorite)
+                : dailyWorkouts
+              ).map((w) => (
+                <div
+                  key={w._id}
+                  className={
+                    "workout-list-item " +
+                    (selectedWorkoutIdForPicker === w._id ? "selected" : "")
+                  }
+                >
+                  <div
+                    className="workout-list-content"
+                    onClick={() =>
+                      setSelectedWorkoutIdForPicker(
+                        selectedWorkoutIdForPicker === w._id ? null : w._id,
+                      )
+                    }
+                  >
+                    <div className="workout-list-title">{w.title}</div>
+                    <div className="workout-list-date">
+                      {unixToDate(w.startTime)}
+                    </div>
+                  </div>
+                  <button
+                    className="workout-favorite-btn"
+                    onClick={() => {
+                      handleToggleFavorite();
+                      setDailyWorkouts(
+                        dailyWorkouts.map((wk) =>
+                          wk._id === w._id
+                            ? { ...wk, favorite: !wk.favorite }
+                            : wk,
+                        ),
+                      );
+                    }}
+                    title={
+                      w.favorite ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    {w.favorite ? "⭐" : "☆"}
+                  </button>
+                </div>
+              ))}
+
+          </div>
+
+          {/* Load button moves HERE, next to the list */}
+          <button
+            className="load-workout-button"
+            disabled={!selectedWorkoutIdForPicker}
+            onClick={handleLoadWorkout}
+          >
+            Load Workout
+          </button>
         </div>
+
+        <div className="zone-divider" />
+
+        {/* Zone 3: Create section */}
+        <div className="create-workout-section">
+          <input
+            type="text"
+            placeholder="New workout name"
+            value={newWorkoutName}
+            onChange={(e) => setNewWorkoutName(e.target.value)}
+            onKeyDown={exitOnEnter}
+          />
+          <select
+            value={selectedGymId}
+            onChange={(e) => setSelectedGymId(e.target.value)}
+          >
+            <option value="">None / No Gym</option>
+            {availableGyms.map((g) => (
+              <option key={g._id} value={g._id}>
+                {g.name || `${g.address || "Unnamed"} (${g._id.slice(0, 6)})`}
+              </option>
+            ))}
+          </select>
+          <button className="create-workout-button" onClick={handleCreateWorkout}>
+            Create Workout
+          </button>
+        </div>
+
       </div>
+    </div>
 
       {/* Center Column: Workout Card */}
       <div className="center-column">
@@ -1096,11 +1091,8 @@ export function WorkoutLogger() {
                   ))}
                 </select>
 
-                <button
-                  className="select-workout-button"
-                  onClick={openWorkoutPicker}
-                >
-                  Select Workout
+                <button className="select-workout-button" onClick={resetWorkoutPicker}>
+                  Clear Selection
                 </button>
               </div>
 
@@ -1238,11 +1230,7 @@ export function WorkoutLogger() {
               </button>
             </div>
           </>
-        ) : (
-          <button className="select-workout-button" onClick={openWorkoutPicker}>
-            Select Workout
-          </button>
-        )}
+        ) : null}
       </div>
 
       {/* Right Column: Exercise Search & Selection */}
@@ -1591,128 +1579,6 @@ export function WorkoutLogger() {
         </div>
       )}
 
-      {showWorkoutPicker && (
-        <div className="popup-overlay">
-          <div className="popup workout-picker-popup">
-            <h2>Select Workout</h2>
-
-            {/* List of workouts for the selected date */}
-            <div className="workout-list">
-              <div className="favorite-filter-section">
-                <button
-                  className={`favorite-filter-btn ${showFavoritesOnly ? 'active' : ''}`}
-                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                  title="Show favorites only"
-                >
-                  {showFavoritesOnly ? '⭐ Favorites' : '☆ All'}
-                </button>
-              </div>
-
-              {(!dailyWorkouts || (showFavoritesOnly ? dailyWorkouts.filter((w) => w.favorite) : dailyWorkouts).length === 0) && (
-                <div className="no-workouts">
-                  {showFavoritesOnly ? "No favorite workouts for this day." : "No workouts for this day."}
-                </div>
-              )}
-
-              {dailyWorkouts &&
-                (showFavoritesOnly ? dailyWorkouts.filter((w) => w.favorite) : dailyWorkouts).map((w) => (
-                  <div
-                    key={w._id}
-                    className={
-                      "workout-list-item " +
-                      (selectedWorkoutIdForPicker === w._id ? "selected" : "")
-                    }
-                  >
-                    <div
-                      className="workout-list-content"
-                      onClick={() =>
-                        setSelectedWorkoutIdForPicker(
-                          selectedWorkoutIdForPicker === w._id ? null : w._id,
-                        )
-                      }
-                    >
-                      <div className="workout-list-title">{w.title}</div>
-                      <div className="workout-list-date">
-                        {unixToDate(w.startTime)}
-                      </div>
-                    </div>
-                    <button
-                      className="workout-favorite-btn"
-                      onClick={() => {
-                        handleToggleFavorite();
-                        setDailyWorkouts(dailyWorkouts.map((wk) =>
-                          wk._id === w._id ? { ...wk, favorite: !wk.favorite } : wk
-                        ));
-                      }}
-                      title={w.favorite ? "Remove from favorites" : "Add to favorites"}
-                    >
-                      {w.favorite ? "⭐" : "☆"}
-                    </button>
-                  </div>
-                ))}
-            </div>
-
-            {/* Create Workout Section */}
-            <div className="create-workout-section">
-              <input
-                type="text"
-                placeholder="New workout name"
-                value={newWorkoutName}
-                onChange={(e) => setNewWorkoutName(e.target.value)}
-                onKeyDown={exitOnEnter}
-              />
-              <div style={{ marginTop: 8 }}>
-                <label
-                  style={{ display: "block", fontSize: 12, marginBottom: 6 }}
-                >
-                  Gym (optional)
-                </label>
-                <select
-                  value={selectedGymId}
-                  onChange={(e) => setSelectedGymId(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 10px",
-                    borderRadius: 6,
-                  }}
-                >
-                  <option value="">None / No Gym</option>
-                  {availableGyms.map((g) => (
-                    <option key={g._id} value={g._id}>
-                      {g.name ||
-                        `${g.address || "Unnamed"} (${g._id.slice(0, 6)})`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                className="create-workout-button"
-                onClick={handleCreateWorkout}
-              >
-                Create Workout
-              </button>
-            </div>
-
-            {/* Footer Buttons */}
-            <div className="popup-footer">
-              <button
-                className="load-workout-button"
-                disabled={!selectedWorkoutIdForPicker}
-                onClick={handleLoadWorkout}
-              >
-                Load Workout
-              </button>
-
-              <button
-                className="cancel-button"
-                onClick={() => setShowWorkoutPicker(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

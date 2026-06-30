@@ -30,7 +30,6 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
 
           <button
             to="/TOS"
-            className={({ isActive }) => (isActive ? "active" : "")}
             onClick={() => setShowTOS(true)}
           >
             Terms of Service
@@ -98,7 +97,7 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
           </NavLink>
 
           <NavLink
-            to="/WorkoutLogger"
+            to="/Templates"
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
@@ -131,7 +130,6 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
 
           <button
             to="/TOS"
-            className={({ isActive }) => (isActive ? "active" : "")}
             onClick={() => setShowTOS(true)}
           >
             Terms of Service

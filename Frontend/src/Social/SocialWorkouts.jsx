@@ -11,7 +11,8 @@ export function SocialWorkouts() {
   const user = useSelector((s) => s.auth.user);
   const userId = user?.id;
   const userEmail = user?.email.toLowerCase();
-``
+  const cachedExercises = useSelector((state) => state.pullExercise.exercises);
+
   const [sharedWorkouts, setSharedWorkouts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -25,6 +26,12 @@ export function SocialWorkouts() {
   const [postTargetEmail, setPostTargetEmail] = useState("");
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState(null);
+  const [gymDetails, setGymDetails] = useState(null);
+  const [gymLoading, setGymLoading] = useState(false);
+  const [gymError, setGymError] = useState(null);
+  const [personalExercises, setPersonalExercises] = useState([]);
+  const [personalExLoading, setPersonalExLoading] = useState(false);
+  const [personalExError, setPersonalExError] = useState(null);
 
   const formatDate = (ts) => {
     if (!ts) return "N/A";
@@ -179,6 +186,104 @@ export function SocialWorkouts() {
     fetchFriends();
   }, [userId]);
 
+  useEffect(() => {
+    let isActive = true;
+    const gymId = selectedWorkout?.gym_id;
+
+    if (!gymId) {
+      setGymDetails(null);
+      setGymError(null);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    const fetchGymDetails = async () => {
+      setGymLoading(true);
+      setGymError(null);
+      try {
+        const res = await fetch(`http://localhost:5000/api/AHFULgyms/${gymId}` , {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        if (isActive) {
+          setGymDetails(data && typeof data === "object" ? data : null);
+        }
+      } catch (err) {
+        if (isActive) {
+          console.warn("fetchGymDetails failed:", err);
+          setGymError("Unable to load gym details.");
+          setGymDetails(null);
+        }
+      } finally {
+        if (isActive) {
+          setGymLoading(false);
+        }
+      }
+    };
+
+    fetchGymDetails();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedWorkout?.gym_id]);
+
+  useEffect(() => {
+    let isActive = true;
+    const workoutId = selectedWorkout?.workout_id;
+
+    if (!workoutId) {
+      setPersonalExercises([]);
+      setPersonalExError(null);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    const fetchPersonalExercises = async () => {
+      setPersonalExLoading(true);
+      setPersonalExError(null);
+      try {
+        const res = await fetch(`http://localhost:5000/api/AHFULpersonalEx/workout/${workoutId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        if (isActive) {
+          setPersonalExercises(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (isActive) {
+          console.warn("fetchPersonalExercises failed:", err);
+          setPersonalExError("Unable to load personal exercises.");
+          setPersonalExercises([]);
+        }
+      } finally {
+        if (isActive) {
+          setPersonalExLoading(false);
+        }
+      }
+    };
+
+    fetchPersonalExercises();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedWorkout?.workout_id, selectedWorkout?._id]);
+
   const getPostTimestamp = (post) => post?.created_at || post?.ts || null;
 
   return (
@@ -208,19 +313,15 @@ export function SocialWorkouts() {
                 onClick={() => setSelectedWorkout(w)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") setSelectedWorkout(w);
-                }}
               >
                 <div className="exercise-main">
                   <div className="exercise-name">{w.title || "Untitled Workout"}</div>
                   <div className="exercise-meta">
-                    {w.startTime && <span>Start: {new Date(w.startTime * 1000).toLocaleDateString()}</span>}
+                    {w.startTime && <span>Start: {formatDate(w.startTime)}</span>}
                     {w.endTime && <span> • Duration: {calculateDuration(w.startTime, w.endTime)}</span>}
                     {w.sharedBy && w.sharedBy.name && <span> • Shared by: {w.sharedBy.name}</span>}
                   </div>
                 </div>
-                {w.instructions && <div className="exercise-instructions">{w.instructions}</div>}
               </div>
             ))}
           </div>
@@ -264,33 +365,21 @@ export function SocialWorkouts() {
               {postError && <div className="explore-error">{postError}</div>}
             </div>
             {wallPosts.length === 0 ? (
-              <div className="wh-status">No posts yet. Your friends' posts will show up here.</div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {wallPosts.map((p) => (
-                  <article key={p._id || p.id} style={{ background: "var(--color-surface)", padding: 12, borderRadius: 8 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <strong>{p?.owner?.name || p.author || "Friend"}</strong>
-                      <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>
-                        {formatDate(getPostTimestamp(p))}
-                      </span>
-                    </div>
-                    <p style={{ marginTop: 8 }}>{p.notes || p.text}</p>
-                    {p.workoutRef && (
-                      <button
-                        className="retry-btn"
-                        onClick={() => {
-                          // try to find workout and open modal
-                          const found = sharedWorkouts.find((sw) => sw._id === p.workoutRef);
-                          if (found) setSelectedWorkout(found);
-                        }}
-                      >
-                        View Workout
-                      </button>
-                    )}
-                  </article>
-                ))}
-              </div>
+                <div className="wh-status">No posts yet. Your friends' posts will show up here.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {wallPosts.map((p) => (
+                    <article key={p._id || p.id} style={{ background: "var(--color-surface)", padding: 12, borderRadius: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <strong>{p?.owner?.name || p.author || "Friend"}</strong>
+                        <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>
+                          {formatDate(getPostTimestamp(p))}
+                        </span>
+                      </div>
+                      <p style={{ marginTop: 8 }}>{p.notes || p.text}</p>
+                    </article>
+                  ))}
+                </div>
             )}
           </div>
         </div>
@@ -301,12 +390,16 @@ export function SocialWorkouts() {
         <div className="workout-modal-overlay" onClick={() => setSelectedWorkout(null)}>
           <div className="workout-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="workout-modal-header">
-              <h2>{selectedWorkout.title || "Untitled Workout"}</h2>
-              <button className="workout-modal-close" onClick={() => setSelectedWorkout(null)} aria-label="Close">
-                ✕
-              </button>
+              <h2>{selectedWorkout.title}</h2>
             </div>
             <div className="workout-modal-body">
+              {selectedWorkout.sharedBy && (
+                <div className="workout-detail-section">
+                  <label className="workout-detail-label">Shared By</label>
+                  <p className="workout-detail-value">{selectedWorkout.sharedBy.name}</p>
+                </div>
+              )}
+
               {selectedWorkout.startTime && (
                 <div className="workout-detail-section">
                   <label className="workout-detail-label">Start Time</label>
@@ -326,19 +419,60 @@ export function SocialWorkouts() {
                 </div>
               )}
 
-              {selectedWorkout.instructions && (
+              {selectedWorkout.gym_id && (
                 <div className="workout-detail-section">
-                  <label className="workout-detail-label">Notes</label>
-                  <p className="workout-detail-value">{selectedWorkout.instructions}</p>
+                  <label className="workout-detail-label">Gym</label>
+                  {gymLoading && <p className="workout-detail-value">Loading gym details...</p>}
+                  {!gymLoading && gymError && <p className="workout-detail-value">{gymError}</p>}
+                  {!gymLoading && !gymError && gymDetails && (
+                    <div className="workout-detail-value">
+                      <div>{gymDetails.name || "Gym"}</div>
+                      {gymDetails.address && <div>{gymDetails.address}</div>}
+                      {gymDetails.type && <div>Type: {gymDetails.type}</div>}
+                      {gymDetails.cost && <div>Cost: (gymDetails.cost)</div>}
+                      {gymDetails.link && (
+                        <a href={gymDetails.link} target="_blank" rel="noreferrer">
+                          Visit site
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  {!gymLoading && !gymError && !gymDetails && (
+                    <p className="workout-detail-value">{selectedWorkout.gym_id}</p>
+                  )}
                 </div>
               )}
 
-              {selectedWorkout.sharedBy && (
-                <div className="workout-detail-section">
-                  <label className="workout-detail-label">Shared By</label>
-                  <p className="workout-detail-value">{selectedWorkout.sharedBy.name}</p>
-                </div>
-              )}
+              <div className="workout-detail-section">
+                <label className="workout-detail-label">Shared Workout Exercises</label>
+                {personalExLoading && <p className="workout-detail-value">Loading exercises...</p>}
+                {!personalExLoading && personalExError && <p className="workout-detail-value">{personalExError}</p>}
+                {!personalExLoading && !personalExError && personalExercises.length === 0 && (
+                  <p className="workout-detail-value">No shared exercises found for workout.</p>
+                )}
+                {!personalExLoading && !personalExError && personalExercises.length > 0 && (
+                  <div className="workout-detail-value" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {personalExercises.map((ex) => (
+                      <div
+                        key={ex._id}
+                        style={{
+                          border: "1px solid var(--color-border)",
+                          borderRadius: 8,
+                          padding: 8,
+                          background: "var(--color-surface)",
+                        }}
+                      >
+                        <div><strong>Exercise:</strong> {cachedExercises?.find(e => e._id?.toString() === ex.exercise_id?.toString())?.name}</div>
+                        <div><strong>Reps:</strong> {ex.reps ?? 0}</div>
+                        <div><strong>Weight:</strong> {ex.weight ?? 0}</div>
+                        <div><strong>Duration:</strong> {ex.duration ?? 0}</div>
+                        <div><strong>Distance:</strong> {ex.distance ?? 0}</div>
+                        <div><strong>Complete:</strong> {ex.complete ? "Yes" : "No"}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
             </div>
             <div className="workout-modal-actions">

@@ -91,34 +91,6 @@ class WorkoutDriver:
         except Exception as e:
             return None, str(e)
 
-    @staticmethod
-    def create_template(user_id, title):
-        # Validate required fields
-        if (not user_id):
-            return None, "You are missing a user_id. Please fix, then attempt to create workout again"
-
-        oid, err = WorkoutDriver._validate_obj_id(user_id, "user_id")
-        if err:
-            return None, err
-
-        # Ensure the user exists
-        user = UserObject.find_by_id(user_id)
-        if not user:
-            return None, "User not found"
-
-        template_data = {
-            "user_id": ObjectId(user_id),
-            "title": title,
-            "template": True,
-            "startTime": int(0)
-        }
-
-        try:
-            response = WorkoutObject.create(template_data)
-            return response, None
-        except Exception as e:
-            return None, str(e)
-
     # ── Read ─────────────────────────────────────────────────────────────────
     @staticmethod
     def get_all_workouts():
@@ -155,36 +127,6 @@ class WorkoutDriver:
             if not workouts:
                 return None, "Workout not found"
             return workouts, None
-        except Exception as e:
-            return None, str(e)
-
-    @staticmethod
-    def get_user_templates(user_id):
-        if (not user_id):
-            return None, "You are missing a user id. Please fix, then attempt to create workout again"
-        oid, err = WorkoutDriver._validate_obj_id(user_id, "user_id")
-        if err:
-            return None, err
-        try:
-            templates = WorkoutObject.find_user_templates(user_id)
-            if not templates:
-                return None, "Templates not found"
-            return templates, None
-        except Exception as e:
-            return None, str(e)
-
-    @staticmethod
-    def get_template(id):
-        if (not id):
-            return None, "You are missing an id. Please fix, then attempt to create workout again"
-        oid, err = WorkoutDriver._validate_obj_id(id, "id")
-        if err:
-            return None, err
-        try:
-            template = WorkoutObject.find_template(id)
-            if not template:
-                return None, "Template not found"
-            return template, None
         except Exception as e:
             return None, str(e)
 

@@ -13,9 +13,10 @@ export async function pullTemplates() {
     const list = await fetchTemplate(user._id);
     const metaData = list.map(t => ({
       _id: t._id,
-      user_id: t.user_id,
       title: t.title,
-      template: t.template,
+      created_at: t.created_at,
+      notes: t.notes,
+      exercises: t.exercises,
     }));
 
     console.log("Pulled templates with exercises:", metaData);

@@ -4,7 +4,9 @@
 from DataModels.PersonalExObject import PersonalExObject
 from DataModels.UserObject import UserObject
 from DataModels.WorkoutObject import WorkoutObject
+from DataModels.ExerciseObject import ExerciseObject
 from bson import ObjectId, errors as bson_errors
+
 
 # The PersonalExDriver is responsible for implementing the business logic related to personalEx operations.
 #   It acts as an intermediary between the API routes and the data models,
@@ -54,10 +56,13 @@ class PersonalExDriver:
         if (not user_id) or (not exercise_id) or (not workout_id):
             return None, "You are missing a user_id, workout_id or exercise_id. Please fix, then attempt to create personalEx again"
 
-        oid, err = PersonalExDriver._validate_obj_id(user_id, "user_id")
+        oidU, err = PersonalExDriver._validate_obj_id(user_id, "user_id")
         if err:
             return None, err
-        oid, err = PersonalExDriver._validate_obj_id(workout_id, "workout_id")
+        oidW, err = PersonalExDriver._validate_obj_id(workout_id, "workout_id")
+        if err:
+            return None, err
+        oidE, err = PersonalExDriver._validate_obj_id(exercise_id, "exercise_id")
         if err:
             return None, err
 
@@ -67,9 +72,9 @@ class PersonalExDriver:
             return None, "User not found"
 
         # Ensure the exercise exists, in data base or external
-        # exercise = ExerciseObject.find_by_id(exercise_id)
-        # if not exercise:
-        #     return None, "Exercise not found"
+        exercise = ExerciseObject.find_by_id(exercise_id)
+        if not exercise:
+            return None, "Exercise not found"
 
         # Ensure the workout exists
         if not template:
@@ -84,8 +89,7 @@ class PersonalExDriver:
 
         personal_ex_data = {
             "user_id": ObjectId(user_id),
-            # "exercise_id": ObjectId(exercise_id),
-            "exercise_id": exercise_id,
+            "exercise_id": ObjectId(exercise_id),
             "workout_id": ObjectId(workout_id),
             "reps": int(reps),
             "sets": int(sets),
