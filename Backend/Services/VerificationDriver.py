@@ -257,7 +257,7 @@ class VerificationDriver:
             return None, str(e)
         
         # Link contains token id and token text
-        link = f"http://localhost:5000/api/AHFULverify/verify/email/{response}/{token}"
+        link = f"https://www.ahful.app/api/AHFULverify/verify/email/{response}/{token}"
 
         send_email(
             to_address=email,
@@ -306,7 +306,7 @@ class VerificationDriver:
             return None, str(e)
         
         # Link contains token id and token text
-        link = f"http://localhost:5000/api/AHFULverify/verify/phone/{response}/{token}"
+        link = f"https://www.ahful.app/api/AHFULverify/verify/phone/{response}/{token}"
 
 
         return "Verification text Not Setup Yet.", None

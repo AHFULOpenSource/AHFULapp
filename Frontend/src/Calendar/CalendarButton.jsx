@@ -95,7 +95,7 @@ export function CalendarButton({ trigger = undefined, setTrigger = undefined, to
                         continue;
                     }
                     try {
-                        const response = await fetch(`http://localhost:5000/api/AHFULexercises/id/${id}`, {credentials: "include"});
+                        const response = await fetch(`https://www.ahful.app/api/AHFULexercises/id/${id}`, {credentials: "include"});
                         if (!response.ok) {
                             results[id] = "Unknown Exercise";
                             continue;

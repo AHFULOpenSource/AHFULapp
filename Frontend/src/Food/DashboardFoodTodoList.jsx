@@ -26,7 +26,7 @@ export function DashboardFoodTodoList() {
 
     const fetchFoods = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/AHFULfoods/${userId}`, {credentials: "include"});
+        const res = await fetch(`https://www.ahful.app/api/AHFULfoods/${userId}`, {credentials: "include"});
         if (res.ok) {
           const data = await res.json();
           const sorted = (Array.isArray(data) ? data : [])

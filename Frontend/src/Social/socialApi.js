@@ -1,5 +1,5 @@
 // Small wrapper around social-related backend endpoints
-const BASE = "http://localhost:5000/api/AHFULsocial";
+const BASE = "https://www.ahful.app/api/AHFULsocial";
 
 async function safeJson(res) {
   try {

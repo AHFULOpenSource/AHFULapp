@@ -5,7 +5,7 @@ import {
 } from "recharts";
 import "./ExploreWorkouts.css";
 
-const API_BASE = "http://localhost:5000/api/AHFULworkouts";
+const API_BASE = "https://www.ahful.app/api/AHFULworkouts";
 const WEEK_OPTIONS = [4, 6, 8, 12];
 
 function getWeekInfo(date) {

@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import "./TodayFoodChart.css";
 
-const API_BASE = "http://localhost:5000/api/AHFULfoods";
+const API_BASE = "https://www.ahful.app/api/AHFULfoods";
 
 const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444"];
 

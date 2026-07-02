@@ -32,7 +32,7 @@ export function getMessagingService() {
   return messaging;
 }
 
-const BACKEND_URL = "http://localhost:5000/api";
+const BACKEND_URL = "https://www.ahful.app/api";
 
 async function sendTokenToBackend(token, userId) {
   try {

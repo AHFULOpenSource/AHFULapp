@@ -124,7 +124,7 @@ export function initCompanionAI({ textInput, sendButton, characterImage, voiceSe
         if (status) status.textContent = "Thinking...";
 
         try {
-            const response = await fetch('http://localhost:5000/api/AHFULchats/', {
+            const response = await fetch('https://www.ahful.app/api/AHFULchats/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message }),
