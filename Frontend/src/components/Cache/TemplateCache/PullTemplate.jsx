@@ -19,7 +19,6 @@ export async function pullTemplates() {
       exercises: t.exercises,
     }));
 
-    console.log("Pulled templates with exercises:", metaData);
     store.dispatch(setTemplates(metaData));
   }
   catch (err) {
