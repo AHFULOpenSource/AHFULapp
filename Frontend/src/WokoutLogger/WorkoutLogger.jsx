@@ -270,14 +270,17 @@ export function WorkoutLogger() {
 
       setDailyWorkouts(todaysWorkouts);
 
-      const todaysWorkout = todaysWorkouts.find((w) => {
-        if (!w?.startTime) return false;
-        const workoutDate = new Date(w.startTime * 1000);
-        workoutDate.setHours(0, 0, 0, 0);
-        return workoutDate.getTime() === selectedDay.getTime();
-      });
+      const activeWorkoutId = workoutRef.current?._id || workout?._id || null;
 
-      const activeWorkoutId = workoutRef.current?._id || null;
+      const todaysWorkout =
+        todaysWorkouts.find((w) => w?._id === activeWorkoutId) ||
+        todaysWorkouts.find((w) => {
+          if (!w?.startTime) return false;
+          const workoutDate = new Date(w.startTime * 1000);
+          workoutDate.setHours(0, 0, 0, 0);
+          return workoutDate.getTime() === selectedDay.getTime();
+        });
+
       const workoutId = todaysWorkout?._id || null;
       const tableMatchesWorkout =
         activeWorkoutId &&
