@@ -558,8 +558,6 @@ export function WorkoutLogger() {
   // Append selected pending exercises to the in-progress table
   const addExerciseToWorkout = async (e) => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
-    console.log("Adding exercises...");
-    console.log("workout._id:", workout?._id);
 
     // Ensure workout is loaded before adding exercises
     if (!workout?._id) {
@@ -569,8 +567,6 @@ export function WorkoutLogger() {
     if (!workout?._id) return;
 
     if (pendingExercises.length === 0) return;
-
-    console.log("Pending exercises to add:", pendingExercises);
 
     // Create exercise objects with workout context
     const newExercises = pendingExercises.map((rawName) => ({
