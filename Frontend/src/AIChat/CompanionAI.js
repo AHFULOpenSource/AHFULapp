@@ -60,12 +60,12 @@ export function initCompanionAI({ textInput, sendButton, characterImage, voiceSe
 
         // If muted, skip speech synthesis entirely and keep mouth static (closed)
         if (isMutedRef && isMutedRef.current) {
-            console.log('🔇 Muted - not speaking');
+            // console.log('🔇 Muted - not speaking');
             if (characterImage) characterImage.src = closedMouthImg;
             return;
         }
 
-        console.log('🔊 Speaking:', text.substring(0, 50) + '...');
+        // console.log('🔊 Speaking:', text.substring(0, 50) + '...');
 
         // Cancel any existing speech
         if (speechSynthesis.speaking) {
@@ -124,7 +124,7 @@ export function initCompanionAI({ textInput, sendButton, characterImage, voiceSe
         if (status) status.textContent = "Thinking...";
 
         try {
-            const response = await fetch('http://localhost:5000/api/AHFULchats/', {
+            const response = await fetch('https://www.ahful.app/api/AHFULchats/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message }),

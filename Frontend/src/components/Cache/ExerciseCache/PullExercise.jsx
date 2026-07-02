@@ -14,7 +14,6 @@ export async function pullExercises() {
       secondaryMuscles: e.secondaryMuscles,
       instructions: e.instructions,
     }));
-    console.log("Pulled exercises:", metadata);
     store.dispatch(setExercises(metadata));
   } catch (err) {
     store.dispatch(setError("No exercises found"));

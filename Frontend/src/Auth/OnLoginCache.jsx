@@ -5,7 +5,6 @@ import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout";
 import { pullFood } from "../components/Cache/FoodCache/PullUserFood";
 import { pullFood as pullAllFood } from "../components/Cache/FoodCache/PullFood";
 export function onLoginCache() {
-  console.log("onLoginCache called");
   pullExercises().catch((err) => console.error("Exercise Cache error:", err));
   pullTemplates().catch((err) => console.error("Template Cache error:", err));
   pullWorkouts().catch((err) => console.error("Workout Cache error:", err));

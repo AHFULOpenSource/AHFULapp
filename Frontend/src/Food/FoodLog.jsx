@@ -6,7 +6,7 @@ import "./FoodLog.css";
 import "../siteStyles.css";
 import { toggleFoodFavorite } from "../QueryFunctions.js";
 
-const API_BASE = "http://localhost:5000/api/AHFULfoods";
+const API_BASE = "https://www.ahful.app/api/AHFULfoods";
 
 export function FoodLog() {
     const user = useSelector((state) => state.auth.user);

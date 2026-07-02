@@ -5,7 +5,7 @@ import "./MeasurementLogger.css";
 import "../siteStyles.css";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const API_BASE = "http://localhost:5000/api/AHFULmeasurements";
+const API_BASE = "https://www.ahful.app/api/AHFULmeasurements";
 
 export function MeasurementLogger() {
     const user = useSelector((state) => state.auth.user);

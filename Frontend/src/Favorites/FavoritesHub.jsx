@@ -107,7 +107,7 @@ export function FavoritesHub() {
 
     try {
       const now = Math.floor(Date.now() / 1000);
-      const res = await fetch(`http://localhost:5000/api/AHFULfoods/create`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULfoods/create`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -141,7 +141,7 @@ export function FavoritesHub() {
 
     try {
       const now = Math.floor(Date.now() / 1000);
-      const res = await fetch(`http://localhost:5000/api/AHFULworkouts/create`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULworkouts/create`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -175,7 +175,7 @@ export function FavoritesHub() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULtasks/create/${userId}`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULtasks/create/${userId}`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

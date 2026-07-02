@@ -11,7 +11,7 @@ export function formatTime(seconds) {
 export async function loadEquipment() {
   try {
     const res = await fetch(
-      "http://localhost:5000/api/AHFULexercises/equipments/",
+      "https://www.ahful.app/api/AHFULexercises/equipments/",
       {
         method: "GET",
         mode: "cors",
@@ -56,7 +56,7 @@ export async function loadEquipment() {
 
 export async function loadBodyParts() {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULexercises/bodyparts/", {
+    const res = await fetch("https://www.ahful.app/api/AHFULexercises/bodyparts/", {
       method: "GET",
       mode: "cors",
       credentials: "include",
@@ -99,7 +99,7 @@ export async function loadBodyParts() {
 
 export async function loadTargetMuscles() {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULexercises/muscles/", {
+    const res = await fetch("https://www.ahful.app/api/AHFULexercises/muscles/", {
       method: "GET",
       mode: "cors",
       credentials: "include",
@@ -143,7 +143,7 @@ export async function loadTargetMuscles() {
 // ──  Authentication  functions ─────────────────────────────────────────────────────────
 export async function handle_logout() {
   //Define POST URL for Later
-  const backendPOSTURL = `http://localhost:5000/api/AHFULauth/logout`;
+  const backendPOSTURL = `https://www.ahful.app/api/AHFULauth/logout`;
 
   //Try to Get LocalStorage Cookie for data
   try {
@@ -169,7 +169,7 @@ export async function handle_google_login(response) {
 
   try {
     //URL to send POST to later
-    const backendPOSTURL = `http://localhost:5000/api/AHFULauth/google-login`;
+    const backendPOSTURL = `https://www.ahful.app/api/AHFULauth/google-login`;
 
     //Find ID Token, and maybe details from Google Success Response
     const googleButtonIdToken = response?.credential;
@@ -203,7 +203,7 @@ export async function handle_google_login(response) {
 
 export async function whoami() {
   try {
-    const backendVerificationResponse = await fetch('http://localhost:5000/api/AHFULauth/whoami', {
+    const backendVerificationResponse = await fetch('https://www.ahful.app/api/AHFULauth/whoami', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: {},
@@ -225,7 +225,7 @@ export async function whoami() {
 // ──  Template functions ─────────────────────────────────────────────────────────
 export async function fetchTemplate(userId) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULtemplate/user`,{
+    `https://www.ahful.app/api/AHFULtemplate/user`,{
       credentials: 'include'
     }
   );
@@ -245,7 +245,7 @@ export async function fetchTemplate(userId) {
 export async function createTemplate(templateData) {
   try {
     const res = await fetch(
-      "http://localhost:5000/api/AHFULtemplate/create",
+      "https://www.ahful.app/api/AHFULtemplate/create",
       {
         method: "POST",
         credentials: 'include',
@@ -272,7 +272,7 @@ export async function createTemplate(templateData) {
 
 // ──  User Settings functions ─────────────────────────────────────────────────────────
 export async function getUserSettings() {
-  const foundUserSettingsResponse = await fetch(`http://localhost:5000/api/AHFULuserSettings`, {
+  const foundUserSettingsResponse = await fetch(`https://www.ahful.app/api/AHFULuserSettings`, {
     method: "GET",
     credentials: "include",
   });
@@ -288,7 +288,7 @@ export async function getUserSettings() {
 
 export async function updateUserSettings(userId, settings) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULuserSettings/update/${userId}`,
+    `https://www.ahful.app/api/AHFULuserSettings/update/${userId}`,
     {
       method: "PUT",
       credentials: 'include',
@@ -345,7 +345,7 @@ export async function forwardGeocode(address) {
 
 export async function fetchGym(gymId) {
   try {
-    const res = await fetch(`http://localhost:5000/api/AHFULgyms/${gymId}`, {credentials: 'include'});
+    const res = await fetch(`https://www.ahful.app/api/AHFULgyms/${gymId}`, {credentials: 'include'});
     if (!res.ok) {
       throw new Error(`Failed to fetch gym: ${res.status} ${res.statusText}`);
     }
@@ -357,7 +357,7 @@ export async function fetchGym(gymId) {
 }
 export async function fetchAllGyms() {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULgyms", {
+    const res = await fetch("https://www.ahful.app/api/AHFULgyms", {
       credentials: "include"
     });
     if (!res.ok) {
@@ -381,7 +381,7 @@ export async function fetchAllGyms() {
 
 export async function createGym(gymData) {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULgyms/create", {
+    const res = await fetch("https://www.ahful.app/api/AHFULgyms/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(gymData),
@@ -400,7 +400,7 @@ export async function createGym(gymData) {
 
 export async function deleteGym(gymId) {
   try {
-    const res = await fetch(`http://localhost:5000/api/AHFULgyms/delete/${gymId}`, {
+    const res = await fetch(`https://www.ahful.app/api/AHFULgyms/delete/${gymId}`, {
       method: "DELETE",
       credentials: "include"
     });
@@ -418,7 +418,7 @@ export async function deleteGym(gymId) {
 
 export async function fetchAllPromos() {
   try {
-    const res = await fetch("http://localhost:5000/api/promotions", {
+    const res = await fetch("https://www.ahful.app/api/promotions", {
       credentials: "include"
     });
 
@@ -456,7 +456,7 @@ export async function fetchAllPromos() {
 
 export async function fetchExerciseById(exerciseId) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULexercises/id/${exerciseId}`, {credentials: 'include'}
+    `https://www.ahful.app/api/AHFULexercises/id/${exerciseId}`, {credentials: 'include'}
   );
   if (!res.ok) {
     throw new Error(
@@ -479,7 +479,7 @@ export function getDefaultNewExercise() {
 
 export async function createExercise(exerciseData) {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULexercises/create/", {
+    const res = await fetch("https://www.ahful.app/api/AHFULexercises/create/", {
       method: "POST",
       mode: "cors",
       credentials: 'include',
@@ -505,7 +505,7 @@ export async function createExercise(exerciseData) {
 }
 
 export async function fetchExercisesFromBackend() {
-  const res = await fetch("http://localhost:5000/api/AHFULexercises", {credentials: 'include'});
+  const res = await fetch("https://www.ahful.app/api/AHFULexercises", {credentials: 'include'});
   if (!res.ok) {
     let bodyText = "";
     try {
@@ -530,7 +530,7 @@ export async function fetchExercisesFromBackend() {
 
 export async function searchExercises(searchQuery) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULexercises/search?search=${encodeURIComponent(searchQuery)}`, {credentials: 'include'}
+    `https://www.ahful.app/api/AHFULexercises/search?search=${encodeURIComponent(searchQuery)}`, {credentials: 'include'}
   );
   if (!res.ok) {
     let bodyText = "";
@@ -557,7 +557,7 @@ export async function searchExercises(searchQuery) {
 // ── Workout Functions ───────────────────────────────────────────────────────────
 
 export async function createWorkout(workoutData) {
-  const res = await fetch("http://localhost:5000/api/AHFULworkouts/create", {
+  const res = await fetch("https://www.ahful.app/api/AHFULworkouts/create", {
     method: "POST",
     credentials: 'include',
     headers: { "Content-Type": "application/json" },
@@ -572,7 +572,7 @@ export async function createWorkout(workoutData) {
 
 export async function fetchWorkout(userId) {
   try {
-    const res = await fetch(`http://localhost:5000/api/AHFULworkouts/${userId}`, {credentials: 'include'});
+    const res = await fetch(`https://www.ahful.app/api/AHFULworkouts/${userId}`, {credentials: 'include'});
 
     // Handle empty or not found responses for new users
     if (res.status === 404 || res.status === 204) {
@@ -598,7 +598,7 @@ export async function fetchWorkout(userId) {
 
 export async function fetchWorkoutById(workoutId) {
   try {
-    const res = await fetch(`http://localhost:5000/api/AHFULworkouts/id/${workoutId}`, {credentials: 'include'});
+    const res = await fetch(`https://www.ahful.app/api/AHFULworkouts/id/${workoutId}`, {credentials: 'include'});
 
     if (res.status === 404 || res.status === 204) {
       return null;
@@ -622,7 +622,7 @@ export async function fetchWorkoutById(workoutId) {
 
 export async function updateWorkout(workoutId, data) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULworkouts/update/${workoutId}`,
+    `https://www.ahful.app/api/AHFULworkouts/update/${workoutId}`,
     {
       method: "PUT",
       credentials: 'include',
@@ -642,7 +642,7 @@ export async function updateWorkout(workoutId, data) {
 export async function fetchPersonalExerciseById(userId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULpersonalEx/${userId}`, {credentials: 'include'}
+      `https://www.ahful.app/api/AHFULpersonalEx/${userId}`, {credentials: 'include'}
     );
     if (res.status === 404 || res.status === 204) {
       return [];
@@ -665,7 +665,7 @@ export async function fetchPersonalExerciseById(userId) {
 export async function fetchPersonalExercises(workoutId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULpersonalEx/workout/${workoutId}`, {credentials: 'include'}
+      `https://www.ahful.app/api/AHFULpersonalEx/workout/${workoutId}`, {credentials: 'include'}
     );
 
     // Handle empty or not found responses
@@ -692,7 +692,7 @@ export async function fetchPersonalExercises(workoutId) {
 }
 
 export async function createPersonalExercise(data) {
-  const res = await fetch("http://localhost:5000/api/AHFULpersonalEx/create", {
+  const res = await fetch("https://www.ahful.app/api/AHFULpersonalEx/create", {
     method: "POST",
     credentials: 'include',
     headers: { "Content-Type": "application/json" },
@@ -707,7 +707,7 @@ export async function createPersonalExercise(data) {
 
 export async function updatePersonalExercise(exerciseId, data) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULpersonalEx/update/${exerciseId}`,
+    `https://www.ahful.app/api/AHFULpersonalEx/update/${exerciseId}`,
     {
       method: "PUT",
       credentials: 'include',
@@ -724,7 +724,7 @@ export async function updatePersonalExercise(exerciseId, data) {
 
 export async function deletePersonalExercise(exerciseId) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULpersonalEx/delete/${exerciseId}`,
+    `https://www.ahful.app/api/AHFULpersonalEx/delete/${exerciseId}`,
     {
       method: "DELETE",
       credentials: 'include',
@@ -740,7 +740,7 @@ export async function deletePersonalExercise(exerciseId) {
 //Personal Exercise Data
 export async function createPersonalExercises(peData) {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULpersonalEx/create", {
+    const res = await fetch("https://www.ahful.app/api/AHFULpersonalEx/create", {
       method: "POST",
       credentials: 'include',
       headers: { "Content-Type": "application/json" },
@@ -763,7 +763,7 @@ export async function createPersonalExercises(peData) {
 export async function updatePersonalExercises(peId, peData) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULpersonalEx/update/${peId}`,
+      `https://www.ahful.app/api/AHFULpersonalEx/update/${peId}`,
       {
         method: "PUT",
         credentials: 'include',
@@ -788,7 +788,7 @@ export async function updatePersonalExercises(peId, peData) {
 export async function updateTask(taskId, updates) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULtasks/update/${taskId}`,
+      `https://www.ahful.app/api/AHFULtasks/update/${taskId}`,
       {
         method: "PUT",
         credentials: 'include',
@@ -807,7 +807,7 @@ export async function updateTask(taskId, updates) {
 export async function fetchFood(userId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULfoods/${userId}`,
+      `https://www.ahful.app/api/AHFULfoods/${userId}`,
       {
         method: "GET",
         credentials: "include",
@@ -838,7 +838,7 @@ export async function fetchFood(userId) {
 }
 export async function fetchAllFood() {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULfoods", {
+    const res = await fetch("https://www.ahful.app/api/AHFULfoods", {
       method: "GET",
       credentials: "include",
     });
@@ -862,7 +862,7 @@ export async function fetchAllFood() {
 export async function toggleWorkoutFavorite(workoutId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULworkouts/${workoutId}/favorite`,
+      `https://www.ahful.app/api/AHFULworkouts/${workoutId}/favorite`,
       {
         method: "PUT",
         mode: "cors",
@@ -889,7 +889,7 @@ export async function toggleWorkoutFavorite(workoutId) {
 export async function getWorkoutFavorites(userId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULworkouts/favorites/${userId}`,
+      `https://www.ahful.app/api/AHFULworkouts/favorites/${userId}`,
       {
         method: "GET",
         mode: "cors",
@@ -917,7 +917,7 @@ export async function getWorkoutFavorites(userId) {
 export async function toggleFoodFavorite(foodId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULfoods/${foodId}/favorite`,
+      `https://www.ahful.app/api/AHFULfoods/${foodId}/favorite`,
       {
         method: "PUT",
         mode: "cors",
@@ -934,7 +934,6 @@ export async function toggleFoodFavorite(foodId) {
     }
 
     const data = await res.json();
-    console.log("toggleFoodFavorite response:", data);
     const food = data.food || data;
     return { data: food, error: null };
   } catch (err) {
@@ -946,7 +945,7 @@ export async function toggleFoodFavorite(foodId) {
 export async function getFoodFavorites(userId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULfoods/favorites/${userId}`,
+      `https://www.ahful.app/api/AHFULfoods/favorites/${userId}`,
       {
         method: "GET",
         mode: "cors",
@@ -974,7 +973,7 @@ export async function getFoodFavorites(userId) {
 export async function toggleTaskFavorite(taskId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULtasks/${taskId}/favorite`,
+      `https://www.ahful.app/api/AHFULtasks/${taskId}/favorite`,
       {
         method: "PUT",
         mode: "cors",
@@ -1001,7 +1000,7 @@ export async function toggleTaskFavorite(taskId) {
 export async function getTaskFavorites(userId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULtasks/favorites/${userId}`,
+      `https://www.ahful.app/api/AHFULtasks/favorites/${userId}`,
       {
         method: "GET",
         mode: "cors",

@@ -96,8 +96,8 @@ def create_app():
 
     # Enable CORS - includes CloudFront production URL and custom domain
     allowed_origins = [
-        'http://localhost:5173',
-        'http://localhost:5000'
+        'https://ahful.app',
+        'https://www.ahful.app'
     ]
 
     CORS(app, origins=allowed_origins, supports_credentials=True)
