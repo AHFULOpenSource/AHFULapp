@@ -118,6 +118,7 @@ export function WorkoutLogger() {
 
   // ─── Refs ───────────────────────────────────────────────────────────────────
   const searchTimeoutRef = useRef(null);
+  const autoCreateWorkoutDateRef = useRef(null);
 
   // ─── Use Effects ───────────────────────────────────────────────────────────────────
 
@@ -134,73 +135,84 @@ export function WorkoutLogger() {
     return () => clearInterval(interval);
   }, [isRunning]);
 
-  // ─── Load or Create Today's Workout be deafult and update when selectedDate or workout changes ─────────────────────────────────────
+  // ─── Load Today's Workout by date ────────────────────────────────
   useEffect(() => {
-    // Don't proceed if user isn't logged in
-    if (!userAuthenticated) {
-      setWorkoutLoading(false);
-      return;
-    }
+    let cancelled = false;
 
-
-    // Calculate today's date range (midnight to midnight)
-    const today = selectedDate ? new Date(selectedDate) : new Date();
-    today.setHours(0, 0, 0, 0);
-    const currentDateUnix = Math.floor(today.getTime() / 1000);
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    const tomorrowUnix = Math.floor(tomorrow.getTime() / 1000);
-
-    console.log("Loading workouts for date:", selectedDate, "Unix range:", currentDateUnix, "-", tomorrowUnix);
-
-    // Filter to today's workouts only
-    const todaysWorkouts = cachedWorkouts.filter(
-      (w) => w.startTime >= currentDateUnix && w.startTime < tomorrowUnix,
-    );
-
-    setDailyWorkouts(todaysWorkouts);
-    console.log("Found workouts for today:", todaysWorkouts);
-
-    const todaysWorkout = todaysWorkouts.find((w) => {
-      if (!w?.startTime) return false;
-      const workoutDate = new Date(w.startTime * 1000)
-      workoutDate.setHours(0, 0, 0, 0);
-      console.log("Workout startTime:", w.startTime, "converted to date:", workoutDate);
-      const selectedDateComparison = new Date(selectedDate);
-      selectedDateComparison.setHours(0, 0, 0, 0);
-      console.log("Comparing workout date:", workoutDate, "with selected date:", selectedDateComparison);
-      return workoutDate.getTime() === selectedDateComparison.getTime();
-    });
-
-    console.log("Found today's workout:", todaysWorkout);
-    if (todaysWorkout && todaysWorkouts.length < 2) {
-      setWorkout(todaysWorkout);
-      setWorkoutTitle(todaysWorkout.title || "");
-      setSelectedGymId(todaysWorkout.gym_id || "");
-
-      if (exercisesInProgressTable.length > 0) {
-        //Skip Loading personal exercises if already there.
+    const loadWorkoutForDay = async () => {
+      if (!userAuthenticated) {
+        setWorkoutLoading(false);
         return;
-      }else{
-        // Load personal exercises for this workout from cache
-        const workoutPersonalExercises =
-          cachedPersonalExercises?.filter(
-            (pe) => pe?.workout_id === todaysWorkout._id,
-          ) || [];
-
-        setExercisesInProgressTable(workoutPersonalExercises);
       }
 
-    }else if (todaysWorkouts.length === 0) {
-      handleCreateWorkout();
+      const selectedDay = selectedDate ? new Date(selectedDate) : new Date();
+      selectedDay.setHours(0, 0, 0, 0);
+      const selectedDayKey = selectedDay.toISOString();
+      const currentDateUnix = Math.floor(selectedDay.getTime() / 1000);
 
-    } 
+      const tomorrow = new Date(selectedDay);
+      tomorrow.setDate(selectedDay.getDate() + 1);
+      const tomorrowUnix = Math.floor(tomorrow.getTime() / 1000);
 
-    console.log("Workout loaded for date:", selectedDate, "Workout:", todaysWorkout);
-    setWorkoutLoading(false);
+      const todaysWorkouts = Array.isArray(cachedWorkouts)
+        ? cachedWorkouts.filter(
+            (w) => w?.startTime >= currentDateUnix && w?.startTime < tomorrowUnix,
+          )
+        : [];
 
-  }, [ selectedDate]);
+      setDailyWorkouts(todaysWorkouts);
+
+      const todaysWorkout = todaysWorkouts.find((w) => {
+        if (!w?.startTime) return false;
+        const workoutDate = new Date(w.startTime * 1000);
+        workoutDate.setHours(0, 0, 0, 0);
+        return workoutDate.getTime() === selectedDay.getTime();
+      });
+
+      const workoutId = todaysWorkout?._id || null;
+      const tableMatchesWorkout =
+        workoutId &&
+        exercisesInProgressTable.length > 0 &&
+        exercisesInProgressTable.every((exercise) => exercise?.workout_id === workoutId);
+
+      try {
+        if (cancelled) return;
+
+        if (todaysWorkout) {
+          setWorkout(todaysWorkout);
+          setWorkoutTitle(todaysWorkout.title || "");
+          setSelectedGymId(todaysWorkout.gym_id || "");
+
+          if (!tableMatchesWorkout) {
+            const workoutPersonalExercises =
+              cachedPersonalExercises?.filter(
+                (pe) => pe?.workout_id === todaysWorkout._id,
+              ) || [];
+            setExercisesInProgressTable(workoutPersonalExercises);
+          }
+
+          autoCreateWorkoutDateRef.current = null;
+          return;
+        }
+
+        setWorkout(null);
+        setWorkoutTitle("");
+        setSelectedGymId("");
+        setExercisesInProgressTable([]);
+        autoCreateWorkoutDateRef.current = null;
+      } finally {
+        if (!cancelled) {
+          setWorkoutLoading(false);
+        }
+      }
+    };
+
+    loadWorkoutForDay();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDate, userAuthenticated, cachedWorkouts, cachedPersonalExercises]);
 
   // ─── Load Exercise Options on Mount ──────────────────────────────────────────
   useEffect(() => {
@@ -234,18 +246,11 @@ export function WorkoutLogger() {
     (async () => {
       const res = await fetchAllGyms();
       if (!mounted) return;
-      if (res && res.data) setGymOptions(res.data);
-      if (res && res.error) setGymError(res.error);
-      setAvailableGyms(res || []);
+      setAvailableGyms(Array.isArray(res) ? res : []);
     })();
 
     //Pull in cached exercises from Redux store to avoid unnecessary DB calls
-    try {
-      const list = cachedExercises;
-      setExercises(list);
-    } catch (err) {
-      console.error("Failed to fetch exercises:", err);
-    }
+    setExercises(Array.isArray(cachedExercises) ? cachedExercises : []);
 
 
     return () => {
@@ -262,12 +267,19 @@ export function WorkoutLogger() {
     return new Date(unix * 1000).toLocaleDateString("en-US");
   };
 
-  const handleToggleFavorite = async () => {
-    if (!workout._id) return;
+  const handleToggleFavorite = async (workoutId) => {
+    if (!workoutId) return;
     try {
-      const { data, error } = await toggleWorkoutFavorite(workout._id);
+      const { error } = await toggleWorkoutFavorite(workoutId);
       if (!error) {
-        setWorkout((prev) => ({ ...prev, favorite: !prev.favorite }));
+        setDailyWorkouts((prev) =>
+          prev.map((item) =>
+            item._id === workoutId ? { ...item, favorite: !item.favorite } : item,
+          ),
+        );
+        setWorkout((prev) =>
+          prev && prev._id === workoutId ? { ...prev, favorite: !prev.favorite } : prev,
+        );
       } else {
         console.error("Failed to toggle favorite:", error);
       }
@@ -386,10 +398,32 @@ export function WorkoutLogger() {
     loadNames();
   }, [exercisesInProgressTable]);
 
+  // Keep the table aligned with whichever workout is currently active.
+  useEffect(() => {
+    if (!workout?._id) {
+      setExercisesInProgressTable([]);
+      setPersonalExToRemove({});
+      return;
+    }
+
+    const workoutPersonalExercises =
+      cachedPersonalExercises?.filter(
+        (pe) => pe?.workout_id === workout._id,
+      ) || [];
+
+    setExercisesInProgressTable(workoutPersonalExercises);
+    setPersonalExToRemove({});
+  }, [workout?._id, cachedPersonalExercises]);
+
   // ─── Submit Workout ───────────────────────────────────────────────────────────
   // Saves all exercise changes and updates workout end time
   const handleSubmit = async () => {
     console.log("Submitting workout...");
+
+    if (!workout?._id) {
+      alert("Please load or create a workout before saving.");
+      return;
+    }
 
     // Alert if reps or sets are negative numbers
 
@@ -406,7 +440,7 @@ export function WorkoutLogger() {
     try {
       // --- CREATE + UPDATE REQUESTS ---
       const saveRequests = exercisesInProgressTable.map((ex) => {
-        const isNew = ex._id === null;
+        const isNew = !ex._id;
 
         const peData = isNew
           ? {
@@ -452,9 +486,9 @@ export function WorkoutLogger() {
 
       // --- UPDATE WORKOUT endTime ---
       const workoutUpdatePayload = {
-        endTime: workout.startTime + time, // your endTime variable
-        startTime: workout.startTime, // keep original startTime
-        title: workoutTitle, // keep original title
+        endTime: (workout.startTime || 0) + time,
+        startTime: workout.startTime,
+        title: workoutTitle,
         gym_id: selectedGymId,
       };
 
@@ -493,12 +527,14 @@ export function WorkoutLogger() {
   const addExerciseToWorkout = async (e) => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
     console.log("Adding exercises...");
-    console.log("workout._id:", workout._id);
+    console.log("workout._id:", workout?._id);
 
     // Ensure workout is loaded before adding exercises
-    if (workout._id == "") {
-      handleCreateWorkout();
+    if (!workout?._id) {
+      await handleCreateWorkout(selectedDate ? new Date(selectedDate) : new Date());
     }
+
+    if (!workout?._id) return;
 
     if (pendingExercises.length === 0) return;
 
@@ -508,7 +544,7 @@ export function WorkoutLogger() {
     const newExercises = pendingExercises.map((rawName) => ({
       exercise_id: rawName,
       workout_id: workout._id,
-      user_id: user._id,
+      user_id: user?._id,
       complete: false,
       reps: 0,
       sets: 0,
@@ -528,7 +564,8 @@ export function WorkoutLogger() {
 
     if (!searchQuery) {
       setSearchTerm(exerciseName);
-      fetchExercises(exerciseName);
+      setExercises(Array.isArray(cachedExercises) ? cachedExercises : []);
+      return;
     }
 
     setExerciseLoading(true);
@@ -589,11 +626,17 @@ export function WorkoutLogger() {
     }
   }
 
-  async function handleCreateWorkout() {
-
+  async function handleCreateWorkout(baseDate) {
     try {
-      const today = new Date();
-      const startUnix = Math.floor(today.getTime() / 1000);
+      if (!user?._id) return;
+
+      const workoutDate = baseDate
+        ? new Date(baseDate)
+        : selectedDate
+          ? new Date(selectedDate)
+          : new Date();
+      workoutDate.setHours(0, 0, 0, 0);
+      const startUnix = Math.floor(workoutDate.getTime() / 1000);
 
       // Use selected gym (or fall back to user's home gym if available)
       const gymId = selectedGymId || user?.settings?.homeGymId || "000000000000000000000000";
@@ -602,7 +645,7 @@ export function WorkoutLogger() {
         endTime: startUnix,
         gym_id: gymId,
         startTime: startUnix,
-        title: newWorkoutName.trim() || "Workout " + today.toLocaleDateString(),
+        title: newWorkoutName.trim() || "Workout " + workoutDate.toLocaleDateString(),
         user_id: user._id,
       };
 
@@ -620,8 +663,9 @@ export function WorkoutLogger() {
       setWorkoutTitle(persisted.title);
       setSelectedGymId(persisted.gym_id);
       setTime(0);
+      setExercisesInProgressTable([]);
 
-      pullWorkouts(); // Refresh cached workouts in Redux
+      await pullWorkouts(); // Refresh cached workouts in Redux
       resetWorkoutPicker();
     } catch (err) {
       console.error("Error creating workout:", err);
@@ -685,7 +729,12 @@ export function WorkoutLogger() {
               </option>
             ))}
           </select>
-          <button id="create-new-workout-button" className="create-workout-button" disabled={!newWorkoutName.trim()} onClick={handleCreateWorkout}>
+          <button
+            id="create-new-workout-button"
+            className="create-workout-button"
+            disabled={!newWorkoutName.trim()}
+            onClick={() => handleCreateWorkout(selectedDate ? new Date(selectedDate) : new Date())}
+          >
             Create New Workout
           </button>
         </div>
@@ -702,7 +751,7 @@ export function WorkoutLogger() {
           </div>
 
           <div className="workout-scroll-container">
-            <p>Showing workout for {selectedDate.slice(0, 10)}</p>
+            <p>Showing workout for {selectedDate?.slice(0, 10) || "selected date"}</p>
 
             {(!dailyWorkouts ||
               (showFavoritesOnly
@@ -744,14 +793,7 @@ export function WorkoutLogger() {
                   <button
                     className="workout-favorite-btn"
                     onClick={() => {
-                      handleToggleFavorite();
-                      setDailyWorkouts(
-                        dailyWorkouts.map((wk) =>
-                          wk._id === w._id
-                            ? { ...wk, favorite: !wk.favorite }
-                            : wk,
-                        ),
-                      );
+                      handleToggleFavorite(w._id);
                     }}
                     title={
                       w.favorite ? "Remove from favorites" : "Add to favorites"
