@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import "./WorkoutLogger.css";
 import "../siteStyles.css";
@@ -26,6 +26,7 @@ import {
 import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout.jsx";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
 import { Loading } from "../Loading.jsx";
+import { useAutosave } from "./useAutosave.js";
 
 /**
  * Logger - Main workout tracking page
@@ -112,13 +113,121 @@ export function WorkoutLogger() {
   const [newExercise, setNewExercise] = useState(getDefaultNewExercise());
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("idle");
 
   // ─── Favorite Filter State ───────────────────────────────────────────────────
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // ─── Refs ───────────────────────────────────────────────────────────────────
   const searchTimeoutRef = useRef(null);
-  const autoCreateWorkoutDateRef = useRef(null);
+  const workoutRef = useRef(workout);
+  const workoutTitleRef = useRef(workoutTitle);
+  const selectedGymIdRef = useRef(selectedGymId);
+  const exercisesInProgressTableRef = useRef(exercisesInProgressTable);
+  const personalExToRemoveRef = useRef(personalExToRemove);
+  const timeRef = useRef(time);
+
+  useEffect(() => {
+    workoutRef.current = workout;
+    workoutTitleRef.current = workoutTitle;
+    selectedGymIdRef.current = selectedGymId;
+    exercisesInProgressTableRef.current = exercisesInProgressTable;
+    personalExToRemoveRef.current = personalExToRemove;
+    timeRef.current = time;
+  }, [workout, workoutTitle, selectedGymId, exercisesInProgressTable, personalExToRemove, time]);
+
+  const persistWorkout = useCallback(async () => {
+    const activeWorkout = workoutRef.current;
+
+    if (!activeWorkout?._id) {
+      return { ok: false, reason: "no-workout" };
+    }
+
+    setSaveStatus("saving");
+
+    try {
+      const currentExercises = exercisesInProgressTableRef.current;
+
+      const invalid = currentExercises.some((ex) => ex.sets < 0 || ex.reps < 0);
+      if (invalid) {
+        setSaveStatus("error");
+        return { ok: false, reason: "invalid-values" };
+      }
+
+      const saveRequests = currentExercises.map((ex) => {
+        const isNew = !ex._id;
+
+        const peData = isNew
+          ? {
+              complete: ex.complete,
+              distance: ex.distance,
+              duration: ex.duration,
+              exercise_id: ex.exercise_id,
+              reps: ex.reps,
+              sets: ex.sets,
+              user_id: ex.user_id,
+              weight: ex.weight,
+              workout_id: ex.workout_id,
+            }
+          : {
+              complete: ex.complete,
+              distance: ex.distance,
+              duration: ex.duration,
+              reps: ex.reps,
+              sets: ex.sets,
+              weight: ex.weight,
+            };
+
+        return isNew ? createPersonalExercise(peData) : updatePersonalExercise(ex._id, peData);
+      });
+
+      const deleteRequests = Object.values(personalExToRemoveRef.current)
+        .filter((ex) => ex._id)
+        .map((ex) => deletePersonalExercise(ex._id));
+
+      const responses = await Promise.all([...saveRequests, ...deleteRequests]);
+      const failed = responses.filter((response) => response == null || response.error);
+
+      if (failed.length > 0) {
+        setSaveStatus("error");
+        console.error("Some operations failed:", failed);
+        return { ok: false, failed };
+      }
+
+      const workoutUpdatePayload = {
+        endTime: (activeWorkout.startTime || 0) + timeRef.current,
+        startTime: activeWorkout.startTime,
+        title: workoutTitleRef.current,
+        gym_id: selectedGymIdRef.current,
+      };
+
+      const workoutRes = await updateWorkout(activeWorkout._id, workoutUpdatePayload);
+
+      if (workoutRes?.error) {
+        setSaveStatus("error");
+        console.error("Failed to update workout:", workoutRes.error);
+        return { ok: false, error: workoutRes.error };
+      }
+
+      await pullWorkouts();
+      await pullPersonalExercises();
+      setSaveStatus("saved");
+      return { ok: true };
+    } catch (err) {
+      setSaveStatus("error");
+      console.error("Error submitting workout:", err);
+      return { ok: false, error: err };
+    }
+  }, []);
+
+  const { trigger: triggerWorkoutAutosave, flush: flushWorkoutAutosave } = useAutosave(
+    persistWorkout,
+  );
+
+  const queueWorkoutAutosave = () => {
+    setSaveStatus((current) => (current === "saving" ? current : "pending"));
+    triggerWorkoutAutosave();
+  };
 
   // ─── Use Effects ───────────────────────────────────────────────────────────────────
 
@@ -147,7 +256,6 @@ export function WorkoutLogger() {
 
       const selectedDay = selectedDate ? new Date(selectedDate) : new Date();
       selectedDay.setHours(0, 0, 0, 0);
-      const selectedDayKey = selectedDay.toISOString();
       const currentDateUnix = Math.floor(selectedDay.getTime() / 1000);
 
       const tomorrow = new Date(selectedDay);
@@ -169,9 +277,11 @@ export function WorkoutLogger() {
         return workoutDate.getTime() === selectedDay.getTime();
       });
 
+      const activeWorkoutId = workoutRef.current?._id || null;
       const workoutId = todaysWorkout?._id || null;
       const tableMatchesWorkout =
-        workoutId &&
+        activeWorkoutId &&
+        workoutId === activeWorkoutId &&
         exercisesInProgressTable.length > 0 &&
         exercisesInProgressTable.every((exercise) => exercise?.workout_id === workoutId);
 
@@ -182,6 +292,7 @@ export function WorkoutLogger() {
           setWorkout(todaysWorkout);
           setWorkoutTitle(todaysWorkout.title || "");
           setSelectedGymId(todaysWorkout.gym_id || "");
+          setSaveStatus("idle");
 
           if (!tableMatchesWorkout) {
             const workoutPersonalExercises =
@@ -191,15 +302,15 @@ export function WorkoutLogger() {
             setExercisesInProgressTable(workoutPersonalExercises);
           }
 
-          autoCreateWorkoutDateRef.current = null;
           return;
         }
 
+        await flushWorkoutAutosave();
         setWorkout(null);
         setWorkoutTitle("");
         setSelectedGymId("");
         setExercisesInProgressTable([]);
-        autoCreateWorkoutDateRef.current = null;
+        setSaveStatus("idle");
       } finally {
         if (!cancelled) {
           setWorkoutLoading(false);
@@ -212,7 +323,7 @@ export function WorkoutLogger() {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, userAuthenticated, cachedWorkouts, cachedPersonalExercises]);
+  }, [selectedDate, userAuthenticated, cachedWorkouts, cachedPersonalExercises, flushWorkoutAutosave]);
 
   // ─── Load Exercise Options on Mount ──────────────────────────────────────────
   useEffect(() => {
@@ -345,6 +456,7 @@ export function WorkoutLogger() {
       };
       return updated;
     });
+    queueWorkoutAutosave();
   };
 
   // ─── Update Exercise Field (reps, sets, weight) ───────────────────────────────
@@ -354,6 +466,7 @@ export function WorkoutLogger() {
       updated[index] = { ...updated[index], [field]: value };
       return updated;
     });
+    queueWorkoutAutosave();
   };
 
   // ─── Load Exercise Names for Display ─────────────────────────────────────────
@@ -415,97 +528,12 @@ export function WorkoutLogger() {
     setPersonalExToRemove({});
   }, [workout?._id, cachedPersonalExercises]);
 
-  // ─── Submit Workout ───────────────────────────────────────────────────────────
-  // Saves all exercise changes and updates workout end time
-  const handleSubmit = async () => {
-    console.log("Submitting workout...");
+  const handleManualSave = async () => {
+    const saved = await flushWorkoutAutosave();
 
-    if (!workout?._id) {
-      alert("Please load or create a workout before saving.");
-      return;
+    if (!saved) {
+      await persistWorkout();
     }
-
-    // Alert if reps or sets are negative numbers
-
-    const invalid = exercisesInProgressTable.some(
-      (ex) => ex.sets < 0 || ex.reps < 0,
-    );
-
-    if (invalid) {
-      alert("Please make sure all reps and sets are not negative numbers.");
-
-      return;
-    }
-
-    try {
-      // --- CREATE + UPDATE REQUESTS ---
-      const saveRequests = exercisesInProgressTable.map((ex) => {
-        const isNew = !ex._id;
-
-        const peData = isNew
-          ? {
-              complete: ex.complete,
-              distance: ex.distance,
-              duration: ex.duration,
-              exercise_id: ex.exercise_id,
-              reps: ex.reps,
-              sets: ex.sets,
-              user_id: ex.user_id,
-              weight: ex.weight,
-              workout_id: ex.workout_id,
-            }
-          : {
-              complete: ex.complete,
-              distance: ex.distance,
-              duration: ex.duration,
-              reps: ex.reps,
-              sets: ex.sets,
-              weight: ex.weight,
-            };
-
-        return isNew
-          ? createPersonalExercise(peData)
-          : updatePersonalExercise(ex._id, peData);
-      });
-
-      // --- DELETE REQUESTS ---
-      const deleteRequests = Object.values(personalExToRemove)
-        .filter((ex) => ex._id) // only delete DB-backed exercises
-        .map((ex) => deletePersonalExercise(ex._id));
-
-      // --- RUN EVERYTHING IN PARALLEL ---
-      const responses = await Promise.all([...saveRequests, ...deleteRequests]);
-
-      const failed = responses.filter((r) => r == null || r.error);
-
-      if (failed.length > 0) {
-        console.error("Some operations failed:", failed);
-      } else {
-        console.log("Workout saved successfully!");
-      }
-
-      // --- UPDATE WORKOUT endTime ---
-      const workoutUpdatePayload = {
-        endTime: (workout.startTime || 0) + time,
-        startTime: workout.startTime,
-        title: workoutTitle,
-        gym_id: selectedGymId,
-      };
-
-      const workoutRes = await updateWorkout(workout._id, workoutUpdatePayload);
-
-      if (workoutRes.error) {
-        console.error("Failed to update workout:", workoutRes.error);
-      } else {
-        console.log("Workout updated successfully!");
-      }
-
-      alert("Workout has been submitted and saved!");
-    } catch (err) {
-      console.error("Error submitting workout:", err);
-    }
-    await pullWorkouts();
-    await pullPersonalExercises();
   };
 
   // ─── Remove Exercise from Workout ─────────────────────────────────────────────
@@ -521,6 +549,7 @@ export function WorkoutLogger() {
       }));
       return prev.filter((_, i) => i !== index);
     });
+    queueWorkoutAutosave();
   };
 
   // Append selected pending exercises to the in-progress table
@@ -556,6 +585,7 @@ export function WorkoutLogger() {
     setExercisesInProgressTable((prev) => [...prev, ...newExercises]);
     setPendingExercises([]);
     setExerciseName("");
+    queueWorkoutAutosave();
   };
 
   // ─── Search Exercises ─────────────────────────────────────────────────────────
@@ -599,6 +629,8 @@ export function WorkoutLogger() {
   async function handleLoadWorkout() {
     if (!selectedWorkoutIdForPicker) return;
 
+    await flushWorkoutAutosave();
+
     try {
       const selected = dailyWorkouts.find(
         (w) => w._id === selectedWorkoutIdForPicker,
@@ -619,6 +651,8 @@ export function WorkoutLogger() {
       } else {
         setTime(0);
       }
+
+      setSaveStatus("idle");
 
       resetWorkoutPicker();
     } catch (err) {
@@ -664,6 +698,7 @@ export function WorkoutLogger() {
       setSelectedGymId(persisted.gym_id);
       setTime(0);
       setExercisesInProgressTable([]);
+      setSaveStatus("idle");
 
       await pullWorkouts(); // Refresh cached workouts in Redux
       resetWorkoutPicker();
@@ -675,6 +710,16 @@ export function WorkoutLogger() {
   const toggleTimer = () => {
     setIsRunning((r) => !r);
   };
+
+  const saveButtonLabel = {
+    idle: "Save",
+    pending: "Save Now",
+    saving: "Saving…",
+    saved: "Saved ✓",
+    error: "Retry Save",
+  }[saveStatus];
+
+  const saveButtonClass = `workout-submit-button save-status-${saveStatus}`;
 
   // ─── Loading State ────────────────────────────────────────────────────────────
   if (workoutLoading) {
@@ -830,6 +875,7 @@ export function WorkoutLogger() {
                     value={workoutTitle}
                     onChange={(e) => {
                       setWorkoutTitle(e.target.value);
+                      queueWorkoutAutosave();
 
                       const el = e.target;
 
@@ -854,7 +900,10 @@ export function WorkoutLogger() {
 
                 <select
                   value={selectedGymId}
-                  onChange={(e) => setSelectedGymId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedGymId(e.target.value);
+                    queueWorkoutAutosave();
+                  }}
                   style={{
                     width: "100%",
                     padding: "8px 10px",
@@ -979,10 +1028,11 @@ export function WorkoutLogger() {
               <div className="workout-actions">
                 <div className="workout-actions-right-side">
                   <button
-                    className="workout-submit-button"
-                    onClick={handleSubmit}
+                    className={saveButtonClass}
+                    onClick={handleManualSave}
+                    disabled={saveStatus === "saving"}
                   >
-                    Save
+                    {saveButtonLabel}
                   </button>
                 </div>
               </div>
