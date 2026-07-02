@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 
-export function useAutosave(saveFn, { debounceMs = 800, maxWaitMs = 5000 } = {}) {
+export function useAutosave(saveFn, { debounceMs = 2000, maxWaitMs = 10000 } = {}) {
   const timeoutRef = useRef(null);
   const maxTimeoutRef = useRef(null);
   const pendingRef = useRef(false);
