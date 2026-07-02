@@ -18,7 +18,6 @@ export async function pullFood() {
       type: e.type,
       time: e.time
     }));
-    console.log("Pulled food:", metadata);
     store.dispatch(setFood(metadata));
   } catch (err) {
     store.dispatch(setError("No food found"));
