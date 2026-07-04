@@ -2247,7 +2247,7 @@ swaggerConfig = {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "food": { "type": "object", "example": "food": {"_id": "6a4218c748ed2d5569c38a24","calsPerServing": 293,"favorite": true,"name": "Pillsbury Grands, Buttermilk Biscuits, refrigerated dough","servings": 2,"time": 1782716615,"type": "Dinner","user_id": "69e521f97f080d90be872734"},},
+                    "food": { "type": "object", "example": {"_id": "6a4218c748ed2d5569c38a24","calsPerServing": 293,"favorite": True,"name": "Pillsbury Grands, Buttermilk Biscuits, refrigerated dough","servings": 2,"time": 1782716615,"type": "Dinner","user_id": "69e521f97f080d90be872734"}},
                     "message": { "type": "string", "example": "Food created" }
                   },
                   "required": ["food_id", "message"]
