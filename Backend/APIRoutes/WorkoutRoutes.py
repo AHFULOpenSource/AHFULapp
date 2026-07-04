@@ -109,7 +109,7 @@ def delete_workout(workout_id):
         response, error = WorkoutDriver.delete_workout(workout_id)
         if error:
             return jsonify({"error": error}), 400
-        return jsonify({"message": "Workout Deleted. No personal exercises found for workout.", "workout_id": response}), 200
+        return jsonify({"ok": True, "message": "Workout Deleted. No personal exercises found for workout.", "workout_id": response}), 200
 
     else:
         for personalEx in personalExercises:
@@ -120,7 +120,7 @@ def delete_workout(workout_id):
         response, error = WorkoutDriver.delete_workout(workout_id)
         if error:
             return jsonify({"error": error}), 400
-        return jsonify({"message": "Workout and related Personal Exercises deleted", "workout_id": response}), 200
+        return jsonify({"ok": True, "message": "Workout and related Personal Exercises deleted", "workout_id": response}), 200
 
 # ── GET workout streak for user ──────────────────────────────────────
 @workoutRouteBlueprint.route("/streak/<user_id>", methods=["GET"])
