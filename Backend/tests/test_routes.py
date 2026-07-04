@@ -483,8 +483,6 @@ def test_create_delete_gym():
     notes = "test"
     response_id, res_err = GymDriver.create_gym(user_id, name, address, type, cost, link, lat, long, notes)
 
-    print("Response: ", response_id)
-
     if res_err is not None:
         print("14.  There was a testing error on Test 14 Object was: ", response_id, "Error Was: ", res_err)
 
