@@ -637,6 +637,21 @@ export async function updateWorkout(workoutId, data) {
   return res.json();
 }
 
+export async function deleteWorkout(workoutId) {
+  const backendResponse = await fetch(
+    `http://localhost:5000/api/AHFULworkouts/delete/${workoutId}`,
+    {
+      method: "DELETE",
+      credentials: 'include',
+    }
+  );
+  if (!backendResponse.ok) {
+    const err = await backendResponse.text();
+    throw new Error(`Failed to delete workout: ${backendResponse.status} ${err}`);
+  }
+  return backendResponse.json();
+}
+
 // ── Personal Exercise Functions ─────────────────────────────────────────────────
 
 export async function fetchPersonalExerciseById(userId) {
