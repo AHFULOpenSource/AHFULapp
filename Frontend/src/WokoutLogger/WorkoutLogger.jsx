@@ -746,7 +746,6 @@ export function WorkoutLogger() {
   // ─── Main Render ─────────────────────────────────────────────────────────────
   return (
     <div className="page-layout">
-      <CalendarButton />
 
       <div className="workout-picker-panel">
       <div className="workout-picker-inline">
