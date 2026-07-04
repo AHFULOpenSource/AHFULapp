@@ -1193,9 +1193,6 @@ def test_find_user_by_id():
     bad_oid = "699d0093795741a59fe1361"
     user, err = UserDriver.get_user_by_id(bad_oid)
 
-    if err is not None:
-        print("29.  There was a testing error on Test 29 Object was: ", user, "Error Was: ", err)
-
     # Expected
     bad_err_code = "Invalid user_id format; must be a 24-hex string"
     
@@ -1206,9 +1203,6 @@ def test_find_user_by_id():
     # Give an invalid user_id
     inv_oid = "000000000000000000000000"
     user, err = UserDriver.get_user_by_id(inv_oid)
-
-    if err is not None:
-        print("30.  There was a testing error on Test 30 Object was: ", user, "Error Was: ", err)
 
     # Expected
     inv_err_code = "User not found"
@@ -1239,9 +1233,6 @@ def test_find_user_by_email():
     # Give an empty email
     inv_email = ""
     user, err = UserDriver.get_user_by_email(inv_email)
-
-    if err is not None:
-        print("32.  There was a testing error on Test 32 Object was: ", user, "Error Was: ", err)
 
     # Expected
     inv_err_code = "User not found"
@@ -1468,9 +1459,6 @@ def test_find_workout_by_id():
     bad_oid = "69af2a4598d0f4227b25ed7"
     ex, err = WorkoutDriver.get_workout_by_id(bad_oid)
 
-    if err is not None:
-        print("34.  There was a testing error on Test 34 Object was: ", ex, "Error Was: ", err)
-
     # Expected
     bad_err_code = "Invalid workout_id format; must be a 24-hex string"
     
@@ -1481,9 +1469,6 @@ def test_find_workout_by_id():
     # Give an invalid _id
     inv_oid = "000000000000000000000000"
     ex, err = WorkoutDriver.get_workout_by_id(inv_oid)
-
-    if err is not None:
-        print("35.  There was a testing error on Test 35 Object was: ", ex, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Workout not found"
@@ -1519,9 +1504,6 @@ def test_find_workout_by_user():
     bad_oid = "699d0093795741a59fe1361"
     exs, err = WorkoutDriver.get_workouts_by_user(bad_oid)
 
-    if err is not None:
-        print("37.  There was a testing error on Test 37 Object was: ", exs, "Error Was: ", err)
-
     # Expected
     bad_err_code = "Invalid user_id format; must be a 24-hex string"
     
@@ -1532,9 +1514,6 @@ def test_find_workout_by_user():
     # Give an invalid _id
     inv_oid = "000000000000000000000000"
     exs, err = WorkoutDriver.get_workouts_by_user(inv_oid)
-
-    if err is not None:
-        print("38.  There was a testing error on Test 38 Object was: ", exs, "Error Was: ", err)
 
     # Expected
     inv_err_code = "Workout not found"
