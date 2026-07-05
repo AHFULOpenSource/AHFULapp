@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import "./WorkoutLogger.css";
 import "../siteStyles.css";
-import { CalendarButton } from "../Calendar/CalendarButton.jsx";
 import {
   getDefaultNewExercise,
   formatTime as formatTimeFn,

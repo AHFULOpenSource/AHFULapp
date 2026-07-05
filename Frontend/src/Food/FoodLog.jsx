@@ -1,4 +1,4 @@
-//@author Jonathan Torrence
+//@author Jonathan Torrence 
 
 import React, {useState, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -11,37 +11,17 @@ const API_BASE = "http://localhost:5000/api/AHFULfoods";
 export function FoodLog() {
     const user = useSelector((state) => state.auth.user);
 
-    const toLocalDateInput = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-    };
+    //Define Variables for Date Range Filtering based off of the Current Selected Date on the Calendar.
+    const selectedDate = useSelector((state) => state.calendar.selectedDate);
+    //Start of currently selected Day - ROOT DATE OBJECT for Page. 
+    const startOfDay = new Date(selectedDate);
+    //Start of currently selected Week
+    const weekStart = new Date(startOfDay);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    //End of currently selected Week
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 7);
 
-    const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-    const getWeekStart = (date) => {
-        const d = new Date(date);
-        d.setHours(0, 0, 0, 0);
-        d.setDate(d.getDate() - d.getDay());
-        return d;
-    };
-
-    const getWeekEnd = (date) => {
-        const end = new Date(getWeekStart(date));
-        end.setDate(end.getDate() + 7);
-        return end;
-    };
-
-    // Get userId from Redux or fall back to localStorage
-    const getUserId = () => {
-        if (user?._id) return user._id;
-        try {
-            const stored = JSON.parse(localStorage.getItem("user_data"));
-            return stored?._id || null;
-        } catch { return null; }
-    };
-    const userId = getUserId();
 
     const [foods, setFoods] = useState([]);
     const [foodName, setFoodName] = useState("");
@@ -50,7 +30,6 @@ export function FoodLog() {
     const [mealType, setMealType] = useState("Lunch");
     const [errors, setErrors] = useState("");
     const [timePeriod, setTimePeriod] = useState("daily");
-    const [selectedDate, setSelectedDate] = useState(toLocalDateInput(new Date()));
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -61,6 +40,7 @@ export function FoodLog() {
     const [usda_searching, setUsda_searching] = useState(false);
     const [showUsda_dropdown, setShowUsda_dropdown] = useState(false);
     const [usda_searchTimeout, setUsda_searchTimeout] = useState(null);
+
 
     // Normalize backend food document to the shape the UI expects
     const normalizeFood = (doc) => ({
@@ -140,9 +120,9 @@ export function FoodLog() {
 
     // Fetch foods for the logged-in user on mount
     useEffect(() => {
-        if (!userId) return;
+        if (!user._id) return;
         setLoading(true);
-        fetch(`${API_BASE}/${userId}`, {credentials: "include"})
+        fetch(`${API_BASE}/${user._id}`, {credentials: "include"})
             .then(async (res) => {
                 if (res.status === 404) {
                     return [];
@@ -164,35 +144,31 @@ export function FoodLog() {
                 console.error("Failed to load foods:", err);
             })
             .finally(() => setLoading(false));
-    }, [userId]);
-
-    const selectedDateObj = new Date(`${selectedDate}T00:00:00`);
+    }, [user._id]);
 
     const foodsInPeriod = foods.filter((food) => {
         const foodDate = food.loggedAt;
 
         if (timePeriod === "daily") {
-            const selectedStart = startOfDay(selectedDateObj);
+            const selectedStart = new Date(selectedDate);
             const selectedEnd = new Date(selectedStart);
             selectedEnd.setDate(selectedEnd.getDate() + 1);
             return foodDate >= selectedStart && foodDate < selectedEnd;
         }
 
         if (timePeriod === "weekly") {
-            const weekStart = getWeekStart(selectedDateObj);
-            const weekEnd = getWeekEnd(selectedDateObj);
             return foodDate >= weekStart && foodDate < weekEnd;
         }
 
         if (timePeriod === "monthly") {
             return (
-                foodDate.getFullYear() === selectedDateObj.getFullYear() &&
-                foodDate.getMonth() === selectedDateObj.getMonth()
+                foodDate.getFullYear() === startOfDay.getFullYear() &&
+                foodDate.getMonth() === startOfDay.getMonth()
             );
         }
 
         if (timePeriod === "yearly") {
-            return foodDate.getFullYear() === selectedDateObj.getFullYear();
+            return foodDate.getFullYear() === startOfDay.getFullYear();
         }
 
         return true;
@@ -235,7 +211,7 @@ export function FoodLog() {
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    user_id: userId,
+                    user_id: user._id,
                     name: foodName,
                     calsPerServing: parseInt(calories),
                     servings: parseInt(servings),
@@ -352,41 +328,27 @@ export function FoodLog() {
 
     const periodTotalCalories = filteredFoods.reduce((sum, food) => sum + food.totalCalories, 0);
 
-    const formatLongDate = (date) =>
-        date.toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "short",
-            day: "numeric",
-            year: "numeric"
-        });
+
 
     const rangeLabel = (() => {
+
         if (timePeriod === "daily") {
-            return formatLongDate(selectedDateObj);
+            return startOfDay.toLocaleString('en-US').slice(0,10);
         }
 
         if (timePeriod === "weekly") {
-            const start = getWeekStart(selectedDateObj);
-            const endInclusive = new Date(getWeekEnd(selectedDateObj));
+            const endInclusive = new Date(weekEnd);
             endInclusive.setDate(endInclusive.getDate() - 1);
-            return `${start.toLocaleDateString()} - ${endInclusive.toLocaleDateString()}`;
+            
+            return `${startOfDay.toLocaleString('en-US')} - ${endInclusive.toLocaleString('en-US')}`;
         }
 
         if (timePeriod === "monthly") {
-            return selectedDateObj.toLocaleDateString(undefined, {
-                month: "long",
-                year: "numeric"
-            });
+            return `${startOfDay.getMonth()}-${startOfDay.getFullYear()}`;
         }
 
-        return `${selectedDateObj.getFullYear()}`;
+        return `${startOfDay.getFullYear()}`;
     })();
-
-    const shiftSelectedDate = (days) => {
-        const shifted = new Date(selectedDateObj);
-        shifted.setDate(shifted.getDate() + days);
-        setSelectedDate(toLocalDateInput(shifted));
-    };
 
     // Group foods by meal type
     const groupedFoods = () => {
@@ -406,7 +368,9 @@ export function FoodLog() {
             <h1>Food Log</h1>
 
             <div className="food-log-content">
-                {/* Add Food Form */}
+
+
+                {/* Add Food Form -------------------------------------------- */}
                 <div className="add-food-section">
                     <h2>Log New Food</h2>
                     <form onSubmit={addFood} className="food-form">
@@ -500,7 +464,7 @@ export function FoodLog() {
 
 
 
-               {/* Time Period Selector */}
+               {/* Time Period Selector -------------------------------------------- */}
                <div className="time-period-selector">
                 <button
                     className={`period-btn ${timePeriod === 'daily' ? 'active' : ''}`}
@@ -539,7 +503,7 @@ export function FoodLog() {
                     <button
                         className="period-btn"
                         type="button"
-                        onClick={() => shiftSelectedDate(-1)}
+                        onClick={() => alert("I did nothing 2")}
                         aria-label="Previous day"
                     >
                         Prev Day
@@ -553,14 +517,14 @@ export function FoodLog() {
                     <button
                         className="period-btn"
                         type="button"
-                        onClick={() => shiftSelectedDate(1)}
+                        onClick={() => alert("i Did nothing")}
                         aria-label="Next day"
                     >
                         Next Day
                     </button>
                 </div>
 
-                {/* Nutrition Summary */}
+                {/* Nutrition Summary -------------------------------------------- */}
                 <div className="daily-summary">
                     <h2>
                         {timePeriod === 'daily' && 'Daily Summary'}
@@ -573,7 +537,7 @@ export function FoodLog() {
                       <div className="total-display">
                         <span className="label">Total Calories:</span>
                         <span className="value">
-                                                        {periodTotalCalories}
+                            {periodTotalCalories}
                         </span>
                       </div>
                     </div>
@@ -581,7 +545,7 @@ export function FoodLog() {
                     </div>
                     <div className="food-count">
                         <span className="label">Items Logged:</span>
-                                                <span className="value">{filteredFoods.length}</span>
+                        <span className="value">{filteredFoods.length}</span>
                     </div>
                 </div>
 
@@ -639,16 +603,12 @@ export function FoodLog() {
                             >
                                 X
                             </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-                        )
-                    ))}
-                </div>
-            )}
+                        </div>))}
+                    </div>
+                </div>)))}
+            </div>)}
         </div>
-        </div>
+     </div>
     );
 }
 
