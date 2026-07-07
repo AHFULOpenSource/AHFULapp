@@ -1,4 +1,5 @@
-//@author Jonathan Torrence 
+//@author Jonathan Torrence & AuGust Ringelstetter
+//updated 7/6/2026
 
 import React, {useState, useEffect } from "react";
 import { useSelector } from "react-redux";

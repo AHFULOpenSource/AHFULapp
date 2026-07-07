@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 there might be a clearner way to do the calendar animations without it.*/
 import { AnimatePresence, motion } from "framer-motion";
 import "./Calendar.css";
-import { setSelectedDate, clearSelectedDate } from "./CalendarSlicer"; 
+import { setSelectedDate } from "./CalendarSlicer"; 
 
 const workoutDatesSet = (workouts) => {
   const set = new Set();
@@ -73,10 +73,6 @@ export function Calendar({ locale, todoPosition, onCalendarSizeChange }) {
     dispatch(setSelectedDate(dateStr));
   };
 
-  const clearSelection = () => {
-    dispatch(clearSelectedDate());
-  };
-  //will use later
 
   return (
     <div className="calendar-container">
