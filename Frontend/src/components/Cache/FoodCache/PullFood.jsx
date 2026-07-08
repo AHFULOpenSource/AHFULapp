@@ -1,6 +1,6 @@
 import { store } from "../../../store";
 import { setFood, setError } from "./PullFoodSlice";
-import { fetchAllFood } from "../../../QueryFunctions";
+import { fetchAllFood } from "../../../Food/QueryFunctions-Food";
 
 export async function pullFood() {
   const user = store.getState().auth.user;

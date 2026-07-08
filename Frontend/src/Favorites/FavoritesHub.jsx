@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import "./FavoritesHub.css";
 import "../siteStyles.css";
-import { getFoodFavorites, getWorkoutFavorites, getTaskFavorites, createWorkout, toggleFoodFavorite, toggleWorkoutFavorite, toggleTaskFavorite } from "../QueryFunctions";
+import { getWorkoutFavorites, getTaskFavorites, createWorkout, toggleWorkoutFavorite, toggleTaskFavorite } from "../QueryFunctions";
+import { getFoodFavorites, toggleFoodFavorite } from "../Food/QueryFunctions-Food";
 
 export function FavoritesHub() {
   const user = useSelector((state) => state.auth.user);

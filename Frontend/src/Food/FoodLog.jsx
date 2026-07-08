@@ -5,7 +5,7 @@ import React, {useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import "./FoodLog.css";
 import "../siteStyles.css";
-import { toggleFoodFavorite } from "../QueryFunctions.js";
+import { toggleFoodFavorite } from "../Food/QueryFunctions-Food";
 
 const API_BASE = "http://localhost:5000/api/AHFULfoods";
 
