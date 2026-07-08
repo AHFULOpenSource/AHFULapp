@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, g
 from Services.WorkoutDriver import WorkoutDriver
+from Services.PersonalExDriver import PersonalExDriver
 from Auth.verification import login_required_user, login_required_dev, login_required_admin, login_required_gym_owner
 
 workoutRouteBlueprint = Blueprint("workouts", __name__, url_prefix="/AHFULworkouts")
@@ -91,19 +92,35 @@ def update_workout(workout_id):
 # Only delete own? dev for now
 # ── DELETE workout ────────────────────────────────────────────────────────────────
 @workoutRouteBlueprint.route("/delete/<workout_id>", methods=["DELETE"])
-@login_required_dev
+@login_required_user
 def delete_workout(workout_id):
     if not workout_id:
         return jsonify({"error": "You must provide a workout id to delete"}), 400
 
-    res, err = WorkoutDriver.verify_operation(g.user_id, workout_id)
+    # Verify that the user has permission to delete this workout
+    verifiyResponse, err = WorkoutDriver.verify_operation(g.user_id, workout_id)
     if err:
         return jsonify({"error": err}), 400
 
-    response, error = WorkoutDriver.delete_workout(workout_id)
-    if error:
-        return jsonify({"error": error}), 400
-    return jsonify({"message": "Workout deleted", "workout_id": response}), 200
+    personalExercises, error = PersonalExDriver.get_personal_exs_by_workout(workout_id)
+
+
+    if personalExercises is None:
+        response, error = WorkoutDriver.delete_workout(workout_id)
+        if error:
+            return jsonify({"error": error}), 400
+        return jsonify({"ok": True, "message": "Workout Deleted. No personal exercises found for workout.", "workout_id": response}), 200
+
+    else:
+        for personalEx in personalExercises:
+            deleteResponse, deleteError = PersonalExDriver.delete_personal_ex(personalEx["_id"])
+            if deleteError:
+                return jsonify({"error": deleteError}), 400
+
+        response, error = WorkoutDriver.delete_workout(workout_id)
+        if error:
+            return jsonify({"error": error}), 400
+        return jsonify({"ok": True, "message": "Workout and related Personal Exercises deleted", "workout_id": response}), 200
 
 # ── GET workout streak for user ──────────────────────────────────────
 @workoutRouteBlueprint.route("/streak/<user_id>", methods=["GET"])

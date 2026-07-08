@@ -60,12 +60,12 @@ export function initCompanionAI({ textInput, sendButton, characterImage, voiceSe
 
         // If muted, skip speech synthesis entirely and keep mouth static (closed)
         if (isMutedRef && isMutedRef.current) {
-            console.log('🔇 Muted - not speaking');
+            // console.log('🔇 Muted - not speaking');
             if (characterImage) characterImage.src = closedMouthImg;
             return;
         }
 
-        console.log('🔊 Speaking:', text.substring(0, 50) + '...');
+        // console.log('🔊 Speaking:', text.substring(0, 50) + '...');
 
         // Cancel any existing speech
         if (speechSynthesis.speaking) {
