@@ -13,10 +13,16 @@ export async function pullFood() {
     const metadata = list.map(e => ({
       _id: e._id,
       name: e.name,
-      calsPerServing: e.calsPerServing,
+      calories: e.calories,
       servings: e.servings,
       type: e.type,
-      time: e.time
+      time: e.time,
+      carbs: e.carbs,
+      protein: e.protein,
+      fat: e.fat,
+      fdcID: e.fdcID,
+      servingSize: e.servingSize ?? 0, 
+      servingUnit: e.servingUnit ?? "",
     }));
     store.dispatch(setFood(metadata));
   } catch (err) {

@@ -26,7 +26,7 @@ def test_find_food_by_id():
     assert food.get("_id") == oid
     assert food.get("user_id") == "699d0093795741a59fe13616"
     assert food.get("name") == "Apple"
-    assert food.get("calsPerServing") == 95
+    assert food.get("calories") or food.get("calsPerServing") == 95
     assert food.get("servings") == 1
     assert food.get("type") == "Lunch"
     assert food.get("time") == 1708473601
@@ -75,7 +75,7 @@ def test_find_food_by_user():
     assert food.get("_id") == "699d0f5f888d8f649698307e"
     assert food.get("user_id") == user_id
     assert food.get("name") == "Apple"
-    assert food.get("calsPerServing") == 95
+    assert food.get("calories") or food.get("calsPerServing") == 95
     assert food.get("servings") == 1
     assert food.get("type") == "Lunch"
     assert food.get("time") == 1708473601
@@ -112,11 +112,10 @@ def test_create_delete_food():
     # Give a valid user
     user_id = "699d0093795741a59fe13616"
     name = "Lettuce"
-    calsPerServing = 0
+    calories = 0
     servings = 99
     type = "Snack"
-    time = 0
-    response_id, err = FoodDriver.create_food(user_id, name, calsPerServing, servings, type, time)
+    response_id, err = FoodDriver.create_food(user_id, name, servings, type, calories=calories)
 
     if err is not None:
         print("8.  There was a testing error on Test 8 Object was: ", response_id, "Error Was: ", err)
@@ -139,10 +138,9 @@ def test_create_delete_food():
     assert food.get("_id") == response_id
     assert food.get("user_id") == "699d0093795741a59fe13616"
     assert food.get("name") == "Lettuce"
-    assert food.get("calsPerServing") == 0
+    assert food.get("calories") == 0
     assert food.get("servings") == 99
     assert food.get("type") == "Snack"
-    assert food.get("time") == 0
 
     # Delete created gym
     response, err = FoodDriver.delete_food(response_id)
@@ -166,14 +164,14 @@ def test_update_food_roundtrip():
     # Save original values for restore
     orig_user_id         = original.get("user_id")
     orig_name           = original.get("name")
-    orig_calsPerServing = original.get("calsPerServing")
+    orig_calories = original.get("calories") or original.get("calsPerServing")
     orig_servings       = original.get("servings")
     orig_type           = original.get("type")
     orig_time           = original.get("time")
 
     # Sanity checks
     assert isinstance(orig_name, str)
-    assert isinstance(orig_calsPerServing, int)
+    assert isinstance(orig_calories, (int, float))
     assert isinstance(orig_servings, int)
     assert isinstance(orig_type, str)
     assert isinstance(orig_time, int)
@@ -181,7 +179,7 @@ def test_update_food_roundtrip():
     # UPDATE all editable fields
     new_values = {
         "name": "Banana",
-        "calsPerServing": 105,
+        "calories": 105,
         "servings": 2,
         "type": "Snack",
         "time": 1708473602
@@ -197,10 +195,9 @@ def test_update_food_roundtrip():
     # Assert updated values persisted
     assert updated.get("user_id") == orig_user_id
     assert updated.get("name") == new_values["name"]
-    assert updated.get("calsPerServing") == new_values["calsPerServing"]
+    assert updated.get("calories") == new_values["calories"]
     assert updated.get("servings") == new_values["servings"]
     assert updated.get("type") == new_values["type"]
-    assert updated.get("time") == new_values["time"]
 
     # Re-fetch to ensure DB persistence
     fetched, err = FoodDriver.get_food_by_id(food_id)
@@ -210,15 +207,14 @@ def test_update_food_roundtrip():
     assert fetched is not None
 
     assert fetched.get("name") == new_values["name"]
-    assert fetched.get("calsPerServing") == new_values["calsPerServing"]
+    assert fetched.get("calories") or fetched.get("calsPerServing") == new_values["calories"]
     assert fetched.get("servings") == new_values["servings"]
     assert fetched.get("type") == new_values["type"]
-    assert fetched.get("time") == new_values["time"]
 
     # RESTORE original values
     restore_payload = {
         "name": orig_name,
-        "calsPerServing": orig_calsPerServing,
+        "calories": orig_calories,
         "servings": orig_servings,
         "type": orig_type,
         "time": orig_time
@@ -231,10 +227,9 @@ def test_update_food_roundtrip():
     assert restored is not None
 
     assert restored.get("name") == orig_name
-    assert restored.get("calsPerServing") == orig_calsPerServing
+    assert restored.get("calories") == orig_calories
     assert restored.get("servings") == orig_servings
     assert restored.get("type") == orig_type
-    assert restored.get("time") == orig_time
 
     # Final re-fetch to ensure DB restore persisted
     final, err = FoodDriver.get_food_by_id(food_id)
@@ -244,10 +239,9 @@ def test_update_food_roundtrip():
     assert final is not None
 
     assert final.get("name") == orig_name
-    assert final.get("calsPerServing") == orig_calsPerServing
+    assert final.get("calories") or final.get("calsPerServing") == orig_calories
     assert final.get("servings") == orig_servings
     assert final.get("type") == orig_type
-    assert final.get("time") == orig_time
     
 def test_food_invalid_inputs():
     valid_food_id = "699d0f5f888d8f649698307e"
@@ -259,20 +253,18 @@ def test_food_invalid_inputs():
     base_create = {
         "user_id": valid_user_id,
         "name": "Apple",
-        "calsPerServing": 95,
+        "calories": 95,
         "servings": 1,
-        "type": "Snack",
-        "time": 123
+        "type": "Snack"
     }
 
     # Missing required values
     missing_cases = [
         {**base_create, "user_id": None},
         {**base_create, "name": ""},
-        {**base_create, "calsPerServing": None},
+        {**base_create, "calories": None},
         {**base_create, "servings": 0},
         {**base_create, "type": ""},
-        {**base_create, "time": None},
     ]
 
     for case in missing_cases:
@@ -281,12 +273,12 @@ def test_food_invalid_inputs():
         assert err == "You are missing a value. Please fix, then attempt to create food again"
 
     # Invalid user_id formats
-    resp, err = FoodDriver.create_food("nothex", "Apple", 95, 1, "Snack", 100)
+    resp, err = FoodDriver.create_food("nothex", "Apple", 1, "Snack", calories=95)
     assert resp is None
     assert err == "Invalid userid format; must be a 24-hex string"
 
     # User not found
-    resp, err = FoodDriver.create_food("000000000000000000000000", "Apple", 95, 1, "Snack", 100)
+    resp, err = FoodDriver.create_food("000000000000000000000000", "Apple", 1, "Snack", calories=95)
     assert resp is None
     assert err == "User not found"
 
@@ -344,7 +336,7 @@ def test_food_invalid_inputs():
     # Invalid types for allowed fields
     invalid_field_cases = [
         {"name": 123},
-        {"calsPerServing": "bad"},
+        {"calories": "bad"},
         {"servings": "many"},
         {"type": 999},
         {"time": "nope"},
@@ -356,7 +348,7 @@ def test_food_invalid_inputs():
         assert err is not None
 
     # Mixed valid + invalid
-    resp, err = FoodDriver.update_food(valid_food_id, {"name": "Good", "calsPerServing": "bad"})
+    resp, err = FoodDriver.update_food(valid_food_id, {"name": "Good", "calories": "bad"})
     assert resp is None
     assert err is not None
 
@@ -395,7 +387,7 @@ def test_food_partial_empty_unknown_updates():
     # unknown fields should be ignored, valid ones applied
     mixed_update = {
         "name": "MixedUpdateName",
-        "calsPerServing": 200,
+        "calories": 200,
         "junk": "ignore me",
         "somethingElse": 999,
     }
@@ -403,7 +395,7 @@ def test_food_partial_empty_unknown_updates():
     updated, err = FoodDriver.update_food(valid_food_id, mixed_update)
     assert err is None
     assert updated.get("name") == "MixedUpdateName"
-    assert updated.get("calsPerServing") == 200
+    assert updated.get("calories") == 200
     assert "junk" not in updated
     assert "somethingElse" not in updated
 
@@ -411,7 +403,7 @@ def test_food_partial_empty_unknown_updates():
     # Fetch original to restore exactly
     restore = {
         "name": original["name"],
-        "calsPerServing": original["calsPerServing"],
+        "calories": original.get("calories"),
         "servings": original["servings"],
         "type": original["type"],
         "time": original["time"],

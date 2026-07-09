@@ -107,10 +107,15 @@ def create_food():
     food_id, error = FoodDriver.create_food(
         user_id=g.user_id,
         name=data.get("name"),
-        calsPerServing=data.get("calsPerServing"),
         servings=data.get("servings"),
         type=data.get("type"),
-        time=data.get("time")
+        calories=data.get("calories"),
+        carbs=data.get("carbs"),
+        fat=data.get("fat"),
+        protein=data.get("protein"),
+        fdcId=data.get("fdcId"),
+        servingSize=data.get("servingSize"),
+        servingUnit=data.get("servingUnit")
     )
 
     if error:
@@ -149,10 +154,16 @@ def update_food(food_id):
 
     updates = {
         "name": data.get("name"),
-        "calsPerServing": data.get("calsPerServing"),
+        "calories": data.get("calories"),
         "servings": data.get("servings"),
         "type": data.get("type"),
-        "time": data.get("time")
+        "time": data.get("time"),
+        "carbs": data.get("carbs"),
+        "fat": data.get("fat"),
+        "protein": data.get("protein"),
+        "fdcId": data.get("fdcId"),
+        "servingSize": data.get("servingSize"),
+        "servingUnit": data.get("servingUnit")
     }
 
     updated, error = FoodDriver.update_food(food_id, updates)

@@ -50,9 +50,9 @@ class FoodDriver:
 
     # ── Create ─────────────────────────────────────────────────────────────────
     @staticmethod
-    def create_food(user_id, name, calsPerServing, servings, type, time):
+    def create_food(user_id, name, servings, type, calories=None, carbs=None, fat=None, protein=None, fdcId=None, servingSize=None, servingUnit=None):
         # Validate required fields
-        if (not user_id) or (not name) or (calsPerServing is None) or (not servings) or (not type) or (time is None):
+        if (not user_id) or (not name) or (calories is None) or (not servings) or (not type):
             return None, "You are missing a value. Please fix, then attempt to create food again"
 
         # Convert IDs safely
@@ -68,12 +68,25 @@ class FoodDriver:
         food_data = {
             "user_id": user_id,
             "name": name,
-            "calsPerServing": calsPerServing,
+            "calories": calories,
             "servings": servings,
             "type": type,
-            "time": time,
+            "time": int(__import__("time").time()),
             "favorite": False
         }
+
+        if carbs is not None:
+            food_data["carbs"] = carbs
+        if fat is not None:
+            food_data["fat"] = fat
+        if protein is not None:
+            food_data["protein"] = protein
+        if fdcId is not None:
+            food_data["fdcId"] = fdcId
+        if servingSize is not None:
+            food_data["servingSize"] = servingSize
+        if servingUnit is not None:
+            food_data["servingUnit"] = servingUnit
 
         try:
             response = FoodObject.create(food_data)
@@ -133,10 +146,16 @@ class FoodDriver:
          # Allowed fields to update
         allowed_fields = {
             "name",
-            "calsPerServing",
+            "calories",
             "servings",
             "type",
-            "time"
+            "time",
+            "carbs",
+            "fat",
+            "protein",
+            "fdcId",
+            "servingSize",
+            "servingUnit"
         }
 
         # Filter only allowed fields
@@ -144,6 +163,18 @@ class FoodDriver:
 
         if not sanitized_updates:
             return None, "No valid fields to update"
+
+        # Type validation map
+        string_fields = {"name", "type", "servingUnit"}
+        numeric_fields = {"calories", "servings", "time", "carbs", "fat", "protein", "fdcId", "servingSize"}
+
+        for field, value in sanitized_updates.items():
+            if field in string_fields and not isinstance(value, str):
+                return None, f"'{field}' must be a string"
+            if field in numeric_fields and not isinstance(value, (int, float)):
+                return None, f"'{field}' must be a number"
+            if field not in string_fields and field not in numeric_fields:
+                return None, f"Unknown field '{field}'"
 
         try:
             updated = FoodObject.update(id, sanitized_updates)

@@ -2159,12 +2159,12 @@ swaggerConfig = {
                       "_id": { "type": "string", "example": "698d0bc06e5117c22dd7774b" },
                       "user_id": { "type": "string", "example": "abc123" },
                       "name": { "type": "string", "example": "Apple" },
-                      "calsPerServing": { "type": "number", "example": 95 },
+                      "calories": { "type": "number", "example": 95 },
                       "servings": { "type": "number", "example": 1 },
                       "type": { "type": "string", "example": "Lunch" },
                       "time": { "type": "integer", "example": 1708473600 }
                     },
-                    "required": ["_id", "user_id", "name", "calsPerServing", "servings", "time"]
+                    "required": ["_id", "user_id", "name", "calories", "servings", "time"]
                   }
                 }
               }
@@ -2205,13 +2205,13 @@ swaggerConfig = {
                       "_id": { "type": "string", "example": "698d0bc06e5117c22dd7774b" },
                       "user_id": { "type": "string", "example": "abc123" },
                       "name": { "type": "string", "example": "Apple" },
-                      "calsPerServing": { "type": "number", "example": 95 },
+                      "calories": { "type": "number", "example": 95 },
                       "servings": { "type": "number", "example": 1 },
                       "type": { "type": "string", "example": "Lunch" },
                       "time": { "type": "integer", "example": 1708473600 },
                       "favorite": { "type": "boolean", "example": True }
                     },
-                    "required": ["_id", "user_id", "name", "calsPerServing", "servings", "time"]
+                    "required": ["_id", "user_id", "name", "calories", "servings", "time"]
                   }
                 }
               }
@@ -2247,7 +2247,7 @@ swaggerConfig = {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "food": { "type": "object", "example": {"_id": "6a4218c748ed2d5569c38a24","calsPerServing": 293,"favorite": True,"name": "Pillsbury Grands, Buttermilk Biscuits, refrigerated dough","servings": 2,"time": 1782716615,"type": "Dinner","user_id": "69e521f97f080d90be872734"}},
+                    "food": { "type": "object", "example": {"_id": "6a4218c748ed2d5569c38a24","calories": 293,"favorite": True,"name": "Pillsbury Grands, Buttermilk Biscuits, refrigerated dough","servings": 2,"time": 1782716615,"type": "Dinner","user_id": "69e521f97f080d90be872734"}},
                     "message": { "type": "string", "example": "Food created" }
                   },
                   "required": ["food_id", "message"]
@@ -2379,7 +2379,7 @@ swaggerConfig = {
                       "servingSize": { "type": "string", "example": "1 medium apple" },
                       "servingSizeUnit": { "type": "string", "example": "g" }
                     },
-                    "required": ["_id", "user_id", "name", "calsPerServing", "servings", "time"]
+                    "required": ["_id", "user_id", "name", "calories", "servings", "time"]
                   }
                 }
               }
@@ -2442,12 +2442,12 @@ swaggerConfig = {
                       "_id": { "type": "string", "example": "698d0bc06e5117c22dd7774b" },
                       "user_id": { "type": "string", "example": "abc123" },
                       "name": { "type": "string", "example": "Apple" },
-                      "calsPerServing": { "type": "number", "example": 95 },
+                      "calories": { "type": "number", "example": 95 },
                       "servings": { "type": "number", "example": 1 },
                       "type": { "type": "string", "example": "Lunch" },
                       "time": { "type": "integer", "example": 1708473600 }
                     },
-                    "required": ["_id", "user_id", "name", "calsPerServing", "servings", "time"]
+                    "required": ["_id", "user_id", "name", "calories", "servings", "time"]
                   }
                 }
               }
@@ -2495,12 +2495,12 @@ swaggerConfig = {
                       "_id": { "type": "string", "example": "698d0bc06e5117c22dd7774b" },
                       "user_id": { "type": "string", "example": "abc123" },
                       "name": { "type": "string", "example": "Apple" },
-                      "calsPerServing": { "type": "number", "example": 95 },
+                      "calories": { "type": "number", "example": 95 },
                       "servings": { "type": "number", "example": 1 },
                       "type": { "type": "string", "example": "Lunch" },
                       "time": { "type": "integer", "example": 1708473600 }
                     },
-                    "required": ["_id", "user_id", "name", "calsPerServing", "servings", "time"]
+                    "required": ["_id", "user_id", "name", "calories", "servings", "time"]
                 }
               }
             }
@@ -2533,14 +2533,18 @@ swaggerConfig = {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["user_id", "name", "calsPerServing", "servings", "time"],
+                "required": ["name", "calories", "servings"],
                 "properties": {
-                  "user_id": { "type": "string", "example": "abc123" },
                   "name": { "type": "string", "example": "Apple" },
-                  "calsPerServing": { "type": "number", "example": 95 },
+                  "calories": { "type": "number", "example": 95 },
                   "servings": { "type": "number", "example": 1 },
                   "type": { "type": "string", "example": "Lunch" },
-                  "time": { "type": "integer", "example": 1708473600 }
+                  "carbs": { "type": "number", "example": 14 },
+                  "fat": { "type": "number", "example": 0.2 },
+                  "protein": { "type": "number", "example": 0.3 },
+                  "fdcId": { "type": "integer", "example": 2706962 },
+                  "servingSize": { "type": "number", "example": 100 },
+                  "servingUnit": { "type": "string", "example": "g" }
                 }
               }
             }
@@ -2678,10 +2682,15 @@ swaggerConfig = {
                 "type": "object",
                 "properties": {
                   "name":           { "type": "string",  "example": "Banana" },
-                  "calsPerServing": { "type": "integer", "example": 105 },
+                  "calories":       { "type": "integer", "example": 105 },
                   "servings":       { "type": "integer", "example": 2 },
                   "type":           { "type": "string",  "example": "Snack" },
-                  "time":           { "type": "number",  "example": 1708473601 }
+                  "carbs":          { "type": "number",  "example": 14 },
+                  "fat":            { "type": "number",  "example": 0.2 },
+                  "protein":        { "type": "number",  "example": 0.3 },
+                  "fdcId":          { "type": "integer", "example": 2706962 },
+                  "servingSize":    { "type": "number",  "example": 100 },
+                  "servingUnit":    { "type": "string",  "example": "g" }
                 },
                 "additionalProperties": False
               }
@@ -2699,12 +2708,18 @@ swaggerConfig = {
                     "_id":            { "type": "string",  "example": "699d0f5f888d8f649698307e" },
                     "user_id":         { "type": "string",  "example": "699d0093795741a59fe13616" },
                     "name":           { "type": "string",  "example": "Banana" },
-                    "calsPerServing": { "type": "integer", "example": 105 },
+                    "calories":       { "type": "integer", "example": 105 },
                     "servings":       { "type": "integer", "example": 2 },
                     "type":           { "type": "string",  "example": "Snack" },
-                    "time":           { "type": "number",  "example": 1708473601 }
+                    "time":           { "type": "number",  "example": 1708473601 },
+                    "carbs":          { "type": "number",  "example": 14 },
+                    "fat":            { "type": "number",  "example": 0.2 },
+                    "protein":        { "type": "number",  "example": 0.3 },
+                    "fdcId":          { "type": "integer", "example": 2706962 },
+                    "servingSize":    { "type": "number",  "example": 100 },
+                    "servingUnit":    { "type": "string",  "example": "g" }
                   },
-                  "required": ["_id", "user_id", "name", "calsPerServing", "servings", "type", "time"]
+                  "required": ["_id", "user_id", "name", "calories", "servings", "type", "time"]
                 }
               }
             }
