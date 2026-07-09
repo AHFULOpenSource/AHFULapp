@@ -17,4 +17,4 @@ Personal trainers can manage clients, create and assign workouts, schedule exerc
 
 ### Getting Help
 
-- [Reporting an Issue](ReportingAnIssue.md) -- Found a bug or have an idea? Let us know.
+- [Reporting an Issue](../ReportingAnIssue.md) -- Found a bug or have an idea? Let us know.

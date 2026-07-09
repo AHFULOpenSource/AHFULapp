@@ -13,4 +13,4 @@ Members are the primary users of the AHFUL app. Both gym and non-gym members fal
 
 ### Getting Help
 
-- [Reporting an Issue](ReportingAnIssue.md) -- Found a bug or have an idea? Let us know.
+- [Reporting an Issue](../ReportingAnIssue.md) -- Found a bug or have an idea? Let us know.
