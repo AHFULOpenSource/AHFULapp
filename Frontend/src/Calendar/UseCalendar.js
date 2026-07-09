@@ -1,5 +1,14 @@
 import { useState, useCallback, useMemo } from "react";
 
+export function toLocalDateString(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+export function parseLocalDate(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 // Detect the first day of the week for a locale
 // Returns 0 for Sunday, 1 for Monday, etc.
 function detectLocaleFirstDayOfWeek(locale) {

@@ -5,6 +5,7 @@ import React, {useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import "./FoodLog.css";
 import "../siteStyles.css";
+import DateNavigation from "../Calendar/DateNavigation";
 import {
   toggleFoodFavorite,
   searchUSDAFoods,
@@ -475,30 +476,7 @@ export function FoodLog() {
                 </button>
                </div>
 
-                <div className="date-navigation">
-                    <button
-                        className="period-btn"
-                        type="button"
-                        onClick={() => alert("I did nothing 2")}
-                        aria-label="Previous day"
-                    >
-                        Prev Day
-                    </button>
-                    <input
-                        type="date"
-                        className="date-input"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                    />
-                    <button
-                        className="period-btn"
-                        type="button"
-                        onClick={() => alert("i Did nothing")}
-                        aria-label="Next day"
-                    >
-                        Next Day
-                    </button>
-                </div>
+                <DateNavigation />
 
                 {/* Nutrition Summary -------------------------------------------- */}
                 <div className="daily-summary">
