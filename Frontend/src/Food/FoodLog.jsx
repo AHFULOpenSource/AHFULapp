@@ -375,8 +375,12 @@ export function FoodLog() {
                                             <div className="food-item-name">{food.name}</div>
                                             {food.calories !== null && (
                                                 <div className="food-item-detail">
-                                                    {Math.round(food.calories)} cal/serving
-                                                    {food.servingSize && ` (${food.servingSize}${food.servingUnit || ""})`}
+                                                    Serving Size: {food.servingSize && ` (${food.servingSize}${food.servingUnit || ""})`} 
+                                                    <br />
+                                                    {Math.round(food.calories)} calories
+                                                    <br />
+                                                    {food.carbs != null ? `Carbs: ${food.carbs}g , ` : ""}{food.fat != null ? `Fat: ${food.fat}g , ` : ""}{food.protein != null ? `Protein: ${food.protein}g` : ""}
+
                                                 </div>
                                             )}
                                         </li>
