@@ -72,21 +72,14 @@ class FoodDriver:
             "servings": servings,
             "type": type,
             "time": int(__import__("time").time()),
-            "favorite": False
+            "favorite": False,
+            "carbs": carbs,
+            "fat": fat,
+            "protein": protein,
+            "fdcId": fdcId,
+            "servingSize": servingSize,
+            "servingUnit": servingUnit
         }
-
-        if carbs is not None:
-            food_data["carbs"] = carbs
-        if fat is not None:
-            food_data["fat"] = fat
-        if protein is not None:
-            food_data["protein"] = protein
-        if fdcId is not None:
-            food_data["fdcId"] = fdcId
-        if servingSize is not None:
-            food_data["servingSize"] = servingSize
-        if servingUnit is not None:
-            food_data["servingUnit"] = servingUnit
 
         try:
             response = FoodObject.create(food_data)

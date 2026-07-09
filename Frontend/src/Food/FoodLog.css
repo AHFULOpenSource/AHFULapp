@@ -270,6 +270,18 @@
     font-size: 0.85rem;
 }
 
+.food-macros {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.8rem;
+}
+
+.food-serving {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.8rem;
+}
+
 .food-info {
     display: flex;
     flex-direction: column;

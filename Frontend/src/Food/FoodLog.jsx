@@ -50,14 +50,12 @@ export function FoodLog() {
     const [selectedUSDAFood, setSelectedUSDAFood] = useState(null);
 
 
-    const cal = (doc) => doc.calories ?? doc.calsPerServing;
-
     const normalizeFood = (doc) => ({
         id: doc._id,
         name: doc.name,
-        calories: cal(doc),
+        calories: doc.calories,
         servings: doc.servings,
-        totalCalories: cal(doc) * doc.servings,
+        totalCalories: doc.calories * doc.servings,
         mealType: doc.type,
         loggedAt: new Date(doc.time * 1000),
         timestamp: new Date(doc.time * 1000).toLocaleTimeString(),
@@ -202,17 +200,14 @@ export function FoodLog() {
                 name: foodName,
                 calories: parseInt(calories),
                 servings: parseInt(servings),
-                type: mealType
+                type: mealType,
+                carbs: selectedUSDAFood?.carbs ?? null,
+                fat: selectedUSDAFood?.fat ?? null,
+                protein: selectedUSDAFood?.protein ?? null,
+                fdcId: selectedUSDAFood?.fdcId ?? null,
+                servingSize: selectedUSDAFood?.servingSize ?? null,
+                servingUnit: selectedUSDAFood?.servingUnit ?? null,
             };
-
-            if (selectedUSDAFood) {
-                if (selectedUSDAFood.carbs != null) payload.carbs = selectedUSDAFood.carbs;
-                if (selectedUSDAFood.fat != null) payload.fat = selectedUSDAFood.fat;
-                if (selectedUSDAFood.protein != null) payload.protein = selectedUSDAFood.protein;
-                if (selectedUSDAFood.fdcId != null) payload.fdcId = selectedUSDAFood.fdcId;
-                if (selectedUSDAFood.servingSize != null) payload.servingSize = selectedUSDAFood.servingSize;
-                if (selectedUSDAFood.servingUnit != null) payload.servingUnit = selectedUSDAFood.servingUnit;
-            }
 
             const { data: createResult, error: createError } = await createFood(payload);
             if (createError) {
@@ -287,17 +282,14 @@ export function FoodLog() {
             name: foodName,
             calories: parseInt(calories),
             servings: parseInt(servings),
-            type: mealType
+            type: mealType,
+            carbs: editFood?.carbs ?? null,
+            fat: editFood?.fat ?? null,
+            protein: editFood?.protein ?? null,
+            fdcId: editFood?.fdcId ?? null,
+            servingSize: editFood?.servingSize ?? null,
+            servingUnit: editFood?.servingUnit ?? null,
         };
-
-        if (editFood) {
-            if (editFood.carbs != null) payload.carbs = editFood.carbs;
-            if (editFood.fat != null) payload.fat = editFood.fat;
-            if (editFood.protein != null) payload.protein = editFood.protein;
-            if (editFood.fdcId != null) payload.fdcId = editFood.fdcId;
-            if (editFood.servingSize != null) payload.servingSize = editFood.servingSize;
-            if (editFood.servingUnit != null) payload.servingUnit = editFood.servingUnit;
-        }
 
         const { data: updated, error } = await updateFood(editingId, payload);
         if (error) {
@@ -563,6 +555,16 @@ export function FoodLog() {
                                         <p className="food-meta">
                                             {food.servings} serving{food.servings > 1 ? "s" : ""} x {food.calories} cal/serving
                                         </p>
+                                        {(food.carbs != null || food.fat != null || food.protein != null) && (
+                                            <p className="food-macros">
+                                                {food.carbs != null && <span>Carbs: {food.carbs}g</span>}
+                                                {food.fat != null && <span> Fat: {food.fat}g</span>}
+                                                {food.protein != null && <span> Protein: {food.protein}g</span>}
+                                            </p>
+                                        )}
+                                        {food.servingSize != null && (
+                                            <p className="food-serving">Serving: {food.servingSize}{food.servingUnit || ""}</p>
+                                        )}
                                     </div>
                             <div className="food-info">
                                 <span className="calories-badge">{food.totalCalories} cal</span>

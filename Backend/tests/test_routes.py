@@ -26,7 +26,7 @@ def test_find_food_by_id():
     assert food.get("_id") == oid
     assert food.get("user_id") == "699d0093795741a59fe13616"
     assert food.get("name") == "Apple"
-    assert food.get("calories") or food.get("calsPerServing") == 95
+    assert food.get("calories") == 95
     assert food.get("servings") == 1
     assert food.get("type") == "Lunch"
     assert food.get("time") == 1708473601
@@ -75,7 +75,7 @@ def test_find_food_by_user():
     assert food.get("_id") == "699d0f5f888d8f649698307e"
     assert food.get("user_id") == user_id
     assert food.get("name") == "Apple"
-    assert food.get("calories") or food.get("calsPerServing") == 95
+    assert food.get("calories") == 95
     assert food.get("servings") == 1
     assert food.get("type") == "Lunch"
     assert food.get("time") == 1708473601
@@ -164,7 +164,7 @@ def test_update_food_roundtrip():
     # Save original values for restore
     orig_user_id         = original.get("user_id")
     orig_name           = original.get("name")
-    orig_calories = original.get("calories") or original.get("calsPerServing")
+    orig_calories = original.get("calories")
     orig_servings       = original.get("servings")
     orig_type           = original.get("type")
     orig_time           = original.get("time")
@@ -207,7 +207,7 @@ def test_update_food_roundtrip():
     assert fetched is not None
 
     assert fetched.get("name") == new_values["name"]
-    assert fetched.get("calories") or fetched.get("calsPerServing") == new_values["calories"]
+    assert fetched.get("calories") == new_values["calories"]
     assert fetched.get("servings") == new_values["servings"]
     assert fetched.get("type") == new_values["type"]
 
@@ -239,7 +239,7 @@ def test_update_food_roundtrip():
     assert final is not None
 
     assert final.get("name") == orig_name
-    assert final.get("calories") or final.get("calsPerServing") == orig_calories
+    assert final.get("calories") == orig_calories
     assert final.get("servings") == orig_servings
     assert final.get("type") == orig_type
     

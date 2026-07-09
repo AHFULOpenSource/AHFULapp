@@ -112,6 +112,12 @@ export function FavoritesHub() {
         calories: food.calories,
         servings: food.servings,
         type: food.type,
+        carbs: food.carbs ?? null,
+        fat: food.fat ?? null,
+        protein: food.protein ?? null,
+        fdcId: food.fdcId ?? null,
+        servingSize: food.servingSize ?? null,
+        servingUnit: food.servingUnit ?? null,
       });
 
       if (!error) {
