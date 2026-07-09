@@ -2,12 +2,12 @@
 
 ```
 frontend/
-├── .env.                                           !!! You will need to create this
+├── .env                                            !!! You will need to create this
 ├── biome.json
 ├── index.html                                      --- Inital Entery Point into Application
 ├── package-lock.json
 ├── package.json
-├── README.md                                       --- You Are Here
+├── README.md                                       --- Frontend project README (see README/Developer/Frontend/ for docs)
 ├── vite.config.js                                  --- Vite Config
 ├── images/                                         ### Images Dir
 │   ├── Flex.ico                                    --- Tab Icon
