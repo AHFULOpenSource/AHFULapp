@@ -41,16 +41,7 @@ A Helpful Fitness Utilization Logger (AHFUL) app is an Open Source Web App for t
 
 ## User Types
 
-- [Members](README/Member/README-Member.md) -- Both gym and non-gym members fall under this type of account made to privately track your workout progress.
-- [Developers](README/Developer/README-Developers.md) -- Has full access to the application to create useful features or fix failing features.
 - [Admins](README/Admin/README-Admin.md) -- Has access to monitor member accounts and ban individuals not following terms of service.
+- [Developers](README/Developer/README-Developers.md) -- Has full access to the application to create useful features or fix failing features.
 - [Gym Owners & Personal Trainers](README/GymOwners&PersonalTrainers/README-GymOwners&PersonalTrainers.md) -- Have the ability to create events, workouts, workout templates, schedule workouts, and edit workout calendars.
-
-## Reporting Issues
-
-Each user type has its own reporting guide with links to the appropriate issue templates:
-
-- [Members: Reporting an Issue](README/Member/ReportingAnIssue.md)
-- [Developers: Reporting an Issue](README/Developer/ReportingAnIssue.md)
-- [Admins: Reporting an Issue](README/Admin/ReportingAnIssue.md)
-- [Gym Owners & Personal Trainers: Reporting an Issue](README/GymOwners&PersonalTrainers/ReportingAnIssue.md)
+- [Members](README/Member/README-Member.md) -- Both gym and non-gym members fall under this type of account made to privately track your workout progress.
