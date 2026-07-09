@@ -25,9 +25,6 @@ google-adk==1.28.1 #Google Agent Development Kit API Client Library
 
 pytest==9.0.3 # Testing framework for writing and running tests (used in CI workflow)
 
+#Linting:
 
-
-
-
-
-
+pylint==4.0.6 #- Static code analysis tool for catching errors and enforcing style

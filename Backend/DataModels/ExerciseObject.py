@@ -24,7 +24,7 @@ class ExerciseObject:
         if "name" not in data or not isinstance(data["name"], str) or not data["name"].strip():
             return False, "Name is required and must be a non-empty string"
         
-        array_fields = ["owner_id", "targetMuscles", "bodyParts", "equipments", "secondaryMuscles", "instructions"]
+        array_fields = ["targetMuscles", "bodyParts", "equipments", "secondaryMuscles", "instructions"]
         for field in array_fields:
             if field in data and not isinstance(data[field], list):
                 return False, f"{field} must be an array"

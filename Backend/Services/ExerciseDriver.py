@@ -188,7 +188,7 @@ class ExerciseDriver:
             equipments = [equipment_value] if equipment_value else []
 
             exercise_data = {
-                "owner_id": owner_id,
+                "owner_id": ObjectId(owner_id),
                 "name": formData.get("name"),
                 "targetMuscles": formData.get("targetMuscles", []),
                 "bodyParts": formData.get("bodyParts", []),

@@ -22,7 +22,6 @@ export async function pullPersonalExercises() {
       user_id: e.user_id,
       workout_id: e.workout_id,
     }));
-    console.log("Pulled personal exercises:", metadata);
     store.dispatch(setPersonalExercises(metadata));
   } catch (err) {
     store.dispatch(setError("No personal exercises found"));

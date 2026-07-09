@@ -23,28 +23,17 @@ class WorkoutObject:
     # ── Read ──────────────────────────────────────────────────────────────────
     @staticmethod
     def find_all():
-        workout = get_collection('workout').find({
-            "template": False,
-            "startTime": {"$ne": 0}
-        })
+        workout = get_collection('workout').find()
         return [WorkoutObject._serialize(w) for w in workout]
 
     @staticmethod   
     def find_by_id(id):
-        workout = get_collection('workout').find_one({
-            "_id": ObjectId(id),
-            "template": False,
-            "startTime": {"$ne": 0}
-        })
+        workout = get_collection('workout').find_one({"_id": ObjectId(id)})
         return WorkoutObject._serialize(workout)
     
     @staticmethod
     def find_by_user(user_id):
-        workout = get_collection('workout').find({
-            "user_id": ObjectId(user_id),
-            "template": False,
-            "startTime": {"$ne": 0}
-        })
+        workout = get_collection('workout').find({"user_id": ObjectId(user_id)})
         return [WorkoutObject._serialize(w) for w in workout]
 
     # ── Update ──────────────────────────────────────────────────────────────────
@@ -100,8 +89,6 @@ class WorkoutObject:
         """Get all favorite workouts for a user."""
         workouts = get_collection('workout').find({
             "user_id": ObjectId(user_id),
-            "favorite": True,
-            "template": False,
-            "startTime": {"$ne": 0}
-        })
+            "favorite": True
+            })
         return [WorkoutObject._serialize(w) for w in workouts]
