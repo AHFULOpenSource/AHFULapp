@@ -18,9 +18,20 @@
 
 ## Prerequisites
 
-- Python 3.13+ (for the backend)
-- Node.js (for the frontend)
-- Internet Connection for external connections
+- **Python 3.13+** (for the backend)
+  - Download: https://www.python.org/downloads/
+  - Verify: `python --version` (Windows) or `python3 --version` (macOS/Linux)
+- **Node.js 18+** (for the frontend)
+  - Download: https://nodejs.org/ (LTS version)
+  - Verify: `node --version`
+- **npm** (ships with Node.js)
+  - Verify: `npm --version`
+- **Git** (for cloning and contributing)
+  - Download: https://git-scm.com/downloads
+  - Verify: `git --version`
+- **MongoDB** (for local backend testing; production uses a hosted instance)
+  - Download: https://www.mongodb.com/try/download/community
+- **Internet connection** (for package managers and external API connections)
 
 ## API Route Documentation (Swagger)
 
