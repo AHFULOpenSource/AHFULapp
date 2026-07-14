@@ -133,10 +133,16 @@ export function initCompanionAI({ textInput, sendButton, characterImage, voiceSe
 
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
+
+
             if (onResponseAdded) {
                 onResponseAdded(data.response);
             }
             speak(data.response);
+
+            //TODO:Add work to handle the workout_part of response. This is the part that will be stored in DB if user chooses to store it.
+            // const workoutPart = data.workout_part;
+
             if (status) status.textContent = "Ask me something!";
         } catch (error) {
             console.error('Error:', error);

@@ -38,6 +38,12 @@ async def chat():
         new_message=content,
     ):
         if event.content and event.content.parts and event.content.parts[0].text:
+            #TODO: testing to see what the RAW response from Google is in event.content.parts
+            print("Google Response:", event.content.parts)
             response_text += event.content.parts[0].text
+
+            #TODO: Driver call to store new workout part back to DB under User. 
+            #TODO: DURING storage Check WHAT GOOGLE GAVE was valid. 
+            #TODO: Send response back to Frontend to have user decide to store. 
 
     return jsonify({'response': response_text})
