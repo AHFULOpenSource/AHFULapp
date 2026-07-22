@@ -1,8 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
-import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
+import { createTransform, persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import calendarReducer from "./Calendar/CalendarSlicer";
+import { normalizeSelectedDate, toLocalDateString } from "./Calendar/UseCalendar";
 import authReducer from "./Auth/AuthSlice";
 import settingsReducer from "./Auth/SettingsSlice";
 import pullExerciseReducer from "./components/Cache/ExerciseCache/PullExerciseSlice";
@@ -30,6 +31,15 @@ const persistCalendarConfig = {
   key: "calendar",
   storage,
 };
+
+const calendarTransform = createTransform(
+  (inboundState) => inboundState,
+  (outboundState) => ({
+    ...outboundState,
+    selectedDate: normalizeSelectedDate(outboundState?.selectedDate) || toLocalDateString(new Date()),
+  }),
+  { whitelist: ["calendar"] },
+);
 const persistPersonalExerciseConfig = {
   key: "pullPersonalExercise",
   storage,
@@ -53,7 +63,10 @@ const persistSettingsConfig = {
 const persistedPullExerciseReducer = persistReducer(persistExerciseConfig, pullExerciseReducer);
 const persistedPullTemplateReducer = persistReducer(persistTemplateConfig, pullTemplateReducer);
 const persistedPullWorkoutReducer = persistReducer(persistWorkoutConfig, pullWorkoutReducer);
-const persistedCalendarReducer = persistReducer(persistCalendarConfig, calendarReducer);
+const persistedCalendarReducer = persistReducer(
+  { ...persistCalendarConfig, transforms: [calendarTransform] },
+  calendarReducer,
+);
 const persistedPersonalExerciseReducer = persistReducer(persistPersonalExerciseConfig, pullPersonalExerciseReducer);
 const persistedUserFoodReducer = persistReducer(persistUserFoodConfig, pullUserFoodReducer);
 const persistedFoodReducer = persistReducer(persistFoodConfig, pullFoodReducer);

@@ -1,26 +1,30 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
-import { setSelectedDate } from './CalendarSlicer';
-import { toLocalDateString, parseLocalDate } from './UseCalendar';
+import { selectSelectedDate, selectSelectedDateOrToday, setSelectedDate, shiftSelectedDateAction } from './CalendarSlicer';
+import { isLocalDateString, toLocalDateString } from './UseCalendar';
 import './DateNavigation.css';
 
 export default function DateNavigation() {
-  const selectedDate = useSelector((state) => state.calendar.selectedDate);
+  const selectedDate = useSelector(selectSelectedDate);
+  const dateValue = useSelector(selectSelectedDateOrToday);
   const dispatch = useDispatch();
 
   const today = toLocalDateString(new Date());
-  const dateValue = selectedDate || today;
 
   useEffect(() => {
+    if (selectedDate && !isLocalDateString(selectedDate)) {
+      console.warn('[calendar] invalid selectedDate detected, resetting to today:', selectedDate);
+      dispatch(setSelectedDate(today));
+      return;
+    }
+
     if (!selectedDate) {
       dispatch(setSelectedDate(today));
     }
-  }, []);
+  }, [dispatch, selectedDate, today]);
 
   const shiftDay = (offset) => {
-    const d = parseLocalDate(dateValue);
-    d.setDate(d.getDate() + offset);
-    dispatch(setSelectedDate(toLocalDateString(d)));
+    dispatch(shiftSelectedDateAction(offset));
   };
 
   const handleDateChange = (e) => {

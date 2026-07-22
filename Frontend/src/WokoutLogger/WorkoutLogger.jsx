@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import "./WorkoutLogger.css";
 import "../siteStyles.css";
+import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
 import {
   getDefaultNewExercise,
   formatTime as formatTimeFn,
@@ -47,7 +48,7 @@ export function WorkoutLogger() {
   const user = useSelector((state) => state.auth.user);
   const cachedExercises = useSelector((state) => state.pullExercise?.exercises);
   const userAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const selectedDate = useSelector((state) => state.calendar.selectedDate);
+  const selectedDate = useSelector(selectSelectedDateOrToday);
   const cachedWorkouts = useSelector((state) => state.pullWorkout.workouts);
   const cachedPersonalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
 

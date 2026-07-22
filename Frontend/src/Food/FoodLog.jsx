@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import "./FoodLog.css";
 import "../siteStyles.css";
 import DateNavigation from "../Calendar/DateNavigation";
+import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
 import {
   toggleFoodFavorite,
   searchUSDAFoods,
@@ -20,7 +21,7 @@ export function FoodLog() {
     const user = useSelector((state) => state.auth.user);
 
     //Define Variables for Date Range Filtering based off of the Current Selected Date on the Calendar.
-    const selectedDate = useSelector((state) => state.calendar.selectedDate);
+    const selectedDate = useSelector(selectSelectedDateOrToday);
     //Start of currently selected Day - ROOT DATE OBJECT for Page. 
     const startOfDay = new Date(selectedDate);
     //Start of currently selected Week

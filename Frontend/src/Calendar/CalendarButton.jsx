@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { fetchPersonalExercises, fetchGym } from "../QueryFunctions";
 import { DashboardWorkoutTodoItem } from "../ExploreWorkouts/DashboardWorkoutTodoItem";
 import { DashboardFoodTodoItem } from "../Food/DashboardFoodTodoItem";
+import { selectSelectedDateOrToday } from "./CalendarSlicer";
 
 export function CalendarButton({ trigger = undefined, setTrigger = undefined, todoPosition = { top5Rows: "61%", top6Rows: "69.5%" } }) {
     const [open, setOpen] = useState(Boolean(trigger));
@@ -33,7 +34,7 @@ export function CalendarButton({ trigger = undefined, setTrigger = undefined, to
         return () => document.removeEventListener("mousedown", handleClick);
     }, [open]);
 
-    const selectedDate = useSelector((state) => state.calendar.selectedDate);
+    const selectedDate = useSelector(selectSelectedDateOrToday);
     const workouts = useSelector((state) => state.pullWorkout.workouts);
     const foods = useSelector((state) => state.pullUserFood.food);
 
@@ -47,7 +48,7 @@ export function CalendarButton({ trigger = undefined, setTrigger = undefined, to
         if (!selectedDate || !workouts?.length || !foods?.length) return;
         setLoading(true);
 
-        const dateStr = new Date(selectedDate).toISOString().slice(0, 10);
+        const dateStr = selectedDate;
         const filteredWorkouts = workouts.filter((w) => {
             if (!w.startTime) return false;
             return new Date(w.startTime * 1000).toISOString().slice(0, 10) === dateStr;

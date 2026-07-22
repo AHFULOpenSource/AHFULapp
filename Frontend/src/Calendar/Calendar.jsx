@@ -5,7 +5,8 @@ import { useSelector, useDispatch } from "react-redux";
 there might be a clearner way to do the calendar animations without it.*/
 import { AnimatePresence, motion } from "framer-motion";
 import "./Calendar.css";
-import { setSelectedDate } from "./CalendarSlicer"; 
+import { selectSelectedDateOrToday, setSelectedDate } from "./CalendarSlicer"; 
+import { toLocalDateString } from "./UseCalendar";
 
 const workoutDatesSet = (workouts) => {
   const set = new Set();
@@ -53,14 +54,14 @@ export function Calendar({ locale, todoPosition, onCalendarSizeChange }) {
 
   const dispatch = useDispatch();
   
-  const selectedDate = useSelector((state) => state.calendar.selectedDate);
+  const selectedDate = useSelector(selectSelectedDateOrToday);
   const workouts = useSelector((state) => state.pullWorkout.workouts);
   const foods = useSelector((state) => state.pullUserFood.food);
   
   const hasWorkoutDates = useMemo(() => workoutDatesSet(workouts), [workouts]);
   const hasFoodDates = useMemo(() => foodDatesSet(foods), [foods]);
   
-  const selectedDateStr = selectedDate ? new Date(selectedDate).toISOString().slice(0, 10) : null;
+  const selectedDateStr = selectedDate;
 
   const monthFormatter = useMemo(() => {
     return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" });
@@ -69,7 +70,7 @@ export function Calendar({ locale, todoPosition, onCalendarSizeChange }) {
   const handleDateClick = (date) => {
     if (!date || isNaN(date.getTime())) return;
     
-    const dateStr = date.toISOString();
+    const dateStr = toLocalDateString(date);
     dispatch(setSelectedDate(dateStr));
   };
 
