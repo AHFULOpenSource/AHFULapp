@@ -1,4 +1,4 @@
-import { store } from "../../../store";
+import { store } from "../store";
 import { setExercises, setError } from "./PullExerciseSlice";
 
 async function fetchExercisesFromBackend() {

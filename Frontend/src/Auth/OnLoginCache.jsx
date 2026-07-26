@@ -1,4 +1,4 @@
-import { pullExercises } from "../components/Cache/ExerciseCache/PullExercise";
+import { pullExercises } from "../ExercisesCard/PullExercise";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise";
 import { pullTemplates } from "../components/Cache/TemplateCache/PullTemplate";
 import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout";

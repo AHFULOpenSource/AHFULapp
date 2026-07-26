@@ -6,7 +6,7 @@ import calendarReducer from "./Calendar/CalendarSlicer";
 import { normalizeSelectedDate, toLocalDateString } from "./Calendar/UseCalendar";
 import authReducer from "./Auth/AuthSlice";
 import settingsReducer from "./Auth/SettingsSlice";
-import pullExerciseReducer from "./components/Cache/ExerciseCache/PullExerciseSlice";
+import pullExerciseReducer from "./ExercisesCard/PullExerciseSlice";
 import pullTemplateReducer from "./components/Cache/TemplateCache/PullTemplateSlice";
 import pullWorkoutReducer from "./components/Cache/WorkoutCache/PullWorkoutSlice";
 import pullPersonalExerciseReducer from "./components/Cache/PersonalExerciseCache/PersonalExerciseSlice";
