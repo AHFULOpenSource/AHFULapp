@@ -34,8 +34,8 @@ export const TUTORIAL_STEPS = [
     highlightSelector: '#ai-text-input'
   },
   {
-    page: '/ExploreWorkout',
-    title: 'Explore Workouts',
+    page: '/HistoryPRs',
+    title: 'Workout History & Personal Exercise Records',
     message: 'Visit Previous workouts and view their details. Our Heat Map visualization helps you identify trends and patterns in your workout history.',
     highlightSelector: '#heatmap-container'
   },

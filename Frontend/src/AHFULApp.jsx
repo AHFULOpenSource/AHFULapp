@@ -2,7 +2,7 @@ import {  useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { WorkoutLogger } from "./WokoutLogger/WorkoutLogger.jsx";
-import { ExploreWorkouts } from "./ExploreWorkouts/ExploreWorkouts.jsx";
+import { HistoryPRsPage } from "./HistoryPRs/HistoryPRs.jsx";
 import { FoodLog } from "./Food/FoodLog.jsx";
 import { Dashboard } from "./Dashboard/Dashboard.jsx";
 import { Login } from "./Auth/Login.jsx";
@@ -96,7 +96,7 @@ function AHFULApp() {
             <Route path="/Favorites" element={<FavoritesHub/>}/>
             <Route path="/WorkoutLogger" element={<WorkoutLogger/>} />
             <Route path="/Templates" element={<Templates/>} />
-            <Route path="/ExploreWorkout" element={<ExploreWorkouts/>}/>
+            <Route path="/HistoryPRs" element={<HistoryPRsPage/>}/>
             <Route path="/FoodLog" element={<FoodLog/>}/>
             <Route path="/EmailVerification" element={<VerifyEmail/>}/>
             <Route path="/AIChat" element={<AIChat/>}/>

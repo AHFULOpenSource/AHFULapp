@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import "../ExploreWorkouts/ExploreWorkouts.css";
+import "../HistoryPRs/ExploreWorkouts.css";
 import "../siteStyles.css";
 
 // SocialWorkouts - social page that resembles ExploreWorkouts what is the Shared workouts a User and their friends have shared

@@ -2,17 +2,17 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import "./ExploreWorkouts.css";
 import "../siteStyles.css";
-import { CalendarButton } from "../Calendar/CalendarButton";
-import { HeatMap } from "./HeatMap";
-import { WorkoutChart } from "../ExploreWorkouts/WorkoutChart";
+import { CalendarButton } from "../Calendar/CalendarButton.jsx";
+import { HeatMap } from "./HeatMap.jsx";
+import { WorkoutChart } from "./WorkoutChart.jsx";
 import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
 import { 
   fetchPersonalExercises,  
   deleteWorkout 
-} from "../QueryFunctions";
+} from "../QueryFunctions.js";
 
 /**
- * ExploreWorkouts - Workout exploration and history page
+ * History & PRs (Personal Exercise Records) - Workout History exploration and Personal Exercise history page
  *
  * Features:
  * - View all workouts or just my workouts (toggle)
@@ -25,7 +25,7 @@ import {
  * - Right column: WorkoutChart and HeatMap widgets
  * - Bottom: Calendar component
  */
-export function ExploreWorkouts() {
+export function HistoryPRsPage() {
   // ─── State ────────────────────────────────────────────────────────────────────
   const user = useSelector((state) => state.auth.user);
   const [workouts, setWorkouts] = useState([]);
@@ -300,7 +300,7 @@ export function ExploreWorkouts() {
     <div className="explore-root">
       {/* Page Header with Title, Toggle, and Refresh Button */}
       <header className="explore-header">
-        <h1>Explore Workouts</h1>
+        <h1>Workout History & Personal Exercise Records</h1>
         <div className="header-controls">
           <button onClick={fetchExercises} disabled={loading} className="refresh-btn">
             {loading ? "Refreshing..." : "Refresh"}

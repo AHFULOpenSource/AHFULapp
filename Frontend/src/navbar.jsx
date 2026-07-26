@@ -89,11 +89,11 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
           </NavLink>
 
           <NavLink
-            to="/ExploreWorkout"
+            to="/HistoryPRs"
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
-            My Workouts
+            History & PRs
           </NavLink>
 
           <NavLink
