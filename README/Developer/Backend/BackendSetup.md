@@ -85,7 +85,7 @@ Using a Python virtual environment keeps dependencies isolated per project.
   ```bash
   python -m flask --app AHFULbackend run --debug
   ```
-  The app will be accessible at `http://localhost:5000`.
+  The app will be accessible at `https://www.ahful.app`.
 
 - **Deactivate when done**
   ```bash
@@ -115,7 +115,7 @@ Place a `.env` file in the root of `Backend/` with all required keys. Ask your t
 - `python --version` returns Python 3.13 or higher inside the venv
 - `pip list` shows installed packages from `requirements.txt`
 - `python -m flask --app AHFULbackend run --debug` starts the app without import errors
-- The app is accessible at `http://localhost:5000`
+- The app is accessible at `https://www.ahful.app`
 
 ### Optional: VSCode Interpreter
 
