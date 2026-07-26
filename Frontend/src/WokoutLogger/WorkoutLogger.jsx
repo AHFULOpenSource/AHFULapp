@@ -12,7 +12,6 @@ import {
   createPersonalExercise,
   updatePersonalExercise,
   deletePersonalExercise,
-  toggleWorkoutFavorite,
 } from "../QueryFunctions.js";
 import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
 import { ExercisesCard } from "../ExercisesCard/ExercisesCard.jsx";
@@ -55,12 +54,11 @@ export function WorkoutLogger() {
   /* Hook to track state of the InProgressTable on the Workout Page */
   const [exercisesInProgressTable, setExercisesInProgressTable] = useState([]);
 
-  // ─── Exercise Database State ──────────────────────────────────────────────────
   // ─── Workout State ───────────────────────────────────────────────────────────
   // Daily workouts for the date
   const [dailyWorkouts, setDailyWorkouts] = useState([]);
   // Current workout object from database
-  const [workout, setWorkout] = useState(null);
+  const [selectedEditableWorkout, setWorkout] = useState(null);
   // User-editable workout title
   const [workoutTitle, setWorkoutTitle] = useState("");
   // Workout loading state
@@ -84,7 +82,7 @@ export function WorkoutLogger() {
   const [saveStatus, setSaveStatus] = useState("idle");
 
   // ─── Refs ───────────────────────────────────────────────────────────────────
-  const workoutRef = useRef(workout);
+  const workoutRef = useRef(selectedEditableWorkout);
   const workoutTitleRef = useRef(workoutTitle);
   const selectedGymIdRef = useRef(selectedGymId);
   const exercisesInProgressTableRef = useRef(exercisesInProgressTable);
@@ -92,13 +90,13 @@ export function WorkoutLogger() {
   const timeRef = useRef(time);
 
   useEffect(() => {
-    workoutRef.current = workout;
+    workoutRef.current = selectedEditableWorkout;
     workoutTitleRef.current = workoutTitle;
     selectedGymIdRef.current = selectedGymId;
     exercisesInProgressTableRef.current = exercisesInProgressTable;
     personalExToRemoveRef.current = personalExToRemove;
     timeRef.current = time;
-  }, [workout, workoutTitle, selectedGymId, exercisesInProgressTable, personalExToRemove, time]);
+  }, [selectedEditableWorkout, workoutTitle, selectedGymId, exercisesInProgressTable, personalExToRemove, time]);
 
   const persistWorkout = useCallback(async () => {
     const activeWorkout = workoutRef.current;
@@ -232,7 +230,7 @@ export function WorkoutLogger() {
 
       setDailyWorkouts(todaysWorkouts);
 
-      const activeWorkoutId = workoutRef.current?._id || workout?._id || null;
+      const activeWorkoutId = workoutRef.current?._id || selectedEditableWorkout?._id || null;
 
       const todaysWorkout =
         todaysWorkouts.find((w) => w?._id === activeWorkoutId) ||
@@ -379,7 +377,7 @@ export function WorkoutLogger() {
 
   // Keep the table aligned with whichever workout is currently active.
   useEffect(() => {
-    if (!workout?._id) {
+    if (!selectedEditableWorkout?._id) {
       setExercisesInProgressTable([]);
       setPersonalExToRemove({});
       return;
@@ -387,12 +385,12 @@ export function WorkoutLogger() {
 
     const workoutPersonalExercises =
       cachedPersonalExercises?.filter(
-        (pe) => pe?.workout_id === workout._id,
+        (pe) => pe?.workout_id === selectedEditableWorkout._id,
       ) || [];
 
     setExercisesInProgressTable(workoutPersonalExercises);
     setPersonalExToRemove({});
-  }, [workout?._id, cachedPersonalExercises]);
+  }, [selectedEditableWorkout?._id, cachedPersonalExercises]);
 
   const handleManualSave = async () => {
     const saved = await flushWorkoutAutosave();
@@ -675,8 +673,7 @@ export function WorkoutLogger() {
     <HeatMap />
 
       {/* Center Column: Workout Card */}
-      <div className="center-column">
-        {workout ? (
+        {selectedEditableWorkout ? (
           <>
             <div className="workout-card">
               {/* Header row: Title on left, button on right */}
@@ -706,7 +703,7 @@ export function WorkoutLogger() {
                   />
 
                   <h3>
-                    {workout?.startTime ? unixToDate(workout.startTime) : ""}
+                    {unixToDate(selectedEditableWorkout.startTime)}
                   </h3>
                 </div>
 
@@ -864,7 +861,6 @@ export function WorkoutLogger() {
             </div>
           </>
         ) : null}
-      </div>
     </div>
   );
 }
