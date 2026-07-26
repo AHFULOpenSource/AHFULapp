@@ -4,7 +4,6 @@ import "./ExploreWorkouts.css";
 import "../siteStyles.css";
 import { CalendarButton } from "../Calendar/CalendarButton.jsx";
 import { HeatMap } from "./HeatMap.jsx";
-import { WorkoutChart } from "./WorkoutChart.jsx";
 import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
 import { 
   fetchPersonalExercises,  
@@ -22,7 +21,6 @@ import {
  *
  * Layout:
  * - Left column: List of workouts/exercises
- * - Right column: WorkoutChart and HeatMap widgets
  * - Bottom: Calendar component
  */
 export function HistoryPRsPage() {
@@ -373,11 +371,7 @@ export function HistoryPRsPage() {
 
         {/* Right Column: Charts and Visualizations */}
         <div className="explore-right">
-          {/* Interactive Workout History Chart */}
-          {/* Allows users to select different week ranges (4, 6, 8, 12 weeks) */}
-          <WorkoutChart defaultWeeks={6} />
           {/* Heat Map showing workout frequency over time */}
-
           <HeatMap />
         </div>
       </div>
