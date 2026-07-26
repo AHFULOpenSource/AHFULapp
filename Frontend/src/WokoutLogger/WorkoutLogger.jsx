@@ -20,6 +20,7 @@ import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout.jsx";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
 import { Loading } from "../Loading.jsx";
 import { useAutosave } from "./useAutosave.js";
+import { HeatMap } from "./HeatMap.jsx";
 
 /**
  * Logger - Main workout tracking page
@@ -30,6 +31,7 @@ import { useAutosave } from "./useAutosave.js";
  * - Create custom exercises
  * - Track reps, sets, weight for each exercise
  * - Workout timer
+ * - Heatmap visualization of target muscles worked in current workout
  *
  * Auth Flow:
  * - Gets user from Redux auth state
@@ -80,9 +82,6 @@ export function WorkoutLogger() {
   const [time, setTime] = useState(0);
 
   const [saveStatus, setSaveStatus] = useState("idle");
-
-  // ─── Favorite Filter State ───────────────────────────────────────────────────
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // ─── Refs ───────────────────────────────────────────────────────────────────
   const workoutRef = useRef(workout);
@@ -193,8 +192,6 @@ export function WorkoutLogger() {
     setSaveStatus((current) => (current === "saving" ? current : "pending"));
     triggerWorkoutAutosave();
   };
-
-  // ─── Use Effects ───────────────────────────────────────────────────────────────────
 
   // ─── Timer Logic ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -314,26 +311,6 @@ export function WorkoutLogger() {
     return new Date(unix * 1000).toLocaleDateString("en-US");
   };
 
-  const handleToggleFavorite = async (workoutId) => {
-    if (!workoutId) return;
-    try {
-      const { error } = await toggleWorkoutFavorite(workoutId);
-      if (!error) {
-        setDailyWorkouts((prev) =>
-          prev.map((item) =>
-            item._id === workoutId ? { ...item, favorite: !item.favorite } : item,
-          ),
-        );
-        setWorkout((prev) =>
-          prev && prev._id === workoutId ? { ...prev, favorite: !prev.favorite } : prev,
-        );
-      } else {
-        console.error("Failed to toggle favorite:", error);
-      }
-    } catch (err) {
-      console.error("Error toggling favorite:", err);
-    }
-  };
 
   // ─── Toggle Exercise Completion ───────────────────────────────────────────────
   const toggleCompleted = (index) => {
@@ -607,10 +584,10 @@ export function WorkoutLogger() {
 
   // ─── Main Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="page-layout">
+  <div className="page-layout">
 
       <div className="workout-picker-panel">
-      <div className="workout-picker-inline">
+        <div className="workout-picker-inline">
 
         {/* Zone A: Create New Workout Section */}
         <div className="create-workout-section">
@@ -646,35 +623,18 @@ export function WorkoutLogger() {
 
         {/* Zone 1 + 2: Filter, scrollable list, load button */}
         <div className="workout-list">
-          <div className="favorite-filter-section">
-            <button
-              className={`favorite-filter-btn ${showFavoritesOnly ? "active" : ""}`}
-              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            >
-              {showFavoritesOnly ? "⭐ Favorites" : "☆ All"}
-            </button>
-          </div>
 
           <div className="workout-scroll-container">
-            <p>Showing workout for {selectedDate?.slice(0, 10) || "selected date"}</p>
+            <p>Showing workout for {selectedDate?.slice(0, 10)}</p>
 
-            {(!dailyWorkouts ||
-              (showFavoritesOnly
-                ? dailyWorkouts.filter((w) => w.favorite)
-                : dailyWorkouts
-              ).length === 0) && (
+            {dailyWorkouts.length === 0 && (
               <div className="no-workouts">
-                {showFavoritesOnly
-                  ? "No favorite workouts for this day."
-                  : "No workouts for this day."}
+                No workouts for this day.
               </div>
             )}
 
             {dailyWorkouts &&
-              (showFavoritesOnly
-                ? dailyWorkouts.filter((w) => w.favorite)
-                : dailyWorkouts
-              ).map((w) => (
+               dailyWorkouts.map((w) => (
                 <div
                   key={w._id}
                   className={
@@ -695,17 +655,6 @@ export function WorkoutLogger() {
                       {unixToDate(w.startTime)}
                     </div>
                   </div>
-                  <button
-                    className="workout-favorite-btn"
-                    onClick={() => {
-                      handleToggleFavorite(w._id);
-                    }}
-                    title={
-                      w.favorite ? "Remove from favorites" : "Add to favorites"
-                    }
-                  >
-                    {w.favorite ? "⭐" : "☆"}
-                  </button>
                 </div>
               ))}
 
@@ -722,7 +671,8 @@ export function WorkoutLogger() {
       </div>
     </div>
 
-        <ExercisesCard AddSelectedExercises={AddSelectedExercises} />
+    <ExercisesCard AddSelectedExercises={AddSelectedExercises} />
+    <HeatMap />
 
       {/* Center Column: Workout Card */}
       <div className="center-column">

@@ -3,11 +3,11 @@ import { useSelector } from "react-redux";
 import "./ExploreWorkouts.css";
 import "../siteStyles.css";
 import { CalendarButton } from "../Calendar/CalendarButton.jsx";
-import { HeatMap } from "./HeatMap.jsx";
 import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
 import { 
   fetchPersonalExercises,  
-  deleteWorkout 
+  deleteWorkout, 
+  toggleWorkoutFavorite
 } from "../QueryFunctions.js";
 
 /**
@@ -16,7 +16,6 @@ import {
  * Features:
  * - View all workouts or just my workouts (toggle)
  * - Interactive workout history chart with week selection
- * - Heat map showing workout frequency
  * - Calendar integration
  *
  * Layout:
@@ -41,6 +40,9 @@ export function HistoryPRsPage() {
   const [shareTargetEmail, setShareTargetEmail] = useState("");
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState(null);
+
+  // ─── Favorite Filter State ───────────────────────────────────────────────────
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   const getUserId = () => {
     if (user?._id) return user._id;
@@ -199,11 +201,11 @@ export function HistoryPRsPage() {
 
   // ─── Fetch Gym Info when Workout is Selected ───────────────────────────────────
   useEffect(() => {
-    if (selectedWorkout?.gymId) {
+    if (selectedWorkout?.gym_id) {
       const loadGymInfo = async () => {
         setGymLoading(true);
         try {
-          const gym = await fetchGym(selectedWorkout.gymId);
+          const gym = await fetchGym(selectedWorkout.gym_id);
           setGymInfo(gym);
         } catch (err) {
           console.error("Failed to fetch gym info:", err);
@@ -293,6 +295,20 @@ export function HistoryPRsPage() {
     }
   };
 
+  const handleToggleFavorite = async (workoutId) => {
+    if (!workoutId) return;
+    try {
+      const { reponse, error } = await toggleWorkoutFavorite(workoutId);
+      if (error) {
+        console.error("Failed to toggle favorite:", error);
+        throw new Error(error);
+      }
+      
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="explore-root">
@@ -300,6 +316,9 @@ export function HistoryPRsPage() {
       <header className="explore-header">
         <h1>Workout History & Personal Exercise Records</h1>
         <div className="header-controls">
+            <button className={`favorite-filter-btn ${showFavoritesOnly ? "active" : ""}`} onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}>
+              {showFavoritesOnly ? "⭐ Favorites" : "☆ All"}
+            </button>
           <button onClick={fetchExercises} disabled={loading} className="refresh-btn">
             {loading ? "Refreshing..." : "Refresh"}
           </button>
@@ -325,9 +344,9 @@ export function HistoryPRsPage() {
                 </div>
               ) : (
                 /* Workout List */
-                workouts.map((workout, idx) => {
+                (showFavoritesOnly ? workouts.filter((w) => w.favorite) : workouts ).map((workout, idx) => {
                   // Generate unique key for each workout item
-                  const key = workout.id || workout._id || workout.title || `workout-${idx}`;
+                  const key = workout._id;
                   return (
                     <div
                       key={key}
@@ -354,25 +373,26 @@ export function HistoryPRsPage() {
                           {workout.endTime && (
                             <span> • End: {new Date(workout.endTime * 1000).toLocaleDateString()}</span>
                           )}
-                          {workout.gymId && <span> • Gym ID: {workout.gymId.slice(0, 8)}...</span>}
+                          {workout.gym_id && <span> • Workout Gym : {workout.gym_id}</span>}
+                          <button
+                          className="workout-favorite-btn"
+                          onClick={() => {
+                            handleToggleFavorite(workout._id);
+                          }}
+                          title={
+                            workout.favorite ? "Remove from favorites" : "Add to favorites"
+                          }
+                        >
+                          {workout.favorite ? "⭐" : "☆"}
+                        </button>
                         </div>
                       </div>
-                      {/* Optional Instructions */}
-                      {workout.instructions && (
-                        <div className="exercise-instructions">{workout.instructions}</div>
-                      )}
                     </div>
                   );
                 })
               )}
             </div>
           )}
-        </div>
-
-        {/* Right Column: Charts and Visualizations */}
-        <div className="explore-right">
-          {/* Heat Map showing workout frequency over time */}
-          <HeatMap />
         </div>
       </div>
 
@@ -402,7 +422,7 @@ export function HistoryPRsPage() {
               </div>
 
               {/* Gym Information */}
-              {selectedWorkout.gymId && (
+              {selectedWorkout.gym_id && (
                 <div className="workout-detail-section">
                   <label className="workout-detail-label">Gym</label>
                   {gymLoading ? (
