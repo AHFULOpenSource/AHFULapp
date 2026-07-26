@@ -53,7 +53,7 @@ export function SocialWorkouts() {
     setError(null);
     try {
       // Attempt a sensible endpoint; if your backend differs update this URL
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/shared-workouts`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/shared-workouts`, {
         method: "GET",
         credentials: "include",
       });
@@ -78,7 +78,7 @@ export function SocialWorkouts() {
 
   const fetchWallPosts = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/wall-posts`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/wall-posts`, {
         method: "GET",
         credentials: "include",
       });
@@ -102,7 +102,7 @@ export function SocialWorkouts() {
     setFriendsLoading(true);
     setFriendsError(null);
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/user`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/user`, {
         method: "GET",
         credentials: "include",
       });
@@ -152,7 +152,7 @@ export function SocialWorkouts() {
     setPosting(true);
     setPostError(null);
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/wall-posts`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/wall-posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -202,7 +202,7 @@ export function SocialWorkouts() {
       setGymLoading(true);
       setGymError(null);
       try {
-        const res = await fetch(`http://localhost:5000/api/AHFULgyms/${gymId}` , {
+        const res = await fetch(`https://www.ahful.app/api/AHFULgyms/${gymId}` , {
           method: "GET",
           credentials: "include",
         });
@@ -251,7 +251,7 @@ export function SocialWorkouts() {
       setPersonalExLoading(true);
       setPersonalExError(null);
       try {
-        const res = await fetch(`http://localhost:5000/api/AHFULpersonalEx/workout/${workoutId}`, {
+        const res = await fetch(`https://www.ahful.app/api/AHFULpersonalEx/workout/${workoutId}`, {
           method: "GET",
           credentials: "include",
         });

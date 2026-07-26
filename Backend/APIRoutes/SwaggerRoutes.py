@@ -740,7 +740,7 @@ swaggerConfig = {
           "Location": {
             "schema": {
               "type": "string",
-              "example": "http://localhost:5173/EmailVerification?status=success"
+              "example": "https://ahful.app/EmailVerification?status=success"
             }
           }
         }
@@ -775,7 +775,7 @@ swaggerConfig = {
           "Location": {
             "schema": {
               "type": "string",
-              "example": "http://localhost:5173/PhoneVerification?status=success"
+              "example": "https://ahful.app/PhoneVerification?status=success"
             }
           }
         }
