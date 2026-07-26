@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import "../HistoryPRs/ExploreWorkouts.css";
 import "../siteStyles.css";
@@ -8,6 +9,7 @@ import "../siteStyles.css";
 // Right: Wall posts (friends' shared posts or public Posts)
 
 export function SocialWorkouts() {
+  const navigate = useNavigate();
   const user = useSelector((s) => s.auth.user);
   const userId = user?.id;
   const userEmail = user?.email.toLowerCase();
@@ -291,6 +293,9 @@ export function SocialWorkouts() {
       <header className="explore-header">
         <h1>Social — Shared Workouts & Wall</h1>
         <div className="header-controls">
+          <button className="refresh-btn" onClick={() => navigate("/ExploreFriends")}>
+            Explore Friends
+          </button>
           <button onClick={fetchShared} disabled={loading} className="refresh-btn">
             {loading ? "Refreshing..." : "Refresh"}
           </button>
