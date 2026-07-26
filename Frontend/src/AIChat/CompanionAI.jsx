@@ -38,7 +38,7 @@ export function CompanionAI() {
 
     // Keep image static when muted
     if (isMuted && imgRef.current) {
-      imgRef.current.src = 'https://www.ahful.app/images/char-mouth-closed.png';
+      imgRef.current.src = '../../images/char-mouth-closed.png';
       console.log('Image set to static (mouth closed)');
     }
   }, [isMuted]);
@@ -142,7 +142,7 @@ export function CompanionAI() {
         <img
           ref={imgRef}
           id="ai-character-image"
-          src="https://www.ahful.app/images/char-mouth-closed.png"
+          src="../../images/char-mouth-closed.png"
           alt="WakuWaku"
         />
       </div>
