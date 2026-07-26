@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import "./ExploreTasks.css";
 import "../siteStyles.css";
-import { updateTask, toggleTaskFavorite } from "../QueryFunctions";
+import { updateTask, toggleTaskFavorite } from "./QueryFunctions-Tasks";
 
 export function ExploreTasks() {
   const [tasks, setTasks] = useState([]);
