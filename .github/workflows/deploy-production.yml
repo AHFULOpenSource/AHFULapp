@@ -80,6 +80,6 @@ jobs:
             sudo systemctl restart ${{ secrets.DEPLOY_SERVICE_NAME }}
 
             echo ">>> Verifying service is alive..."
-            sudo systemctl is-active --quiet ${{ secrets.DEPLOY_SERVICE_NAME }} \
+            systemctl is-active --quiet ${{ secrets.DEPLOY_SERVICE_NAME }} \
               && echo "✓ Service is running" \
               || (echo "✗ Service failed to start" && exit 1)
