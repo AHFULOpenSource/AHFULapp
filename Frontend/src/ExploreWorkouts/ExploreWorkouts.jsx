@@ -8,7 +8,6 @@ import { WorkoutChart } from "../ExploreWorkouts/WorkoutChart";
 import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
 import { 
   fetchPersonalExercises,  
-  fetchExerciseById,
   deleteWorkout 
 } from "../QueryFunctions";
 
