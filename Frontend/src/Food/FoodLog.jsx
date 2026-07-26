@@ -1,47 +1,36 @@
-//@author Jonathan Torrence
+//@author Jonathan Torrence & AuGust Ringelstetter
+//updated 7/6/2026
 
 import React, {useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import "./FoodLog.css";
 import "../siteStyles.css";
-import { toggleFoodFavorite } from "../QueryFunctions.js";
-
-const API_BASE = "http://localhost:5000/api/AHFULfoods";
+import DateNavigation from "../Calendar/DateNavigation";
+import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
+import {
+  toggleFoodFavorite,
+  searchUSDAFoods,
+  fetchFoodsByUser,
+  createFood,
+  fetchFoodById,
+  updateFood,
+  deleteFood
+} from "../Food/QueryFunctions-Food";
 
 export function FoodLog() {
     const user = useSelector((state) => state.auth.user);
 
-    const toLocalDateInput = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-    };
+    //Define Variables for Date Range Filtering based off of the Current Selected Date on the Calendar.
+    const selectedDate = useSelector(selectSelectedDateOrToday);
+    //Start of currently selected Day - ROOT DATE OBJECT for Page. 
+    const startOfDay = new Date(selectedDate);
+    //Start of currently selected Week
+    const weekStart = new Date(startOfDay);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    //End of currently selected Week
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 7);
 
-    const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-    const getWeekStart = (date) => {
-        const d = new Date(date);
-        d.setHours(0, 0, 0, 0);
-        d.setDate(d.getDate() - d.getDay());
-        return d;
-    };
-
-    const getWeekEnd = (date) => {
-        const end = new Date(getWeekStart(date));
-        end.setDate(end.getDate() + 7);
-        return end;
-    };
-
-    // Get userId from Redux or fall back to localStorage
-    const getUserId = () => {
-        if (user?._id) return user._id;
-        try {
-            const stored = JSON.parse(localStorage.getItem("user_data"));
-            return stored?._id || null;
-        } catch { return null; }
-    };
-    const userId = getUserId();
 
     const [foods, setFoods] = useState([]);
     const [foodName, setFoodName] = useState("");
@@ -50,7 +39,6 @@ export function FoodLog() {
     const [mealType, setMealType] = useState("Lunch");
     const [errors, setErrors] = useState("");
     const [timePeriod, setTimePeriod] = useState("daily");
-    const [selectedDate, setSelectedDate] = useState(toLocalDateInput(new Date()));
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -61,22 +49,29 @@ export function FoodLog() {
     const [usda_searching, setUsda_searching] = useState(false);
     const [showUsda_dropdown, setShowUsda_dropdown] = useState(false);
     const [usda_searchTimeout, setUsda_searchTimeout] = useState(null);
+    const [selectedUSDAFood, setSelectedUSDAFood] = useState(null);
 
-    // Normalize backend food document to the shape the UI expects
+
     const normalizeFood = (doc) => ({
         id: doc._id,
         name: doc.name,
-        calories: doc.calsPerServing,
+        calories: doc.calories,
         servings: doc.servings,
-        totalCalories: doc.calsPerServing * doc.servings,
+        totalCalories: doc.calories * doc.servings,
         mealType: doc.type,
         loggedAt: new Date(doc.time * 1000),
         timestamp: new Date(doc.time * 1000).toLocaleTimeString(),
-        favorite: doc.favorite || false
+        favorite: doc.favorite || false,
+        carbs: doc.carbs,
+        fat: doc.fat,
+        protein: doc.protein,
+        fdcId: doc.fdcId,
+        servingSize: doc.servingSize,
+        servingUnit: doc.servingUnit
     });
 
     // USDA Food Search - with debouncing
-    const searchUSDAFoods = async (query) => {
+    const searchUSDAFoodsWrapper = async (query) => {
         if (!query || query.length < 2) {
             setUsda_searchResults([]);
             setShowUsda_dropdown(false);
@@ -84,24 +79,15 @@ export function FoodLog() {
         }
 
         setUsda_searching(true);
-        try {
-            const res = await fetch(`${API_BASE}/search/usda?q=${encodeURIComponent(query)}&limit=8`, {credentials: "include"});
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                console.error("USDA Search error:", errData.error);
-                setUsda_searchResults([]);
-                return;
-            }
-
-            const data = await res.json();
-            setUsda_searchResults(data.foods || []);
-            setShowUsda_dropdown(true);
-        } catch (err) {
-            console.error("Network error searching USDA:", err);
+        const { data, error } = await searchUSDAFoods(query);
+        if (error) {
+            console.error("USDA Search error:", error);
             setUsda_searchResults([]);
-        } finally {
-            setUsda_searching(false);
+        } else {
+            setUsda_searchResults(data);
+            setShowUsda_dropdown(true);
         }
+        setUsda_searching(false);
     };
 
     // Handle USDA Search Input with Debouncing
@@ -115,7 +101,7 @@ export function FoodLog() {
 
         // Set new timeout to debounce search
         const newTimeout = setTimeout(() => {
-            searchUSDAFoods(value);
+            searchUSDAFoodsWrapper(value);
         }, 500);
 
         setUsda_searchTimeout(newTimeout);
@@ -124,14 +110,12 @@ export function FoodLog() {
     // Select a USDA Food and populate the form
     const selectUSDAFood = (food) => {
         setFoodName(food.name || "");
-
-        // If calories are available, use them; otherwise leave blank
-        if (food.calories !== null && food.calories !== undefined) {
+        if (food.calories != null) {
             setCalories(Math.round(food.calories).toString());
         } else {
             setCalories("");
         }
-
+        setSelectedUSDAFood(food);
         setServings("1");
         setUsda_searchInput("");
         setUsda_searchResults([]);
@@ -140,59 +124,43 @@ export function FoodLog() {
 
     // Fetch foods for the logged-in user on mount
     useEffect(() => {
-        if (!userId) return;
+        if (!user._id) return;
         setLoading(true);
-        fetch(`${API_BASE}/${userId}`, {credentials: "include"})
-            .then(async (res) => {
-                if (res.status === 404) {
-                    return [];
-                }
-
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.error || res.statusText || "Failed to load foods");
-                }
-
-                return res.json();
-            })
-            .then((data) => {
-                const list = Array.isArray(data) ? data : [];
-                setFoods(list.map(normalizeFood));
-            })
-            .catch((err) => {
+        (async () => {
+            const { data, error } = await fetchFoodsByUser(user._id);
+            if (error) {
                 setFoods([]);
-                console.error("Failed to load foods:", err);
-            })
-            .finally(() => setLoading(false));
-    }, [userId]);
-
-    const selectedDateObj = new Date(`${selectedDate}T00:00:00`);
+                console.error("Failed to load foods:", error);
+            } else {
+                setFoods(data.map(normalizeFood));
+            }
+            setLoading(false);
+        })();
+    }, [user._id]);
 
     const foodsInPeriod = foods.filter((food) => {
         const foodDate = food.loggedAt;
 
         if (timePeriod === "daily") {
-            const selectedStart = startOfDay(selectedDateObj);
+            const selectedStart = new Date(selectedDate);
             const selectedEnd = new Date(selectedStart);
             selectedEnd.setDate(selectedEnd.getDate() + 1);
             return foodDate >= selectedStart && foodDate < selectedEnd;
         }
 
         if (timePeriod === "weekly") {
-            const weekStart = getWeekStart(selectedDateObj);
-            const weekEnd = getWeekEnd(selectedDateObj);
             return foodDate >= weekStart && foodDate < weekEnd;
         }
 
         if (timePeriod === "monthly") {
             return (
-                foodDate.getFullYear() === selectedDateObj.getFullYear() &&
-                foodDate.getMonth() === selectedDateObj.getMonth()
+                foodDate.getFullYear() === startOfDay.getFullYear() &&
+                foodDate.getMonth() === startOfDay.getMonth()
             );
         }
 
         if (timePeriod === "yearly") {
-            return foodDate.getFullYear() === selectedDateObj.getFullYear();
+            return foodDate.getFullYear() === startOfDay.getFullYear();
         }
 
         return true;
@@ -230,31 +198,27 @@ export function FoodLog() {
         }
 
         try {
-            const res = await fetch(`${API_BASE}/create`, {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: userId,
-                    name: foodName,
-                    calsPerServing: parseInt(calories),
-                    servings: parseInt(servings),
-                    type: mealType,
-                    time: Math.trunc(Date.now() / 1000)
-                })
-            });
+            const payload = {
+                name: foodName,
+                calories: parseInt(calories),
+                servings: parseInt(servings),
+                type: mealType,
+                carbs: selectedUSDAFood?.carbs ?? null,
+                fat: selectedUSDAFood?.fat ?? null,
+                protein: selectedUSDAFood?.protein ?? null,
+                fdcId: selectedUSDAFood?.fdcId ?? null,
+                servingSize: selectedUSDAFood?.servingSize ?? null,
+                servingUnit: selectedUSDAFood?.servingUnit ?? null,
+            };
 
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                setErrors(errData.error || "Failed to add food");
+            const { data: createResult, error: createError } = await createFood(payload);
+            if (createError) {
+                setErrors(createError);
                 return;
             }
 
-            const result = await res.json();
-            // Fetch the newly created food from the server to get the full document
-            const newRes = await fetch(`${API_BASE}/id/${result.food_id}`, {credentials: "include"});
-            if (newRes.ok) {
-                const newDoc = await newRes.json();
+            const { data: newDoc, error: fetchError } = await fetchFoodById(createResult.food_id);
+            if (!fetchError && newDoc) {
                 setFoods((prev) => [...prev, normalizeFood(newDoc)]);
             }
         } catch (err) {
@@ -270,16 +234,12 @@ export function FoodLog() {
     };
 
     const removeFood = async (id) => {
-        try {
-            const res = await fetch(`${API_BASE}/delete/${id}`, { method: "DELETE" }, {credentials: "include"});
-            if (!res.ok) {
-                console.error("Failed to delete food");
-                return;
-            }
-            setFoods(foods.filter(food => food.id !== id));
-        } catch (err) {
-            console.error("Network error — could not delete food", err);
+        const { error } = await deleteFood(id);
+        if (error) {
+            console.error("Failed to delete food:", error);
+            return;
         }
+        setFoods(foods.filter(food => food.id !== id));
     };
 
     const toggleFavorite = async (id) => {
@@ -320,73 +280,53 @@ export function FoodLog() {
     };
 
     const saveEdit = async () => {
-        try {
-            const res = await fetch(`${API_BASE}/update/${editingId}`, {
-                method: "PUT",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: foodName,
-                    calsPerServing: parseInt(calories),
-                    servings: parseInt(servings),
-                    type: mealType,
-                    time: Math.trunc(Date.now() / 1000)
-                })
-            });
+        const payload = {
+            name: foodName,
+            calories: parseInt(calories),
+            servings: parseInt(servings),
+            type: mealType,
+            carbs: editFood?.carbs ?? null,
+            fat: editFood?.fat ?? null,
+            protein: editFood?.protein ?? null,
+            fdcId: editFood?.fdcId ?? null,
+            servingSize: editFood?.servingSize ?? null,
+            servingUnit: editFood?.servingUnit ?? null,
+        };
 
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                setErrors(errData.error || "Failed to update food");
-                return;
-            }
-
-            const updated = await res.json();
-            setFoods((prev) => prev.map((f) => f.id === editingId ? normalizeFood(updated) : f));
-        } catch (err) {
-            setErrors("Network error — could not update food");
-            console.error(err);
+        const { data: updated, error } = await updateFood(editingId, payload);
+        if (error) {
+            setErrors(error);
             return;
+        }
+        if (updated) {
+            setFoods((prev) => prev.map((f) => f.id === editingId ? normalizeFood(updated) : f));
         }
         cancelEdit();
     };
 
     const periodTotalCalories = filteredFoods.reduce((sum, food) => sum + food.totalCalories, 0);
 
-    const formatLongDate = (date) =>
-        date.toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "short",
-            day: "numeric",
-            year: "numeric"
-        });
+
 
     const rangeLabel = (() => {
+
         if (timePeriod === "daily") {
-            return formatLongDate(selectedDateObj);
+            return startOfDay.toLocaleString('en-US').slice(0,10);
         }
 
         if (timePeriod === "weekly") {
-            const start = getWeekStart(selectedDateObj);
-            const endInclusive = new Date(getWeekEnd(selectedDateObj));
+            const endInclusive = new Date(weekEnd);
             endInclusive.setDate(endInclusive.getDate() - 1);
-            return `${start.toLocaleDateString()} - ${endInclusive.toLocaleDateString()}`;
+            
+            return `${startOfDay.toLocaleString('en-US')} - ${endInclusive.toLocaleString('en-US')}`;
         }
 
         if (timePeriod === "monthly") {
-            return selectedDateObj.toLocaleDateString(undefined, {
-                month: "long",
-                year: "numeric"
-            });
+            return `${startOfDay.getMonth()}-${startOfDay.getFullYear()}`;
         }
 
-        return `${selectedDateObj.getFullYear()}`;
+        return `${startOfDay.getFullYear()}`;
     })();
-
-    const shiftSelectedDate = (days) => {
-        const shifted = new Date(selectedDateObj);
-        shifted.setDate(shifted.getDate() + days);
-        setSelectedDate(toLocalDateInput(shifted));
-    };
 
     // Group foods by meal type
     const groupedFoods = () => {
@@ -406,7 +346,9 @@ export function FoodLog() {
             <h1>Food Log</h1>
 
             <div className="food-log-content">
-                {/* Add Food Form */}
+
+
+                {/* Add Food Form -------------------------------------------- */}
                 <div className="add-food-section">
                     <h2>Log New Food</h2>
                     <form onSubmit={addFood} className="food-form">
@@ -434,8 +376,12 @@ export function FoodLog() {
                                             <div className="food-item-name">{food.name}</div>
                                             {food.calories !== null && (
                                                 <div className="food-item-detail">
-                                                    {Math.round(food.calories)} cal/serving
-                                                    {food.servingSize && ` (${food.servingSize}${food.servingUnit || ""})`}
+                                                    Serving Size: {food.servingSize && ` (${food.servingSize}${food.servingUnit || ""})`} 
+                                                    <br />
+                                                    {Math.round(food.calories)} calories
+                                                    <br />
+                                                    {food.carbs != null ? `Carbs: ${food.carbs}g , ` : ""}{food.fat != null ? `Fat: ${food.fat}g , ` : ""}{food.protein != null ? `Protein: ${food.protein}g` : ""}
+
                                                 </div>
                                             )}
                                         </li>
@@ -500,7 +446,7 @@ export function FoodLog() {
 
 
 
-               {/* Time Period Selector */}
+               {/* Time Period Selector -------------------------------------------- */}
                <div className="time-period-selector">
                 <button
                     className={`period-btn ${timePeriod === 'daily' ? 'active' : ''}`}
@@ -535,32 +481,9 @@ export function FoodLog() {
                 </button>
                </div>
 
-                <div className="date-navigation">
-                    <button
-                        className="period-btn"
-                        type="button"
-                        onClick={() => shiftSelectedDate(-1)}
-                        aria-label="Previous day"
-                    >
-                        Prev Day
-                    </button>
-                    <input
-                        type="date"
-                        className="date-input"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                    />
-                    <button
-                        className="period-btn"
-                        type="button"
-                        onClick={() => shiftSelectedDate(1)}
-                        aria-label="Next day"
-                    >
-                        Next Day
-                    </button>
-                </div>
+                <DateNavigation />
 
-                {/* Nutrition Summary */}
+                {/* Nutrition Summary -------------------------------------------- */}
                 <div className="daily-summary">
                     <h2>
                         {timePeriod === 'daily' && 'Daily Summary'}
@@ -573,7 +496,7 @@ export function FoodLog() {
                       <div className="total-display">
                         <span className="label">Total Calories:</span>
                         <span className="value">
-                                                        {periodTotalCalories}
+                            {periodTotalCalories}
                         </span>
                       </div>
                     </div>
@@ -581,7 +504,7 @@ export function FoodLog() {
                     </div>
                     <div className="food-count">
                         <span className="label">Items Logged:</span>
-                                                <span className="value">{filteredFoods.length}</span>
+                        <span className="value">{filteredFoods.length}</span>
                     </div>
                 </div>
 
@@ -615,6 +538,16 @@ export function FoodLog() {
                                         <p className="food-meta">
                                             {food.servings} serving{food.servings > 1 ? "s" : ""} x {food.calories} cal/serving
                                         </p>
+                                        {(food.carbs != null || food.fat != null || food.protein != null) && (
+                                            <p className="food-macros">
+                                                {food.carbs != null && <span>Carbs: {food.carbs}g</span>}
+                                                {food.fat != null && <span> Fat: {food.fat}g</span>}
+                                                {food.protein != null && <span> Protein: {food.protein}g</span>}
+                                            </p>
+                                        )}
+                                        {food.servingSize != null && (
+                                            <p className="food-serving">Serving: {food.servingSize}{food.servingUnit || ""}</p>
+                                        )}
                                     </div>
                             <div className="food-info">
                                 <span className="calories-badge">{food.totalCalories} cal</span>
@@ -639,16 +572,12 @@ export function FoodLog() {
                             >
                                 X
                             </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-                        )
-                    ))}
-                </div>
-            )}
+                        </div>))}
+                    </div>
+                </div>)))}
+            </div>)}
         </div>
-        </div>
+     </div>
     );
 }
 

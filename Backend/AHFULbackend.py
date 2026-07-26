@@ -32,7 +32,7 @@ import firebase_admin
 from firebase_admin import credentials
 
 #Notification Scheduler
-from Services.NotificationScheduler import start_scheduler
+from Services.NotificationScheduler import NotificationScheduler
 
 # Start mail obj
 mail = Mail()
@@ -103,7 +103,8 @@ def create_app():
     CORS(app, origins=allowed_origins, supports_credentials=True)
 
     #Start the notification scheduler
-    start_scheduler()
+    app.notificationScheduler = NotificationScheduler(app=app, interval_seconds=300)
+    app.notificationScheduler.start()
 
     #Print an list of all Route maps on the AHFUL App after startup.
     print(app.url_map)

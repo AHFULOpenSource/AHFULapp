@@ -6,7 +6,7 @@ export function DashboardFoodTodoItem({ food }) {
     return new Date(timestamp * 1000).toLocaleDateString();
   };
 
-  const totalCalories = (food.calsPerServing || 0) * (food.servings || 1);
+  const totalCalories = ((food.calories) || 0) * (food.servings || 1);
 
   return (
     <div className="dashboard-todo-item">
