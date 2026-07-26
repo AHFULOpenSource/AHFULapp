@@ -11,7 +11,6 @@ import {
   fetchWorkoutById,
   fetchPersonalExercises,
   fetchExerciseById,
-  fetchAllGyms,
   createWorkout,
   updateWorkout,
   createPersonalExercise,
@@ -21,6 +20,7 @@ import {
   toggleWorkoutFavorite,
 } from "../QueryFunctions.js";
 import { loadEquipment, loadBodyParts, loadTargetMuscles } from "./QueryFunctions-WorkoutLogger.js";
+import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
 import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout.jsx";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
 import { Loading } from "../Loading.jsx";

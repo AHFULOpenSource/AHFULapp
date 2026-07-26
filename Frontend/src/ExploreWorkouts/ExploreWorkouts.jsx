@@ -5,9 +5,9 @@ import "../siteStyles.css";
 import { CalendarButton } from "../Calendar/CalendarButton";
 import { HeatMap } from "./HeatMap";
 import { WorkoutChart } from "../ExploreWorkouts/WorkoutChart";
+import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
 import { 
-  fetchPersonalExercises, 
-  fetchGym, 
+  fetchPersonalExercises,  
   fetchExerciseById,
   deleteWorkout 
 } from "../QueryFunctions";
