@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { updateUserSettings, getUserSettings } from '../QueryFunctions';
+import { updateUserSettings, getUserSettings } from './QueryFunctions-Auth.js';
 import { setSettings } from './SettingsSlice.jsx';
 
 /**

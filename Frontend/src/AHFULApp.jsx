@@ -22,13 +22,13 @@ import { TutorialOverlay } from "./Auth/TutorialOverlay.jsx";
 import "./siteStyles.css";
 import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";
-import { whoami, getUserSettings } from "./QueryFunctions.js";
+import { whoami, getUserSettings } from "./Auth/QueryFunctions-Auth.js";
 import { setSettings } from './Auth/SettingsSlice.jsx';
 import { authLogin } from "./Auth/AuthSlice.jsx";
-import { ExploreFriends } from "./Social/ExploreFriends.jsx";
+import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
 import { RequireVerifiedEmail } from "./Auth/EnsureEmailVerify.jsx";
-import { SocialWorkouts } from "./Social/SocialWorkouts.jsx";
-import { Templates } from "./WokoutLogger/Templates.jsx";
+import { SocialWorkouts } from "./SocialWall/SocialWorkouts.jsx";
+import { Templates } from "./Templates/Templates.jsx";
 
 
 function AHFULApp() {

@@ -6,8 +6,6 @@ import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
 import {
   getDefaultNewExercise,
   formatTime as formatTimeFn,
-  loadEquipment as loadEquipmentFn,
-  loadTargetMuscles,
   searchExercises,
   fetchWorkout,
   fetchWorkoutById,
@@ -19,10 +17,10 @@ import {
   createPersonalExercise,
   updatePersonalExercise,
   deletePersonalExercise,
-  loadBodyParts,
   createExercise,
   toggleWorkoutFavorite,
 } from "../QueryFunctions.js";
+import { loadEquipment, loadBodyParts, loadTargetMuscles } from "./QueryFunctions-WorkoutLogger.js";
 import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout.jsx";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
 import { Loading } from "../Loading.jsx";
@@ -334,7 +332,7 @@ export function WorkoutLogger() {
 
     // Load equipment options
     (async () => {
-      const res = await loadEquipmentFn();
+      const res = await loadEquipment();
       if (!mounted) return;
       if (res && res.data) setEquipmentOptions(res.data);
       if (res && res.error) setEquipmentError(res.error);
