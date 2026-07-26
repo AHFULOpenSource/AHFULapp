@@ -53,7 +53,7 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
-            ⭐ My Favorites
+            Favorites Hub
           </NavLink>
 
           <NavLink
@@ -117,7 +117,7 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
           >
-            Social Workouts
+            Social Wall
           </NavLink>
 
           <NavLink

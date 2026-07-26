@@ -250,7 +250,7 @@ export function FavoritesHub() {
   return (
     <div className="favorites-hub">
       <div className="favorites-header">
-        <h1>⭐ My Favorites</h1>
+        <h1>Favorites Hub</h1>
         <button className="refresh-btn" onClick={fetchFavorites} disabled={loading}>
           {loading ? "Refreshing..." : "Refresh"}
         </button>
