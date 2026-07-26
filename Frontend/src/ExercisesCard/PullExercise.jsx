@@ -28,14 +28,15 @@ async function fetchExercisesFromBackend() {
 export async function pullExercises() {
   try {
     const list = await fetchExercisesFromBackend();
-    const metadata = list.map(e => ({
+    const metadata = list.map((e) => ({
       _id: e._id,
       name: e.name,
       targetMuscles: e.targetMuscles,
-      bodyParts: e.bodyParts,
-      equipment: e.equipment,
       secondaryMuscles: e.secondaryMuscles,
+      bodyParts: e.bodyParts,
+      equipments: e.equipments,
       instructions: e.instructions,
+      gifUrl: e.gifUrl,
     }));
     store.dispatch(setExercises(metadata));
   } catch (err) {

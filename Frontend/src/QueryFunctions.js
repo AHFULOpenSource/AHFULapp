@@ -25,7 +25,7 @@ export function getDefaultNewExercise() {
     name: "",
     targetMuscles: [],
     bodyParts: [],
-    equipment: [],
+    equipments: [],
     gifUrl: "",
     instructions: "",
   };
