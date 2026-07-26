@@ -637,6 +637,21 @@ export async function updateWorkout(workoutId, data) {
   return res.json();
 }
 
+export async function deleteWorkout(workoutId) {
+  const backendResponse = await fetch(
+    `https://www.ahful.app/api/AHFULworkouts/delete/${workoutId}`,
+    {
+      method: "DELETE",
+      credentials: 'include',
+    }
+  );
+  if (!backendResponse.ok) {
+    const err = await backendResponse.text();
+    throw new Error(`Failed to delete workout: ${backendResponse.status} ${err}`);
+  }
+  return backendResponse.json();
+}
+
 // ── Personal Exercise Functions ─────────────────────────────────────────────────
 
 export async function fetchPersonalExerciseById(userId) {
@@ -803,59 +818,7 @@ export async function updateTask(taskId, updates) {
     return { error: err.message || "Failed to update task" };
   }
 }
-//Fetch Specific Food
-export async function fetchFood(userId) {
-  try {
-    const res = await fetch(
-      `https://www.ahful.app/api/AHFULfoods/${userId}`,
-      {
-        method: "GET",
-        credentials: "include",
-      }
-    );
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      return {
-        error: data.error || "Failed to fetch foods",
-      };
-    }
-
-    const sorted = (Array.isArray(data) ? data : [])
-      .sort((a, b) => (b.time || 0) - (a.time || 0))
-      .slice(0, 15);
-
-    return sorted;
-
-  } catch (err) {
-    console.error("Failed to fetch foods:", err);
-
-    return {
-      error: err.message || "Failed to fetch foods",
-    };
-  }
-}
-export async function fetchAllFood() {
-  try {
-    const res = await fetch("https://www.ahful.app/api/AHFULfoods", {
-      method: "GET",
-      credentials: "include",
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      return {
-        error: data.error || "Failed to fetch all foods",
-      };
-    }
-    return data;
-  } catch (err) {
-    console.error("Failed to fetch all foods:", err);
-    return {
-      error: err.message || "Failed to fetch all foods",
-    };
-  }
-}
 // ── Favorite Functions ──────────────────────────────────────────────────────
 
 // ── Workout Favorite Functions ──────────────────────────────────────────
@@ -913,61 +876,6 @@ export async function getWorkoutFavorites(userId) {
   }
 }
 
-// ── Food Favorite Functions ──────────────────────────────────────────
-export async function toggleFoodFavorite(foodId) {
-  try {
-    const res = await fetch(
-      `https://www.ahful.app/api/AHFULfoods/${foodId}/favorite`,
-      {
-        method: "PUT",
-        mode: "cors",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error(`Failed to toggle favorite: ${res.statusText}`);
-    }
-
-    const data = await res.json();
-    const food = data.food || data;
-    return { data: food, error: null };
-  } catch (err) {
-    console.error("toggleFoodFavorite error:", err);
-    return { data: null, error: err.message };
-  }
-}
-
-export async function getFoodFavorites(userId) {
-  try {
-    const res = await fetch(
-      `https://www.ahful.app/api/AHFULfoods/favorites/${userId}`,
-      {
-        method: "GET",
-        mode: "cors",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch favorites: ${res.statusText}`);
-    }
-
-    const data = await res.json();
-    return { data: data, error: null };
-  } catch (err) {
-    console.error("getFoodFavorites error:", err);
-    return { data: null, error: err.message };
-  }
-}
 
 // ── Task Favorite Functions ──────────────────────────────────────────
 export async function toggleTaskFavorite(taskId) {

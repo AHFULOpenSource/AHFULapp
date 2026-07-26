@@ -4,6 +4,7 @@ import { Header } from "./Header.jsx";
 import { Footer } from "./Footer.jsx";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { CalendarButton } from "./Calendar/CalendarButton.jsx";
 
 export function Layout() {
     const [isNavOpen, setIsNavOpen] = useState(false);
@@ -32,6 +33,7 @@ export function Layout() {
             <Header onMenuToggle={toggleNav} isMenuOpen={isNavOpen} onNavClick={closeNav} />
             <Navbar isOpen={isNavOpen} onNavClick={closeNav} />
             <div className="page-content">
+                <CalendarButton />
                 <Outlet />
                 <Footer />
             </div>

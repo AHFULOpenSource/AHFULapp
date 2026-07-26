@@ -1,5 +1,58 @@
 import { useState, useCallback, useMemo } from "react";
 
+export function toLocalDateString(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+export function parseLocalDate(str) {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export function isLocalDateString(value) {
+    if (typeof value !== "string") return false;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+    const parsed = parseLocalDate(value);
+    return !Number.isNaN(parsed.getTime());
+}
+
+export function normalizeSelectedDate(value) {
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : toLocalDateString(value);
+    }
+
+    if (typeof value !== "string" || value.trim() === "") {
+        return null;
+    }
+
+    if (isLocalDateString(value)) {
+        return value;
+    }
+
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+        return toLocalDateString(parsed);
+    }
+
+    return null;
+}
+
+export function getSelectedDateOrToday(value) {
+    return normalizeSelectedDate(value) || toLocalDateString(new Date());
+}
+
+export function shiftSelectedDate(value, offset) {
+    const baseDate = parseLocalDate(getSelectedDateOrToday(value));
+    if (Number.isNaN(baseDate.getTime())) {
+        return toLocalDateString(new Date());
+    }
+
+    baseDate.setDate(baseDate.getDate() + offset);
+    return toLocalDateString(baseDate);
+}
+
 // Detect the first day of the week for a locale
 // Returns 0 for Sunday, 1 for Monday, etc.
 function detectLocaleFirstDayOfWeek(locale) {

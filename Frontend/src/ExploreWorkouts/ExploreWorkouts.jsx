@@ -5,7 +5,12 @@ import "../siteStyles.css";
 import { CalendarButton } from "../Calendar/CalendarButton";
 import { HeatMap } from "./HeatMap";
 import { WorkoutChart } from "../ExploreWorkouts/WorkoutChart";
-import { fetchPersonalExercises, fetchGym, fetchExerciseById } from "../QueryFunctions";
+import { 
+  fetchPersonalExercises, 
+  fetchGym, 
+  fetchExerciseById,
+  deleteWorkout 
+} from "../QueryFunctions";
 
 /**
  * ExploreWorkouts - Workout exploration and history page
@@ -271,6 +276,26 @@ export function ExploreWorkouts() {
     }
   };
 
+  const handleDeleteWorkout = async () => {
+    if (!selectedWorkout?._id) return;
+
+    try {
+      const response = await deleteWorkout(selectedWorkout._id);
+      const deleteSucceeded =
+        response?.ok === true;
+
+      if (!deleteSucceeded) {
+        throw new Error(response?.message || response?.error);
+      }
+
+      setSelectedWorkout(null);
+      await fetchExercises();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      window.alert(`Failed to delete workout: ${message}`);
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="explore-root">
@@ -521,6 +546,14 @@ export function ExploreWorkouts() {
             </div>
 
             <div className="workout-modal-actions">
+
+              <button
+                className="workout-modal-btn workout-modal-btn-delete"
+                onClick={handleDeleteWorkout}
+              >
+                DELETE
+              </button>
+              
               <button
                 className="workout-modal-btn workout-modal-btn-close"
                 onClick={() => setSelectedWorkout(null)}

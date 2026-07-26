@@ -58,7 +58,7 @@ export function TodayFoodChart() {
             .map((meal) => {
               const mealFoods = todayFoods.filter((f) => f.type === meal);
               const calories = mealFoods.reduce(
-                (sum, f) => sum + f.calsPerServing * f.servings,
+                (sum, f) => sum + (f.calories) * f.servings,
                 0
               );
               return { name: meal, calories };

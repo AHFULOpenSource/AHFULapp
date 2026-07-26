@@ -2,6 +2,7 @@ import Body from "react-muscle-highlighter";
 import "./HeatMap.css";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
+import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
 
 const HEAT_COLORS = ["#ef4444"];
 
@@ -77,7 +78,7 @@ function getDateStringFromTimestamp(timestamp) {
 }
 
 export function HeatMap({ data = {} }) {
-  const selectedDate = useSelector((state) => state.calendar.selectedDate);
+  const selectedDate = useSelector(selectSelectedDateOrToday);
   const workouts = useSelector((state) => state.pullWorkout.workouts);
   const exercises = useSelector((state) => state.pullExercise.exercises);
   const personalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
@@ -96,7 +97,7 @@ export function HeatMap({ data = {} }) {
       return;
     }
     //Trim date to just YYYY-MM-DD
-    const selectedDateStr = selectedDate.slice(0, 10);
+    const selectedDateStr = selectedDate;
     console.log('selectedDateStr:', selectedDateStr);
 
     const todaysWorkout = workouts?.find(w => {
