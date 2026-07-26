@@ -613,7 +613,7 @@ export function WorkoutLogger() {
             id="create-new-workout-button"
             className="create-workout-button"
             disabled={!newWorkoutName.trim()}
-            onClick={() => handleCreateWorkout(selectedDate ? new Date(selectedDate) : new Date())}
+            onClick={() => handleCreateWorkout(new Date(selectedDate))}
           >
             Create New Workout
           </button>
@@ -623,7 +623,7 @@ export function WorkoutLogger() {
         <div className="workout-list">
 
           <div className="workout-scroll-container">
-            <p>Showing workout for {selectedDate?.slice(0, 10)}</p>
+            <p>Showing workout for {selectedDate}</p>
 
             {dailyWorkouts.length === 0 && (
               <div className="no-workouts">
