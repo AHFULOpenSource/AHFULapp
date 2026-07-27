@@ -133,3 +133,40 @@ export async function loadTargetMuscles() {
 }
 
 //. END Section Exercise Selector Query Functions
+
+// ── Exercise Functions ─────────────────────────────────────────────────────────
+
+export async function fetchExerciseById(exerciseId) {
+  const res = await fetch(
+    `http://localhost:5000/api/AHFULexercises/id/${exerciseId}`, {credentials: 'include'}
+  );
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch exercise: ${res.status} ${res.statusText}`,
+    );
+  }
+  return res.json();
+}
+
+export async function fetchWorkoutById(workoutId) {
+  try {
+    const res = await fetch(`http://localhost:5000/api/AHFULworkouts/id/${workoutId}`, {credentials: 'include'});
+
+    if (res.status === 404 || res.status === 204) {
+      return null;
+    }
+
+    if (!res.ok) {
+      const bodyText = await res.text().catch(() => "");
+      throw new Error(
+        `Server returned ${res.status} ${res.statusText} ${bodyText}`,
+      );
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("fetchWorkout error:", err);
+    throw err;
+  }
+}
