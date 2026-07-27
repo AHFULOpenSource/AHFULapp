@@ -15,7 +15,7 @@ import {
 } from "../QueryFunctions.js";
 import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
 import { ExercisesCard } from "../ExercisesCard/ExercisesCard.jsx";
-import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout.jsx";
+import { pullWorkouts } from "./PullWorkout.jsx";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
 import { Loading } from "../Loading.jsx";
 import { useAutosave } from "./useAutosave.js";

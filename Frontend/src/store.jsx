@@ -8,7 +8,7 @@ import authReducer from "./Auth/AuthSlice";
 import settingsReducer from "./Auth/SettingsSlice";
 import pullExerciseReducer from "./ExercisesCard/PullExerciseSlice";
 import pullTemplateReducer from "./Templates/PullTemplateSlice.jsx";
-import pullWorkoutReducer from "./components/Cache/WorkoutCache/PullWorkoutSlice";
+import pullWorkoutReducer from "./WokoutLogger/PullWorkoutSlice.jsx";
 import pullPersonalExerciseReducer from "./components/Cache/PersonalExerciseCache/PersonalExerciseSlice";
 import pullUserFoodReducer from "./Food/PullUserFoodSlice";
 import pullFoodReducer from "./Food/PullFoodSlice";

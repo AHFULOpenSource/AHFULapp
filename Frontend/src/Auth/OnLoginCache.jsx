@@ -1,7 +1,7 @@
 import { pullExercises } from "../ExercisesCard/PullExercise";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise";
 import { pullTemplates } from "../Templates/PullTemplate.jsx";
-import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout";
+import { pullWorkouts } from "../WokoutLogger/PullWorkout.jsx";
 import { pullUserFood } from "../Food/PullUserFood.jsx";
 import { pullAllFood } from "../Food/PullAllFood.jsx";
 export function onLoginCache() {
