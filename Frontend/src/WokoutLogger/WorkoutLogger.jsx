@@ -20,6 +20,7 @@ import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache
 import { Loading } from "../Loading.jsx";
 import { useAutosave } from "./useAutosave.js";
 import { HeatMap } from "./HeatMap.jsx";
+import { Calendar } from "../Calendar/Calendar.jsx";
 
 /**
  * Logger - Main workout tracking page
@@ -582,41 +583,11 @@ export function WorkoutLogger() {
   return (
   <div className="page-layout">
 
+
       <div className="workout-picker-panel">
         <div className="workout-picker-inline">
 
-        {/* Zone A: Create New Workout Section */}
-        <div className="create-workout-section">
-          <input
-            type="text"
-            id="new-workout-name-textbox"
-            placeholder="Add a New Workout by Entering a Name"
-            value={newWorkoutName}
-            onChange={(e) => setNewWorkoutName(e.target.value)}
-            onKeyDown={exitOnEnter}
-          />
-          <select
-            id="select-gym-dropdown"
-            value={selectedGymId}
-            onChange={(e) => setSelectedGymId(e.target.value)}
-          >
-            <option value="">New Workout - No Gym</option>
-            {availableGyms.map((g) => (
-              <option key={g._id} value={g._id}>
-                {g.name || g.address || "Ambiguous Gym"}
-              </option>
-            ))}
-          </select>
-          <button
-            id="create-new-workout-button"
-            className="create-workout-button"
-            disabled={!newWorkoutName.trim()}
-            onClick={() => handleCreateWorkout()}
-          >
-            Create New Workout
-          </button>
-        </div>
-
+        
         {/* Zone 1 + 2: Filter, scrollable list, load button */}
         <div className="workout-list">
 
@@ -626,6 +597,38 @@ export function WorkoutLogger() {
             {dailyWorkouts.length === 0 && (
               <div className="no-workouts">
                 No workouts for this day.
+                <div className="create-workout-section">
+                  <input
+                    type="text"
+                    id="new-workout-name-textbox"
+                    placeholder="Add a New Workout by Entering a Name"
+                    value={newWorkoutName}
+                    onChange={(e) => setNewWorkoutName(e.target.value)}
+                    onKeyDown={exitOnEnter}
+                  />
+                  <select
+                    id="select-gym-dropdown"
+                    value={selectedGymId}
+                    onChange={(e) => setSelectedGymId(e.target.value)}
+                  >
+                    <option value="">New Workout - No Gym</option>
+                    {availableGyms.map((g) => (
+                      <option key={g._id} value={g._id}>
+                        {g.name || g.address || "Ambiguous Gym"}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    id="create-new-workout-button"
+                    className="create-workout-button"
+                    disabled={!newWorkoutName.trim()}
+                    onClick={() => handleCreateWorkout()}
+                  >
+                    Create New Workout
+                  </button>
+                </div>
+
+
               </div>
             )}
 
@@ -667,14 +670,16 @@ export function WorkoutLogger() {
       </div>
     </div>
 
-    <ExercisesCard AddSelectedExercises={AddSelectedExercises} />
-    <HeatMap />
+
 
       {/* Center Column: Workout Card */}
         {selectedEditableWorkout ? (
           <>
+            <ExercisesCard AddSelectedExercises={AddSelectedExercises} />
+            <HeatMap />
             <div className="workout-card">
               {/* Header row: Title on left, button on right */}
+
               <div className="workout-header">
                 <div className="workout-title">
                   <textarea
