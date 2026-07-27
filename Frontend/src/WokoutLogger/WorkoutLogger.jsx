@@ -591,7 +591,6 @@ export function WorkoutLogger() {
         {/* Zone 1 + 2: Filter, scrollable list, load button */}
         <div className="workout-list">
 
-          <div >
             <p>Showing workout for {selectedDate}</p>
 
             {dailyWorkouts.length === 0 && (
@@ -655,17 +654,18 @@ export function WorkoutLogger() {
                       {unixToDate(w.startTime)}
                     </div>
                   </div>
+
+                  <button className="load-workout-button"
+                  disabled={selectedWorkoutIdForPicker !== w._id}
+                    onClick={handleLoadWorkout}
+                  >
+                    Load Existing Workout
+                  </button>
+
                 </div>
+                
               ))}
 
-          </div>
-
-          <button className="load-workout-button"
-          disabled={!selectedWorkoutIdForPicker}
-            onClick={handleLoadWorkout}
-          >
-            Load Existing Workout
-          </button>
 
         </div>
       </div>
