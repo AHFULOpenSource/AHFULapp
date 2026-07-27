@@ -58,7 +58,7 @@ export function Templates() {
       for (const id of missingIds) {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/AHFULexercises/id/${id}`,
+            `https://www.ahful.app/api/AHFULexercises/id/${id}`,
             { credentials: "include" }
           );
           if (!response.ok) {

@@ -1,7 +1,7 @@
 // ──  Authentication  functions ─────────────────────────────────────────────────────────
 export async function handle_logout() {
   //Define POST URL for Later
-  const backendPOSTURL = `http://localhost:5000/api/AHFULauth/logout`;
+  const backendPOSTURL = `https://www.ahful.app/api/AHFULauth/logout`;
 
   //Try to Get LocalStorage Cookie for data
   try {
@@ -27,7 +27,7 @@ export async function handle_google_login(response) {
 
   try {
     //URL to send POST to later
-    const backendPOSTURL = `http://localhost:5000/api/AHFULauth/google-login`;
+    const backendPOSTURL = `https://www.ahful.app/api/AHFULauth/google-login`;
 
     //Find ID Token, and maybe details from Google Success Response
     const googleButtonIdToken = response?.credential;
@@ -61,7 +61,7 @@ export async function handle_google_login(response) {
 
 export async function whoami() {
   try {
-    const backendVerificationResponse = await fetch('http://localhost:5000/api/AHFULauth/whoami', {
+    const backendVerificationResponse = await fetch('https://www.ahful.app/api/AHFULauth/whoami', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: {},
@@ -82,7 +82,7 @@ export async function whoami() {
 
 // ──  User Settings functions ─────────────────────────────────────────────────────────
 export async function getUserSettings() {
-  const foundUserSettingsResponse = await fetch(`http://localhost:5000/api/AHFULuserSettings`, {
+  const foundUserSettingsResponse = await fetch(`https://www.ahful.app/api/AHFULuserSettings`, {
     method: "GET",
     credentials: "include",
   });
@@ -98,7 +98,7 @@ export async function getUserSettings() {
 
 export async function updateUserSettings(userId, settings) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULuserSettings/update/${userId}`,
+    `https://www.ahful.app/api/AHFULuserSettings/update/${userId}`,
     {
       method: "PUT",
       credentials: 'include',

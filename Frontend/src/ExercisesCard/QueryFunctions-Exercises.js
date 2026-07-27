@@ -11,7 +11,7 @@ export function getDefaultNewExercise() {
 
 export async function createExercise(exerciseData) {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULexercises/create/", {
+    const res = await fetch("https://www.ahful.app/api/AHFULexercises/create/", {
       method: "POST",
       mode: "cors",
       credentials: 'include',
@@ -38,7 +38,7 @@ export async function createExercise(exerciseData) {
 
 export async function searchExercises(searchQuery) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULexercises/search?search=${encodeURIComponent(searchQuery)}`, {credentials: 'include'}
+    `https://www.ahful.app/api/AHFULexercises/search?search=${encodeURIComponent(searchQuery)}`, {credentials: 'include'}
   );
   if (!res.ok) {
     let bodyText = "";

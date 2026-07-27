@@ -1,7 +1,7 @@
 // ──  Template functions ─────────────────────────────────────────────────────────
 export async function fetchTemplate(userId) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULtemplate/user`,{
+    `https://www.ahful.app/api/AHFULtemplate/user`,{
       credentials: 'include'
     }
   );
@@ -21,7 +21,7 @@ export async function fetchTemplate(userId) {
 export async function createTemplate(templateData) {
   try {
     const res = await fetch(
-      "http://localhost:5000/api/AHFULtemplate/create",
+      "https://www.ahful.app/api/AHFULtemplate/create",
       {
         method: "POST",
         credentials: 'include',

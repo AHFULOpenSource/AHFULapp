@@ -43,7 +43,7 @@ export async function forwardGeocode(address) {
 
 export async function fetchGym(gymId) {
   try {
-    const res = await fetch(`http://localhost:5000/api/AHFULgyms/${gymId}`, {credentials: 'include'});
+    const res = await fetch(`https://www.ahful.app/api/AHFULgyms/${gymId}`, {credentials: 'include'});
     if (!res.ok) {
       throw new Error(`Failed to fetch gym: ${res.status} ${res.statusText}`);
     }
@@ -55,7 +55,7 @@ export async function fetchGym(gymId) {
 }
 export async function fetchAllGyms() {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULgyms", {
+    const res = await fetch("https://www.ahful.app/api/AHFULgyms", {
       credentials: "include"
     });
     if (!res.ok) {
@@ -79,7 +79,7 @@ export async function fetchAllGyms() {
 
 export async function createGym(gymData) {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULgyms/create", {
+    const res = await fetch("https://www.ahful.app/api/AHFULgyms/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(gymData),
@@ -98,7 +98,7 @@ export async function createGym(gymData) {
 
 export async function deleteGym(gymId) {
   try {
-    const res = await fetch(`http://localhost:5000/api/AHFULgyms/delete/${gymId}`, {
+    const res = await fetch(`https://www.ahful.app/api/AHFULgyms/delete/${gymId}`, {
       method: "DELETE",
       credentials: "include"
     });
@@ -116,7 +116,7 @@ export async function deleteGym(gymId) {
 
 export async function fetchAllPromos() {
   try {
-    const res = await fetch("http://localhost:5000/api/promotions", {
+    const res = await fetch("https://www.ahful.app/api/promotions", {
       credentials: "include"
     });
 

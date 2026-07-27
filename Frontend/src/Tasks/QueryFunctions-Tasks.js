@@ -1,7 +1,7 @@
 export async function updateTask(taskId, updates) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULtasks/update/${taskId}`,
+      `https://www.ahful.app/api/AHFULtasks/update/${taskId}`,
       {
         method: "PUT",
         credentials: 'include',
@@ -21,7 +21,7 @@ export async function updateTask(taskId, updates) {
 export async function toggleTaskFavorite(taskId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULtasks/${taskId}/favorite`,
+      `https://www.ahful.app/api/AHFULtasks/${taskId}/favorite`,
       {
         method: "PUT",
         mode: "cors",
@@ -48,7 +48,7 @@ export async function toggleTaskFavorite(taskId) {
 export async function getTaskFavorites(userId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULtasks/favorites/${userId}`,
+      `https://www.ahful.app/api/AHFULtasks/favorites/${userId}`,
       {
         method: "GET",
         mode: "cors",

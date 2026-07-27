@@ -3,7 +3,7 @@
 export async function loadEquipment() {
   try {
     const res = await fetch(
-      "http://localhost:5000/api/AHFULexercises/equipments/",
+      "https://www.ahful.app/api/AHFULexercises/equipments/",
       {
         method: "GET",
         mode: "cors",
@@ -48,7 +48,7 @@ export async function loadEquipment() {
 
 export async function loadBodyParts() {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULexercises/bodyparts/", {
+    const res = await fetch("https://www.ahful.app/api/AHFULexercises/bodyparts/", {
       method: "GET",
       mode: "cors",
       credentials: "include",
@@ -91,7 +91,7 @@ export async function loadBodyParts() {
 
 export async function loadTargetMuscles() {
   try {
-    const res = await fetch("http://localhost:5000/api/AHFULexercises/muscles/", {
+    const res = await fetch("https://www.ahful.app/api/AHFULexercises/muscles/", {
       method: "GET",
       mode: "cors",
       credentials: "include",
@@ -138,7 +138,7 @@ export async function loadTargetMuscles() {
 
 export async function fetchExerciseById(exerciseId) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULexercises/id/${exerciseId}`, {credentials: 'include'}
+    `https://www.ahful.app/api/AHFULexercises/id/${exerciseId}`, {credentials: 'include'}
   );
   if (!res.ok) {
     throw new Error(
@@ -150,7 +150,7 @@ export async function fetchExerciseById(exerciseId) {
 
 export async function fetchWorkoutById(workoutId) {
   try {
-    const res = await fetch(`http://localhost:5000/api/AHFULworkouts/id/${workoutId}`, {credentials: 'include'});
+    const res = await fetch(`https://www.ahful.app/api/AHFULworkouts/id/${workoutId}`, {credentials: 'include'});
 
     if (res.status === 404 || res.status === 204) {
       return null;
