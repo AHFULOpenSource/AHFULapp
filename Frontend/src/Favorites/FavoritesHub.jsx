@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import "./FavoritesHub.css";
 import "../siteStyles.css";
-import { getWorkoutFavorites, createWorkout, toggleWorkoutFavorite } from "../QueryFunctions";
+import { createWorkout, toggleWorkoutFavorite } from "../QueryFunctions";
+import { getWorkoutFavorites} from "./QueryFunctions-Favorties.js";
 import { toggleTaskFavorite, getTaskFavorites } from "../Tasks/QueryFunctions-Tasks";
 import { getFoodFavorites, toggleFoodFavorite, createFood } from "../Food/QueryFunctions-Food";
 
