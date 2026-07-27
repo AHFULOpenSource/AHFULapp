@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import "./FavoritesHub.css";
 import "../siteStyles.css";
-import { getWorkoutFavorites, getTaskFavorites, createWorkout, toggleWorkoutFavorite, toggleTaskFavorite } from "../QueryFunctions";
+import { createWorkout, toggleWorkoutFavorite } from "../QueryFunctions";
+import { getWorkoutFavorites} from "./QueryFunctions-Favorties.js";
+import { toggleTaskFavorite, getTaskFavorites } from "../Tasks/QueryFunctions-Tasks";
 import { getFoodFavorites, toggleFoodFavorite, createFood } from "../Food/QueryFunctions-Food";
 
 export function FavoritesHub() {
@@ -249,7 +251,7 @@ export function FavoritesHub() {
   return (
     <div className="favorites-hub">
       <div className="favorites-header">
-        <h1>⭐ My Favorites</h1>
+        <h1>Favorites Hub</h1>
         <button className="refresh-btn" onClick={fetchFavorites} disabled={loading}>
           {loading ? "Refreshing..." : "Refresh"}
         </button>

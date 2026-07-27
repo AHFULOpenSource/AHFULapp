@@ -5,7 +5,6 @@ import "../Dashboard/Dashboard.css";
 import { GoogleLogin } from "@react-oauth/google";
 import { GoogleButton } from "./GoogleButton";
 import { useSelector, useDispatch } from "react-redux";
-import { handle_google_login, getUserSettings } from "../QueryFunctions.js";
 import { authLogin } from "./AuthSlice.jsx";
 import { useState, useEffect } from "react";
 import {useNavigate } from "react-router-dom";

@@ -1,8 +1,8 @@
-import { store } from "../../../store";
-import { setFood, setError } from "./PullFoodSlice";
-import { fetchAllFood } from "../../../Food/QueryFunctions-Food";
+import { store } from "../store";
+import { setFood, setError } from "./PullFoodSlice.jsx";
+import { fetchAllFood } from "./QueryFunctions-Food.js";
 
-export async function pullFood() {
+export async function pullAllFood() {
   const user = store.getState().auth.user;
   if (!user?._id) {
     store.dispatch(setError("No user logged in"));

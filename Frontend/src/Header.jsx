@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { updateSetting } from "./Auth/SettingsSlice";
-import { updateUserSettings } from "./QueryFunctions";
+import { updateUserSettings } from "./Auth/QueryFunctions-Auth.js";
 import "./siteStyles.css";
 import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";

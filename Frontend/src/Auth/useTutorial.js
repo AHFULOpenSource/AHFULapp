@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { updateUserSettings, getUserSettings } from '../QueryFunctions';
+import { updateUserSettings, getUserSettings } from './QueryFunctions-Auth.js';
 import { setSettings } from './SettingsSlice.jsx';
 
 /**
@@ -34,8 +34,8 @@ export const TUTORIAL_STEPS = [
     highlightSelector: '#ai-text-input'
   },
   {
-    page: '/ExploreWorkout',
-    title: 'Explore Workouts',
+    page: '/HistoryPRs',
+    title: 'Workout History & Personal Exercise Records',
     message: 'Visit Previous workouts and view their details. Our Heat Map visualization helps you identify trends and patterns in your workout history.',
     highlightSelector: '#heatmap-container'
   },

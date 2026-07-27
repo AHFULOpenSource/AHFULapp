@@ -4,29 +4,23 @@ import "./WorkoutLogger.css";
 import "../siteStyles.css";
 import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
 import {
-  getDefaultNewExercise,
   formatTime as formatTimeFn,
-  loadEquipment as loadEquipmentFn,
-  loadTargetMuscles,
-  searchExercises,
-  fetchWorkout,
-  fetchWorkoutById,
-  fetchPersonalExercises,
-  fetchExerciseById,
-  fetchAllGyms,
+  
   createWorkout,
   updateWorkout,
   createPersonalExercise,
   updatePersonalExercise,
   deletePersonalExercise,
-  loadBodyParts,
-  createExercise,
-  toggleWorkoutFavorite,
 } from "../QueryFunctions.js";
-import { pullWorkouts } from "../components/Cache/WorkoutCache/PullWorkout.jsx";
+import { fetchWorkoutById, fetchExerciseById } from "./QueryFunctions-WorkoutLogger.js"
+import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
+import { ExercisesCard } from "../ExercisesCard/ExercisesCard.jsx";
+import { pullWorkouts } from "./PullWorkout.jsx";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
 import { Loading } from "../Loading.jsx";
 import { useAutosave } from "./useAutosave.js";
+import { HeatMap } from "./HeatMap.jsx";
+import { Calendar } from "../Calendar/Calendar.jsx";
 
 /**
  * Logger - Main workout tracking page
@@ -37,6 +31,7 @@ import { useAutosave } from "./useAutosave.js";
  * - Create custom exercises
  * - Track reps, sets, weight for each exercise
  * - Workout timer
+ * - Heatmap visualization of target muscles worked in current workout
  *
  * Auth Flow:
  * - Gets user from Redux auth state
@@ -46,9 +41,10 @@ import { useAutosave } from "./useAutosave.js";
 export function WorkoutLogger() {
   // ─── Redux State ─────────────────────────────────────────────────────────
   const user = useSelector((state) => state.auth.user);
-  const cachedExercises = useSelector((state) => state.pullExercise?.exercises);
   const userAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const selectedDate = useSelector(selectSelectedDateOrToday);
+  const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number)
+
   const cachedWorkouts = useSelector((state) => state.pullWorkout.workouts);
   const cachedPersonalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
 
@@ -61,19 +57,11 @@ export function WorkoutLogger() {
   /* Hook to track state of the InProgressTable on the Workout Page */
   const [exercisesInProgressTable, setExercisesInProgressTable] = useState([]);
 
-  // ─── Exercise Database State ──────────────────────────────────────────────────
-  // All exercises available in the database
-  const [exercises, setExercises] = useState([]);
-  // Exercise list loading state
-  const [exerciseLoading, setExerciseLoading] = useState(false);
-  // Error state for exercise operations
-  const [error, setError] = useState(null);
-
   // ─── Workout State ───────────────────────────────────────────────────────────
   // Daily workouts for the date
   const [dailyWorkouts, setDailyWorkouts] = useState([]);
   // Current workout object from database
-  const [workout, setWorkout] = useState(null);
+  const [selectedEditableWorkout, setWorkout] = useState(null);
   // User-editable workout title
   const [workoutTitle, setWorkoutTitle] = useState("");
   // Workout loading state
@@ -94,33 +82,10 @@ export function WorkoutLogger() {
   const [isRunning, setIsRunning] = useState(false);
   const [time, setTime] = useState(0);
 
-  // ─── Exercise Selection State ────────────────────────────────────────────────
-  const [exerciseName, setExerciseName] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Selected exercise IDs pending to be added to workout
-  const [pendingExercises, setPendingExercises] = useState([]);
-  // Modal visibility for creating new exercises
-  const [showNewExerciseModal, setShowNewExerciseModal] = useState(false);
-
-  // ─── New Exercise Form States
-  const [equipmentOptions, setEquipmentOptions] = useState([]);
-  const [equipmentError, setEquipmentError] = useState(null);
-  const [BodyPartOptions, setBodyPartOptions] = useState([]);
-  const [BodyPartError, setBodyPartError] = useState(null);
-  const [muscleOptions, setMuscleOptions] = useState([]);
-  const [muscleError, setMuscleError] = useState(null);
-  const [newExercise, setNewExercise] = useState(getDefaultNewExercise());
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
 
-  // ─── Favorite Filter State ───────────────────────────────────────────────────
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-
   // ─── Refs ───────────────────────────────────────────────────────────────────
-  const searchTimeoutRef = useRef(null);
-  const workoutRef = useRef(workout);
+  const workoutRef = useRef(selectedEditableWorkout);
   const workoutTitleRef = useRef(workoutTitle);
   const selectedGymIdRef = useRef(selectedGymId);
   const exercisesInProgressTableRef = useRef(exercisesInProgressTable);
@@ -128,13 +93,13 @@ export function WorkoutLogger() {
   const timeRef = useRef(time);
 
   useEffect(() => {
-    workoutRef.current = workout;
+    workoutRef.current = selectedEditableWorkout;
     workoutTitleRef.current = workoutTitle;
     selectedGymIdRef.current = selectedGymId;
     exercisesInProgressTableRef.current = exercisesInProgressTable;
     personalExToRemoveRef.current = personalExToRemove;
     timeRef.current = time;
-  }, [workout, workoutTitle, selectedGymId, exercisesInProgressTable, personalExToRemove, time]);
+  }, [selectedEditableWorkout, workoutTitle, selectedGymId, exercisesInProgressTable, personalExToRemove, time]);
 
   const persistWorkout = useCallback(async () => {
     const activeWorkout = workoutRef.current;
@@ -229,8 +194,6 @@ export function WorkoutLogger() {
     triggerWorkoutAutosave();
   };
 
-  // ─── Use Effects ───────────────────────────────────────────────────────────────────
-
   // ─── Timer Logic ──────────────────────────────────────────────────────────────
   useEffect(() => {
     let interval = null;
@@ -254,32 +217,27 @@ export function WorkoutLogger() {
         return;
       }
 
-      const selectedDay = selectedDate ? new Date(selectedDate) : new Date();
-      selectedDay.setHours(0, 0, 0, 0);
-      const currentDateUnix = Math.floor(selectedDay.getTime() / 1000);
+      const currentDateUnix = Math.floor(new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0).getTime() / 1000);
+      const tomorrowUnix = Math.floor(currentDateUnix + 86400); // 24 hours later
 
-      const tomorrow = new Date(selectedDay);
-      tomorrow.setDate(selectedDay.getDate() + 1);
-      const tomorrowUnix = Math.floor(tomorrow.getTime() / 1000);
-
-      const todaysWorkouts = Array.isArray(cachedWorkouts)
+      const workoutsFoundBetweenCurrDateAndTomorrow = Array.isArray(cachedWorkouts)
         ? cachedWorkouts.filter(
             (w) => w?.startTime >= currentDateUnix && w?.startTime < tomorrowUnix,
           )
         : [];
 
-      setDailyWorkouts(todaysWorkouts);
+      setDailyWorkouts(workoutsFoundBetweenCurrDateAndTomorrow);
 
-      const activeWorkoutId = workoutRef.current?._id || workout?._id || null;
+      let todaysWorkout;
+      if (workoutsFoundBetweenCurrDateAndTomorrow.length === 1) {
+        todaysWorkout = workoutsFoundBetweenCurrDateAndTomorrow[0];
 
-      const todaysWorkout =
-        todaysWorkouts.find((w) => w?._id === activeWorkoutId) ||
-        todaysWorkouts.find((w) => {
-          if (!w?.startTime) return false;
-          const workoutDate = new Date(w.startTime * 1000);
-          workoutDate.setHours(0, 0, 0, 0);
-          return workoutDate.getTime() === selectedDay.getTime();
-        });
+      } else {
+        todaysWorkout = null;
+
+      }
+      const activeWorkoutId = workoutRef.current?._id || selectedEditableWorkout?._id || null;
+
 
       const workoutId = todaysWorkout?._id || null;
       const tableMatchesWorkout =
@@ -293,8 +251,8 @@ export function WorkoutLogger() {
 
         if (todaysWorkout) {
           setWorkout(todaysWorkout);
-          setWorkoutTitle(todaysWorkout.title || "");
-          setSelectedGymId(todaysWorkout.gym_id || "");
+          setWorkoutTitle(todaysWorkout.title);
+          setSelectedGymId(todaysWorkout.gym_id);
           setSaveStatus("idle");
 
           if (!tableMatchesWorkout) {
@@ -328,33 +286,9 @@ export function WorkoutLogger() {
     };
   }, [selectedDate, userAuthenticated, cachedWorkouts, cachedPersonalExercises, flushWorkoutAutosave]);
 
-  // ─── Load Exercise Options on Mount ──────────────────────────────────────────
+  // ─── Load Gyms on Mount ─────────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
-
-    // Load equipment options
-    (async () => {
-      const res = await loadEquipmentFn();
-      if (!mounted) return;
-      if (res && res.data) setEquipmentOptions(res.data);
-      if (res && res.error) setEquipmentError(res.error);
-})();
-
-    // Load muscle options
-    (async () => {
-      const res = await loadTargetMuscles();
-      if (!mounted) return;
-      if (res && res.data) setMuscleOptions(res.data);
-      if (res && res.error) setMuscleError(res.error);
-    })();
-
-    // Load body part options
-    (async () => {
-      const res = await loadBodyParts();
-      if (!mounted) return;
-      if (res && res.data) setBodyPartOptions(res.data);
-      if (res && res.error) setBodyPartError(res.error);
-    })();
 
     //Load Gyms
     (async () => {
@@ -363,91 +297,16 @@ export function WorkoutLogger() {
       setAvailableGyms(Array.isArray(res) ? res : []);
     })();
 
-    //Pull in cached exercises from Redux store to avoid unnecessary DB calls
-    setExercises(Array.isArray(cachedExercises) ? cachedExercises : []);
-
 
     return () => {
       mounted = false;
-      // ─── Cleanup Search Timeout on Unmount ─────────────────────────────────────
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
   }, []);
-
-  // ─── Utility Functions ───────────────────────────────────────────────────────
-  const resetNewExercise = () => setNewExercise(getDefaultNewExercise());
 
   const unixToDate = (unix) => {
     return new Date(unix * 1000).toLocaleDateString("en-US");
   };
 
-  const handleToggleFavorite = async (workoutId) => {
-    if (!workoutId) return;
-    try {
-      const { error } = await toggleWorkoutFavorite(workoutId);
-      if (!error) {
-        setDailyWorkouts((prev) =>
-          prev.map((item) =>
-            item._id === workoutId ? { ...item, favorite: !item.favorite } : item,
-          ),
-        );
-        setWorkout((prev) =>
-          prev && prev._id === workoutId ? { ...prev, favorite: !prev.favorite } : prev,
-        );
-      } else {
-        console.error("Failed to toggle favorite:", error);
-      }
-    } catch (err) {
-      console.error("Error toggling favorite:", err);
-    }
-  };
-
-  // ─── Modal Handlers ─────────────────────────────────────────────────────────
-  const openNewExerciseModal = () => {
-    resetNewExercise();
-    setShowNewExerciseModal(true);
-  };
-
-  const closeNewExerciseModal = () => {
-    setShowNewExerciseModal(false);
-  };
-
-  // ─── New Exercise Form Handler ────────────────────────────────────────────────
-  const handleNewExerciseSave = async (e) => {
-    e.preventDefault();
-    if (!newExercise.name.trim()) {
-      alert("Please enter a name for the exercise");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const result = await createExercise(newExercise);
-
-      if (result.error) {
-        alert(`Failed to save exercise: ${result.error}`);
-        return;
-      }
-
-      // Add the new exercise to the local list
-      setExercises((prev) => [
-        ...prev,
-        { ...newExercise, _id: result.data.exercise_id },
-      ]);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2500);
-      closeNewExerciseModal();
-      resetNewExercise();
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // ─── Multi-select Handler for Exercise Form ─────────────────────────────────
-  const handleMultiSelectChange = (e, field) => {
-    const values = Array.from(e.target.selectedOptions, (o) => o.value);
-    setNewExercise((prev) => ({ ...prev, [field]: values }));
-  };
 
   // ─── Toggle Exercise Completion ───────────────────────────────────────────────
   const toggleCompleted = (index) => {
@@ -516,7 +375,7 @@ export function WorkoutLogger() {
 
   // Keep the table aligned with whichever workout is currently active.
   useEffect(() => {
-    if (!workout?._id) {
+    if (!selectedEditableWorkout?._id) {
       setExercisesInProgressTable([]);
       setPersonalExToRemove({});
       return;
@@ -524,12 +383,12 @@ export function WorkoutLogger() {
 
     const workoutPersonalExercises =
       cachedPersonalExercises?.filter(
-        (pe) => pe?.workout_id === workout._id,
+        (pe) => pe?.workout_id === selectedEditableWorkout._id,
       ) || [];
 
     setExercisesInProgressTable(workoutPersonalExercises);
     setPersonalExToRemove({});
-  }, [workout?._id, cachedPersonalExercises]);
+  }, [selectedEditableWorkout?._id, cachedPersonalExercises]);
 
   const handleManualSave = async () => {
     const saved = await flushWorkoutAutosave();
@@ -555,61 +414,35 @@ export function WorkoutLogger() {
     queueWorkoutAutosave();
   };
 
-  // Append selected pending exercises to the in-progress table
-  const addExerciseToWorkout = async (e) => {
-    if (e && typeof e.preventDefault === "function") e.preventDefault();
+  const AddSelectedExercises = async (selectedExercises = []) => {
+    if (!Array.isArray(selectedExercises) || selectedExercises.length === 0) return;
 
-    // Ensure workout is loaded before adding exercises
-    if (!workout?._id) {
-      await handleCreateWorkout(selectedDate ? new Date(selectedDate) : new Date());
+    let activeWorkout = workoutRef.current;
+
+    if (!activeWorkout?._id) {
+      activeWorkout = await handleCreateWorkout(selectedDate ? new Date(selectedDate) : new Date());
     }
 
-    if (!workout?._id) return;
+    if (!activeWorkout?._id) return;
 
-    if (pendingExercises.length === 0) return;
+    const newExercises = selectedExercises
+      .filter((exercise) => exercise?._id)
+      .map((exercise) => ({
+        exercise_id: exercise._id,
+        workout_id: activeWorkout._id,
+        user_id: user?._id,
+        complete: false,
+        reps: 0,
+        sets: 0,
+        weight: "0",
+        distance: "0",
+        duration: 0,
+      }));
 
-    // Create exercise objects with workout context
-    const newExercises = pendingExercises.map((rawName) => ({
-      exercise_id: rawName,
-      workout_id: workout._id,
-      user_id: user?._id,
-      complete: false,
-      reps: 0,
-      sets: 0,
-      weight: "0",
-      distance: "0",
-      duration: 0,
-    }));
+    if (newExercises.length === 0) return;
 
     setExercisesInProgressTable((prev) => [...prev, ...newExercises]);
-    setPendingExercises([]);
-    setExerciseName("");
     queueWorkoutAutosave();
-  };
-
-  // ─── Search Exercises ─────────────────────────────────────────────────────────
-  const handleSearch = async (query) => {
-    const searchQuery = typeof query === "string" ? query : exerciseName;
-
-    if (!searchQuery) {
-      setSearchTerm(exerciseName);
-      setExercises(Array.isArray(cachedExercises) ? cachedExercises : []);
-      return;
-    }
-
-    setExerciseLoading(true);
-    setError(null);
-    try {
-      const list = await searchExercises(searchQuery);
-      setExercises(list);
-    } catch (err) {
-      console.error("Search failed:", err);
-      const friendly =
-        err && err.name ? `${err.name}: ${err.message}` : String(err);
-      setError(friendly || "Unknown error");
-    } finally {
-      setExerciseLoading(false);
-    }
   };
 
   // ─── Select Workout Picker logic ──────────────────────────────────────────────────────────────
@@ -659,17 +492,18 @@ export function WorkoutLogger() {
     }
   }
 
-  async function handleCreateWorkout(baseDate) {
+  async function handleCreateWorkout() {
     try {
       if (!user?._id) return;
 
-      const workoutDate = baseDate
-        ? new Date(baseDate)
-        : selectedDate
-          ? new Date(selectedDate)
-          : new Date();
-      workoutDate.setHours(0, 0, 0, 0);
+      const workoutDate = new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0);
       const startUnix = Math.floor(workoutDate.getTime() / 1000);
+
+      console.log("I USED selectedDate:", selectedDate, "DONT YELL AT ME.  Split:", [selectedYear, selectedMonth, selectedDay]);
+      console.log("Creating workout for date:", workoutDate);
+      console.log("Creating workout for date (ISO):", workoutDate.toISOString());
+      console.log("Creating workout for date (String):", workoutDate.toString());
+      console.log("Creating workout for date (Unix):", startUnix);
 
       // Use selected gym (or fall back to user's home gym if available)
       const gymId = selectedGymId || user?.settings?.homeGymId || "000000000000000000000000";
@@ -701,8 +535,10 @@ export function WorkoutLogger() {
 
       await pullWorkouts(); // Refresh cached workouts in Redux
       resetWorkoutPicker();
+      return persisted;
     } catch (err) {
       console.error("Error creating workout:", err);
+      return null;
     }
   }
 
@@ -745,74 +581,59 @@ export function WorkoutLogger() {
 
   // ─── Main Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="page-layout">
+  <div className="page-layout">
+
 
       <div className="workout-picker-panel">
-      <div className="workout-picker-inline">
+        <div className="workout-picker-inline">
 
-        {/* Zone A: Create New Workout Section */}
-        <div className="create-workout-section">
-          <input
-            type="text"
-            id="new-workout-name-textbox"
-            placeholder="Add a New Workout by Entering a Name"
-            value={newWorkoutName}
-            onChange={(e) => setNewWorkoutName(e.target.value)}
-            onKeyDown={exitOnEnter}
-          />
-          <select
-            id="select-gym-dropdown"
-            value={selectedGymId}
-            onChange={(e) => setSelectedGymId(e.target.value)}
-          >
-            <option value="">New Workout - No Gym</option>
-            {availableGyms.map((g) => (
-              <option key={g._id} value={g._id}>
-                {g.name || g.address || "Ambiguous Gym"}
-              </option>
-            ))}
-          </select>
-          <button
-            id="create-new-workout-button"
-            className="create-workout-button"
-            disabled={!newWorkoutName.trim()}
-            onClick={() => handleCreateWorkout(selectedDate ? new Date(selectedDate) : new Date())}
-          >
-            Create New Workout
-          </button>
-        </div>
-
+        
         {/* Zone 1 + 2: Filter, scrollable list, load button */}
         <div className="workout-list">
-          <div className="favorite-filter-section">
-            <button
-              className={`favorite-filter-btn ${showFavoritesOnly ? "active" : ""}`}
-              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            >
-              {showFavoritesOnly ? "⭐ Favorites" : "☆ All"}
-            </button>
-          </div>
 
-          <div className="workout-scroll-container">
-            <p>Showing workout for {selectedDate?.slice(0, 10) || "selected date"}</p>
+            <p>Showing workout for {selectedDate}</p>
 
-            {(!dailyWorkouts ||
-              (showFavoritesOnly
-                ? dailyWorkouts.filter((w) => w.favorite)
-                : dailyWorkouts
-              ).length === 0) && (
+            {dailyWorkouts.length === 0 && (
               <div className="no-workouts">
-                {showFavoritesOnly
-                  ? "No favorite workouts for this day."
-                  : "No workouts for this day."}
+                No workouts for this day. Create a workout or select a new date on the Calendar. 
+
+                <Calendar />
+                <br />
+                <div className="create-workout-section">
+                  <input
+                    type="text"
+                    id="new-workout-name-textbox"
+                    placeholder="Add a New Workout by Entering a Name"
+                    value={newWorkoutName}
+                    onChange={(e) => setNewWorkoutName(e.target.value)}
+                    onKeyDown={exitOnEnter}
+                  />
+                  <select
+                    id="select-gym-dropdown"
+                    value={selectedGymId}
+                    onChange={(e) => setSelectedGymId(e.target.value)}
+                  >
+                    <option value="">New Workout - No Gym</option>
+                    {availableGyms.map((g) => (
+                      <option key={g._id} value={g._id}>
+                        {g.name || g.address || "Ambiguous Gym"}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    id="create-new-workout-button"
+                    className="create-workout-button"
+                    disabled={!newWorkoutName.trim()}
+                    onClick={() => handleCreateWorkout()}
+                  >
+                    Create New Workout
+                  </button>
+                </div>
               </div>
             )}
 
             {dailyWorkouts &&
-              (showFavoritesOnly
-                ? dailyWorkouts.filter((w) => w.favorite)
-                : dailyWorkouts
-              ).map((w) => (
+               dailyWorkouts.map((w) => (
                 <div
                   key={w._id}
                   className={
@@ -833,39 +654,65 @@ export function WorkoutLogger() {
                       {unixToDate(w.startTime)}
                     </div>
                   </div>
-                  <button
-                    className="workout-favorite-btn"
-                    onClick={() => {
-                      handleToggleFavorite(w._id);
-                    }}
-                    title={
-                      w.favorite ? "Remove from favorites" : "Add to favorites"
-                    }
+
+                  <button className="load-workout-button"
+                  disabled={selectedWorkoutIdForPicker !== w._id}
+                    onClick={handleLoadWorkout}
                   >
-                    {w.favorite ? "⭐" : "☆"}
+                    Load Existing Workout
                   </button>
+
                 </div>
+                
               ))}
 
-          </div>
-
-          <button className="load-workout-button"
-          disabled={!selectedWorkoutIdForPicker}
-            onClick={handleLoadWorkout}
-          >
-            Load Existing Workout
-          </button>
+            {dailyWorkouts.length > 0 && (
+                <div className="create-workout-section">
+                  <input
+                    type="text"
+                    id="new-workout-name-textbox"
+                    placeholder="Add a New Workout by Entering a Name"
+                    value={newWorkoutName}
+                    onChange={(e) => setNewWorkoutName(e.target.value)}
+                    onKeyDown={exitOnEnter}
+                  />
+                  <select
+                    id="select-gym-dropdown"
+                    value={selectedGymId}
+                    onChange={(e) => setSelectedGymId(e.target.value)}
+                  >
+                    <option value="">New Workout - No Gym</option>
+                    {availableGyms.map((g) => (
+                      <option key={g._id} value={g._id}>
+                        {g.name || g.address || "Ambiguous Gym"}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    id="create-new-workout-button"
+                    className="create-workout-button"
+                    disabled={newWorkoutName.trim() === ""}
+                    onClick={() => handleCreateWorkout()}
+                  >
+                    Create New Workout
+                  </button>
+                </div>
+            )}
 
         </div>
       </div>
     </div>
 
+
+
       {/* Center Column: Workout Card */}
-      <div className="center-column">
-        {workout ? (
+        {selectedEditableWorkout ? (
           <>
+            <ExercisesCard AddSelectedExercises={AddSelectedExercises} />
+            <HeatMap data={{workout: selectedEditableWorkout._id}}/>
             <div className="workout-card">
               {/* Header row: Title on left, button on right */}
+
               <div className="workout-header">
                 <div className="workout-title">
                   <textarea
@@ -892,7 +739,7 @@ export function WorkoutLogger() {
                   />
 
                   <h3>
-                    {workout?.startTime ? unixToDate(workout.startTime) : ""}
+                    {unixToDate(selectedEditableWorkout.startTime)}
                   </h3>
                 </div>
 
@@ -1050,314 +897,6 @@ export function WorkoutLogger() {
             </div>
           </>
         ) : null}
-      </div>
-
-      {/* Right Column: Exercise Search & Selection */}
-      <div className="right-column">
-        <div className="add-exercise">
-          <div className="add-exercise-form">
-            {/* Search Input */}
-            <div className="dropdown-wrapper">
-              <div className="search-row">
-                <input
-                  type="text"
-                  placeholder="Search exercises..."
-                  value={exerciseName}
-                  onChange={(e) => setExerciseName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSearch(exerciseName); // run search
-                      exitOnEnter(e); // blur input
-                    }
-                  }}
-                />
-
-                <button
-                  type="button"
-                  className="search-btn"
-                  onClick={() => handleSearch(exerciseName)}
-                >
-                  Search
-                </button>
-              </div>
-
-              <div className="dropdown-instructions">
-                Click an exercise to select it
-              </div>
-
-              {/* Exercise List Dropdown */}
-              <div className="dropdown">
-                {exerciseLoading && (
-                  <div className="dropdown-item">Loading...</div>
-                )}
-                {!exerciseLoading && exercises.length === 0 && (
-                  <div className="dropdown-item">No exercises found</div>
-                )}
-                {!exerciseLoading &&
-                  exercises
-                    .filter((ex) => ex && (ex.name || ex._id || ex.exercise_id)) // remove empty objects
-                    .map((item, i) => {
-                      const name = item.name ?? "";
-                      const id = item._id ?? item.exerciseId;
-
-                      // Filter by search term
-                      if (
-                        searchTerm &&
-                        !name.toLowerCase().includes(searchTerm.toLowerCase())
-                      ) {
-                        return;
-                      }
-
-                      // Check if already selected
-                      const isSelected =
-                        typeof id === "string" &&
-                        pendingExercises.includes(id) &&
-                        exercises.some(
-                          (ex) => (ex._id ?? ex.exerciseId) === id,
-                        );
-
-                      return (
-                        <div
-                          key={`item-${i}`}
-                          className={`dropdown-item ${isSelected ? "selected" : ""}`}
-                          onClick={() => {
-                            setPendingExercises((prev) => {
-                              if (
-                                !exercises.some(
-                                  (ex) => (ex._id ?? ex.exerciseId) === id,
-                                )
-                              ) {
-                                console.warn("Invalid exerciseId clicked:", id);
-                                return prev;
-                              }
-                              if (prev.includes(id)) {
-                                return prev.filter((p) => p !== id);
-                              }
-                              return [...prev, id];
-                            });
-                          }}
-                        >
-                          <span>{name}</span>
-                          {isSelected && <span className="check">✓</span>}
-                        </div>
-                      );
-                    })}
-              </div>
-            </div>
-
-            {/* Pending Exercises List */}
-            <div className="pending-list">
-              {pendingExercises.map((id, i) => {
-                const name =
-                  personalExNames[id] ||
-                  exercises.find((ex) => (ex._id ?? ex.exerciseId) === id)
-                    ?.name ||
-                  "(Unknown Exercise)";
-                return (
-                  <div key={i} className="pending-item">
-                    <span>{name}</span>
-                    <button
-                      type="button"
-                      className="remove-btn"
-                      onClick={() =>
-                        setPendingExercises((prev) =>
-                          prev.filter((_, idx) => idx !== i),
-                        )
-                      }
-                    >
-                      ×
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Action Buttons */}
-            <div
-              className="add-btn-wrapper"
-              style={{ display: "flex", gap: "8px" }}
-            >
-              <button
-                className="workout-add-selected-button add-btn"
-                id="add-exercises-btn"
-                type="button"
-                onClick={() => addExerciseToWorkout()}
-              >
-                Add Selected Exercises
-              </button>
-              <button
-                className="workout-open-new-button add-btn"
-                type="button"
-                onClick={openNewExerciseModal}
-              >
-                Add New Exercise
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Save Success Toast */}
-      {saveSuccess && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 24,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#0a7b00",
-            color: "white",
-            padding: "12px 24px",
-            borderRadius: 8,
-            fontWeight: "bold",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-            zIndex: 3000,
-          }}
-        >
-          Exercise saved successfully!
-        </div>
-      )}
-
-      {/* New Exercise Modal */}
-      {showNewExerciseModal && (
-        <div className="modal-overlay" onClick={closeNewExerciseModal}>
-          <form
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={handleNewExerciseSave}
-          >
-            <h3>Add New Exercise</h3>
-
-            <label style={{ display: "block", marginTop: 8 }}>Name</label>
-            <input
-              type="text"
-              value={newExercise.name}
-              onChange={(e) =>
-                setNewExercise((p) => ({ ...p, name: e.target.value }))
-              }
-              style={{ width: "100%" }}
-              onKeyDown={exitOnEnter}
-            />
-
-            <label style={{ display: "block", marginTop: 8 }}>
-              GIF URL (optional)
-            </label>
-            <input
-              type="text"
-              value={newExercise.gifUrl}
-              onChange={(e) =>
-                setNewExercise((p) => ({ ...p, gifUrl: e.target.value }))
-              }
-              placeholder="https://..."
-              style={{ width: "100%" }}
-              onKeyDown={exitOnEnter}
-            />
-            {newExercise.gifUrl && newExercise.gifUrl.startsWith("http") && (
-              <div style={{ marginTop: 8, textAlign: "center" }}>
-                <img
-                  src={newExercise.gifUrl}
-                  alt="GIF Preview"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "150px",
-                    borderRadius: "8px",
-                    border: "2px solid #000",
-                  }}
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                  }}
-                />
-              </div>
-            )}
-
-            <label style={{ display: "block", marginTop: 8 }}>
-              Target Muscles
-            </label>
-            {muscleError && (
-              <div style={{ color: "red", marginBottom: 6 }}>{muscleError}</div>
-            )}
-            <select
-              multiple
-              value={newExercise.targetMuscles}
-              onChange={(e) => handleMultiSelectChange(e, "targetMuscles")}
-              style={{ width: "100%" }}
-            >
-              {(muscleOptions || []).map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-
-            <label style={{ display: "block", marginTop: 8 }}>Body Parts</label>
-            {BodyPartError && (
-              <div style={{ color: "red", marginBottom: 6 }}>
-                {BodyPartError}
-              </div>
-            )}
-            <select
-              multiple
-              value={newExercise.bodyParts}
-              onChange={(e) => handleMultiSelectChange(e, "bodyParts")}
-              style={{ width: "100%" }}
-            >
-              {(BodyPartOptions || []).map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-
-            <label style={{ display: "block", marginTop: 8 }}>Equipment</label>
-            {equipmentError && (
-              <div style={{ color: "red", marginBottom: 6 }}>
-                {equipmentError}
-              </div>
-            )}
-            <select
-              multiple
-              value={newExercise.equipment}
-              onChange={(e) => handleMultiSelectChange(e, "equipment")}
-              style={{ width: "100%" }}
-            >
-              {(equipmentOptions || []).map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-
-            <label style={{ display: "block", marginTop: 8 }}>
-              Instructions
-            </label>
-            <textarea
-              value={newExercise.instructions}
-              onChange={(e) =>
-                setNewExercise((p) => ({ ...p, instructions: e.target.value }))
-              }
-              style={{ width: "100%" }}
-            />
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 8,
-                marginTop: 12,
-              }}
-            >
-              <button type="button" onClick={closeNewExerciseModal}>
-                Cancel
-              </button>
-              <button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-
     </div>
   );
 }
