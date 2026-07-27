@@ -666,6 +666,38 @@ export function WorkoutLogger() {
                 
               ))}
 
+            {dailyWorkouts.length > 0 && (
+                <div className="create-workout-section">
+                  <input
+                    type="text"
+                    id="new-workout-name-textbox"
+                    placeholder="Add a New Workout by Entering a Name"
+                    value={newWorkoutName}
+                    onChange={(e) => setNewWorkoutName(e.target.value)}
+                    onKeyDown={exitOnEnter}
+                  />
+                  <select
+                    id="select-gym-dropdown"
+                    value={selectedGymId}
+                    onChange={(e) => setSelectedGymId(e.target.value)}
+                  >
+                    <option value="">New Workout - No Gym</option>
+                    {availableGyms.map((g) => (
+                      <option key={g._id} value={g._id}>
+                        {g.name || g.address || "Ambiguous Gym"}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    id="create-new-workout-button"
+                    className="create-workout-button"
+                    disabled={newWorkoutName.trim() === ""}
+                    onClick={() => handleCreateWorkout()}
+                  >
+                    Create New Workout
+                  </button>
+                </div>
+            )}
 
         </div>
       </div>
