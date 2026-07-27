@@ -1,18 +1,14 @@
 .calendar-container {
-  position: fixed !important;
-  top: 8vh !important;
-  left: 55% !important;
-  transform: translateX(-50%) !important;
-  width: clamp(30vw, 20vw, 320px) !important;
-  min-width: clamp(250px, 20vw, 320px) !important;
-  padding: clamp(10px, 1.5vw, 16px) !important;
+  width: 100%;
+  max-width: 320px;
+  min-width: 250px;
+  padding: clamp(10px, 1.5vw, 16px);
   box-sizing: border-box;
   font-family: sans-serif;
-  z-index: 10000 !important;
 
   background: var(--color-surface);
-  border: clamp(2px, 0.3vw, 3px) solid var(--color-border) !important;
-  border-radius: clamp(8px, 1vw, 12px) !important;
+  border: clamp(2px, 0.3vw, 3px) solid var(--color-border);
+  border-radius: clamp(8px, 1vw, 12px);
   box-shadow: var(--shadow-md);
   overflow: hidden;
 }
@@ -146,117 +142,12 @@
   background: green;
 }
 
-/* Calendar Button Functions */
-.calendar-button-wrapper {
-    position: fixed;
-    bottom: clamp(10px, 2vh, 20px);
-    left: clamp(130px, 15vw, 260px);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    z-index: 9999; 
-}
-
-.calendar-button-wrapper > div:first-child {
-    position: absolute;
-    bottom: clamp(30px, 8vh, 60px);
-    right: 0;
-    z-index: 10000;
-}
-
-.calendar-button-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--button-bg);
-    border: 2px solid var(--color-border);
-    border-radius: 50%;
-    height: clamp(40px, 6vw, 50px);
-    width: clamp(40px, 6vw, 50px);
-    cursor: pointer;
-    font-size: clamp(14px, 2vw, 18px);
-    transition: background-color 0.2s ease;
-    color: var(--text-primary);
-}
-
-.calendar-button-trigger:hover,
-.calendar-button-trigger.active {
-    background-color: var(--button-hover);
-}
-
-.calendar-popup-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: clamp(10px, 2vw, 20px);
-}
-
-.calendar-todo-row {
-    position: fixed;
-    left: 55%;
-    top: 70%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: clamp(10px, 2vw, 20px);
-    width: clamp(30vw, 40vw, 450px);
-    z-index: 10000;
-    background: var(--color-surface);
-    border: clamp(2px, 0.5vw, 4px) solid var(--color-border);
-    border-radius: clamp(8px, 1.5vw, 16px);
-    box-shadow: var(--shadow-md);
-    padding: clamp(10px, 2vw, 20px);
-    box-sizing: border-box;
-}
-
-.calendar-todo-panel {
-    flex: 1;
-    min-width: 0;
-}
-
-.calendar-todo-panel .dashboard-todo-items {
-    max-height: clamp(120px, 25vh, 200px);
-    overflow-y: auto;
-}
-
-.workout-todo-clickable {
-    cursor: pointer;
-    transition: background 0.15s ease;
-    border-radius: clamp(4px, 0.8vw, 8px);
-    padding: clamp(2px, 0.5vw, 4px);
-    margin: clamp(-2px, -0.5vw, -4px);
-}
-
-.workout-todo-clickable:hover {
-    background: var(--button-hover);
-}
-
-.calendar-workout-modal {
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    padding-top: clamp(10px, 2vh, 20px) !important;
-    z-index: 100001 !important;
-}
-
-.calendar-workout-modal-content {
-    position: fixed !important;
-    top: clamp(10px, 2vh, 20px) !important;
-    left: 55% !important;
-    transform: translateX(-50%) !important;
-    max-height: clamp(70vh, 80vh, 85vh) !important;
-    margin: 0 !important;
-    z-index: 100002 !important;
-    width: clamp(90vw, 50vw, 520px) !important;
-}
-
 @media (max-width: 768px) {
     .calendar-container {
-        top: 10% !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        width: 85vw !important;
-        min-width: 250px !important;
-        max-width: 275px !important;
-        padding: 8px !important;
+    width: 100%;
+    min-width: 250px;
+    max-width: 275px;
+    padding: 8px;
     }
 
     .calendar-title {
@@ -282,21 +173,5 @@
     .food-dot {
         width: 5px !important;
         height: 5px !important;
-    }
-
-    .calendar-workout-modal-content {
-        width: 90% !important;
-        left: 50% !important;
-        top: 10% !important;
-        max-height: 80vh !important;
-    }
-
-    .calendar-todo-row {
-        display: none !important;
-    }
-
-    .calendar-button-wrapper {
-        bottom: 1% !important;
-        left: 1% !important;
     }
 }
