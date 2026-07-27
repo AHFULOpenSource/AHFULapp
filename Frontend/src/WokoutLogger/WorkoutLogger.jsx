@@ -5,14 +5,14 @@ import "../siteStyles.css";
 import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
 import {
   formatTime as formatTimeFn,
-  fetchWorkoutById,
-  fetchExerciseById,
+  
   createWorkout,
   updateWorkout,
   createPersonalExercise,
   updatePersonalExercise,
   deletePersonalExercise,
 } from "../QueryFunctions.js";
+import { fetchWorkoutById, fetchExerciseById } from "./QueryFunctions-WorkoutLogger.js"
 import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
 import { ExercisesCard } from "../ExercisesCard/ExercisesCard.jsx";
 import { pullWorkouts } from "./PullWorkout.jsx";
@@ -591,12 +591,15 @@ export function WorkoutLogger() {
         {/* Zone 1 + 2: Filter, scrollable list, load button */}
         <div className="workout-list">
 
-          <div className="workout-scroll-container">
+          <div >
             <p>Showing workout for {selectedDate}</p>
 
             {dailyWorkouts.length === 0 && (
               <div className="no-workouts">
-                No workouts for this day.
+                No workouts for this day. Create a workout or select a new date on the Calendar. 
+
+                <Calendar />
+                <br />
                 <div className="create-workout-section">
                   <input
                     type="text"
@@ -627,8 +630,6 @@ export function WorkoutLogger() {
                     Create New Workout
                   </button>
                 </div>
-
-
               </div>
             )}
 
