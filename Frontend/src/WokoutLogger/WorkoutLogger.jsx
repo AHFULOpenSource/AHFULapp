@@ -676,7 +676,7 @@ export function WorkoutLogger() {
         {selectedEditableWorkout ? (
           <>
             <ExercisesCard AddSelectedExercises={AddSelectedExercises} />
-            <HeatMap />
+            <HeatMap data={{workout: selectedEditableWorkout._id}}/>
             <div className="workout-card">
               {/* Header row: Title on left, button on right */}
 
