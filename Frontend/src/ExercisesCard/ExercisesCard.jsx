@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { createExercise, getDefaultNewExercise } from "../QueryFunctions.js";
+import { createExercise, getDefaultNewExercise } from "./QueryFunctions-Exercises.js";
 import { pullExercises } from "./PullExercise.jsx";
 import {
   loadBodyParts,
