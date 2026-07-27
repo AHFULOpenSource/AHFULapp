@@ -42,6 +42,8 @@ export function WorkoutLogger() {
   const user = useSelector((state) => state.auth.user);
   const userAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const selectedDate = useSelector(selectSelectedDateOrToday);
+  const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number)
+
   const cachedWorkouts = useSelector((state) => state.pullWorkout.workouts);
   const cachedPersonalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
 
@@ -214,32 +216,27 @@ export function WorkoutLogger() {
         return;
       }
 
-      const selectedDay = selectedDate ? new Date(selectedDate) : new Date();
-      selectedDay.setHours(0, 0, 0, 0);
-      const currentDateUnix = Math.floor(selectedDay.getTime() / 1000);
+      const currentDateUnix = Math.floor(new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0).getTime() / 1000);
+      const tomorrowUnix = Math.floor(currentDateUnix + 86400); // 24 hours later
 
-      const tomorrow = new Date(selectedDay);
-      tomorrow.setDate(selectedDay.getDate() + 1);
-      const tomorrowUnix = Math.floor(tomorrow.getTime() / 1000);
-
-      const todaysWorkouts = Array.isArray(cachedWorkouts)
+      const workoutsFoundBetweenCurrDateAndTomorrow = Array.isArray(cachedWorkouts)
         ? cachedWorkouts.filter(
             (w) => w?.startTime >= currentDateUnix && w?.startTime < tomorrowUnix,
           )
         : [];
 
-      setDailyWorkouts(todaysWorkouts);
+      setDailyWorkouts(workoutsFoundBetweenCurrDateAndTomorrow);
 
+      let todaysWorkout;
+      if (workoutsFoundBetweenCurrDateAndTomorrow.length === 1) {
+        todaysWorkout = workoutsFoundBetweenCurrDateAndTomorrow[0];
+
+      } else {
+        todaysWorkout = null;
+
+      }
       const activeWorkoutId = workoutRef.current?._id || selectedEditableWorkout?._id || null;
 
-      const todaysWorkout =
-        todaysWorkouts.find((w) => w?._id === activeWorkoutId) ||
-        todaysWorkouts.find((w) => {
-          if (!w?.startTime) return false;
-          const workoutDate = new Date(w.startTime * 1000);
-          workoutDate.setHours(0, 0, 0, 0);
-          return workoutDate.getTime() === selectedDay.getTime();
-        });
 
       const workoutId = todaysWorkout?._id || null;
       const tableMatchesWorkout =
@@ -253,8 +250,8 @@ export function WorkoutLogger() {
 
         if (todaysWorkout) {
           setWorkout(todaysWorkout);
-          setWorkoutTitle(todaysWorkout.title || "");
-          setSelectedGymId(todaysWorkout.gym_id || "");
+          setWorkoutTitle(todaysWorkout.title);
+          setSelectedGymId(todaysWorkout.gym_id);
           setSaveStatus("idle");
 
           if (!tableMatchesWorkout) {
@@ -494,17 +491,18 @@ export function WorkoutLogger() {
     }
   }
 
-  async function handleCreateWorkout(baseDate) {
+  async function handleCreateWorkout() {
     try {
       if (!user?._id) return;
 
-      const workoutDate = baseDate
-        ? new Date(baseDate)
-        : selectedDate
-          ? new Date(selectedDate)
-          : new Date();
-      workoutDate.setHours(0, 0, 0, 0);
+      const workoutDate = new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0);
       const startUnix = Math.floor(workoutDate.getTime() / 1000);
+
+      console.log("I USED selectedDate:", selectedDate, "DONT YELL AT ME.  Split:", [selectedYear, selectedMonth, selectedDay]);
+      console.log("Creating workout for date:", workoutDate);
+      console.log("Creating workout for date (ISO):", workoutDate.toISOString());
+      console.log("Creating workout for date (String):", workoutDate.toString());
+      console.log("Creating workout for date (Unix):", startUnix);
 
       // Use selected gym (or fall back to user's home gym if available)
       const gymId = selectedGymId || user?.settings?.homeGymId || "000000000000000000000000";
@@ -613,7 +611,7 @@ export function WorkoutLogger() {
             id="create-new-workout-button"
             className="create-workout-button"
             disabled={!newWorkoutName.trim()}
-            onClick={() => handleCreateWorkout(new Date(selectedDate))}
+            onClick={() => handleCreateWorkout()}
           >
             Create New Workout
           </button>
