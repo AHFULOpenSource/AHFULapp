@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import "./FavoritesHub.css";
 import "../siteStyles.css";
-import { getFoodFavorites, getWorkoutFavorites, getTaskFavorites, createWorkout, toggleFoodFavorite, toggleWorkoutFavorite, toggleTaskFavorite } from "../QueryFunctions";
+import { createWorkout, toggleWorkoutFavorite } from "../QueryFunctions";
+import { getWorkoutFavorites} from "./QueryFunctions-Favorties.js";
+import { toggleTaskFavorite, getTaskFavorites } from "../Tasks/QueryFunctions-Tasks";
+import { getFoodFavorites, toggleFoodFavorite, createFood } from "../Food/QueryFunctions-Food";
 
 export function FavoritesHub() {
   const user = useSelector((state) => state.auth.user);
@@ -106,21 +109,20 @@ export function FavoritesHub() {
     }
 
     try {
-      const now = Math.floor(Date.now() / 1000);
-      const res = await fetch(`https://www.ahful.app/api/AHFULfoods/create`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: food.name,
-          calsPerServing: food.calsPerServing,
-          servings: food.servings,
-          type: food.type,
-          time: now,
-        }),
+      const { error } = await createFood({
+        name: food.name,
+        calories: food.calories,
+        servings: food.servings,
+        type: food.type,
+        carbs: food.carbs ?? null,
+        fat: food.fat ?? null,
+        protein: food.protein ?? null,
+        fdcId: food.fdcId ?? null,
+        servingSize: food.servingSize ?? null,
+        servingUnit: food.servingUnit ?? null,
       });
 
-      if (res.ok) {
+      if (!error) {
         markAsAddedToday(food._id);
         alert(`✅ Added "${food.name}" to today's food log!`);
       } else {
@@ -249,7 +251,7 @@ export function FavoritesHub() {
   return (
     <div className="favorites-hub">
       <div className="favorites-header">
-        <h1>⭐ My Favorites</h1>
+        <h1>Favorites Hub</h1>
         <button className="refresh-btn" onClick={fetchFavorites} disabled={loading}>
           {loading ? "Refreshing..." : "Refresh"}
         </button>
@@ -294,7 +296,7 @@ export function FavoritesHub() {
                     <div className="favorite-info">
                       <h3>{food.name}</h3>
                       <p className="food-meta">
-                        {food.calsPerServing} cal/serving × {food.servings} servings = {food.calsPerServing * food.servings} cal
+                        {(food.calories)} cal/serving × {food.servings} servings = {(food.calories) * food.servings} cal
                       </p>
                       <span className="food-type">{food.type}</span>
                     </div>

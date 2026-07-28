@@ -6,13 +6,25 @@ from Services.TaskDriver import TaskDriver
 from Services.TokenDriver import TokenDriver
 from Services.SocialDriver import SocialDriver
 
+
 class NotificationScheduler:
-    def __init__(self, interval_seconds=300):
+    def __init__(self, app=None, interval_seconds=300):
         self.interval = interval_seconds
         self.running = False
         self.thread = None
+        self.app = app  # <-- now the scheduler owns a reference to the app
+
+    def init_app(self, app):
+        """Optional two-step init, mirrors the Flask extension pattern
+        (db.init_app(app), scheduler.init_app(app), etc.)."""
+        self.app = app
 
     def start(self):
+        if self.app is None:
+            raise RuntimeError(
+                "NotificationScheduler has no app. Pass app=... to the "
+                "constructor or call init_app(app) before start()."
+            )
         if not self.running:
             self.running = True
             self.thread = threading.Thread(target=self._run, daemon=True)
@@ -28,15 +40,22 @@ class NotificationScheduler:
     def _run(self):
         while self.running:
             try:
-                self._check_and_send_notifications()
-                self._check_and_send_friend_request_notifications()
+                # Push the app context ONCE per loop iteration, so every
+                # DB call and driver call made during this tick sees
+                # current_app correctly.
+                with self.app.app_context():
+                    self._check_and_send_notifications()
+                    self._check_and_send_friend_request_notifications()
             except Exception as e:
                 print(f"Error in notification scheduler: {e}")
             time.sleep(self.interval)
 
     def _check_and_send_notifications(self):
         tasks, error = TaskDriver.find_overdue_tasks()
-        if error or not tasks:
+        if not tasks:
+            return
+        elif error:
+            print(f"Error fetching overdue tasks: {error}")
             return
 
         sent_task_ids = set()
@@ -67,7 +86,10 @@ class NotificationScheduler:
     def _check_and_send_friend_request_notifications(self):
         pending_requests, error = SocialDriver.find_pending_friend_requests()
 
-        if error or not pending_requests:
+        if error:
+            print(f"Error fetching pending friend requests: {error}")
+            return
+        elif not pending_requests:
             return
 
         sent_request_ids = set()
@@ -135,11 +157,3 @@ class NotificationScheduler:
             print(f"Successfully sent friend request reminder {friendship_id}: {response}")
         except Exception as e:
             print(f"Error sending friend request reminder to {token[:20]}...: {e}")
-
-notification_scheduler = NotificationScheduler(interval_seconds=300)
-
-def start_scheduler():
-    notification_scheduler.start()
-
-def stop_scheduler():
-    notification_scheduler.stop()

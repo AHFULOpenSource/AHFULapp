@@ -5,7 +5,6 @@ import "../Dashboard/Dashboard.css";
 import { GoogleLogin } from "@react-oauth/google";
 import { GoogleButton } from "./GoogleButton";
 import { useSelector, useDispatch } from "react-redux";
-import { handle_google_login, getUserSettings } from "../QueryFunctions.js";
 import { authLogin } from "./AuthSlice.jsx";
 import { useState, useEffect } from "react";
 import {useNavigate } from "react-router-dom";
@@ -26,9 +25,10 @@ export function Login() {
   const [isMobile, setIsMobile] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showTOS, setShowTOS] = useState(false);
-const [browser, setBrowser] = useState('');
+  const [browser, setBrowser] = useState('');
   const scrollText = "∨ scroll down to learn more ∨";
 
+  //Check if we are on a mobile device and if so resize. 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -107,6 +107,7 @@ const [browser, setBrowser] = useState('');
       <div className="login-top-overlay">
         <div className={`login-content ${showContent ? 'fade-in' : ''}`}>
           <div className="login-title">
+            <br/>
               <div>
                 <h1>AHFUL</h1>
                 A Helpful Fitness Utilization Logger App

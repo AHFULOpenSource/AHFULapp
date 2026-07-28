@@ -2,26 +2,27 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import "./ExploreWorkouts.css";
 import "../siteStyles.css";
-import { CalendarButton } from "../Calendar/CalendarButton";
-import { HeatMap } from "./HeatMap";
-import { WorkoutChart } from "../ExploreWorkouts/WorkoutChart";
-import { fetchPersonalExercises, fetchGym, fetchExerciseById } from "../QueryFunctions";
+import { CalendarButton } from "../Calendar/CalendarButton.jsx";
+import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
+import { 
+  fetchPersonalExercises,  
+  deleteWorkout, 
+  toggleWorkoutFavorite
+} from "../QueryFunctions.js";
 
 /**
- * ExploreWorkouts - Workout exploration and history page
+ * History & PRs (Personal Exercise Records) - Workout History exploration and Personal Exercise history page
  *
  * Features:
  * - View all workouts or just my workouts (toggle)
  * - Interactive workout history chart with week selection
- * - Heat map showing workout frequency
  * - Calendar integration
  *
  * Layout:
  * - Left column: List of workouts/exercises
- * - Right column: WorkoutChart and HeatMap widgets
  * - Bottom: Calendar component
  */
-export function ExploreWorkouts() {
+export function HistoryPRsPage() {
   // ─── State ────────────────────────────────────────────────────────────────────
   const user = useSelector((state) => state.auth.user);
   const [workouts, setWorkouts] = useState([]);
@@ -39,6 +40,9 @@ export function ExploreWorkouts() {
   const [shareTargetEmail, setShareTargetEmail] = useState("");
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState(null);
+
+  // ─── Favorite Filter State ───────────────────────────────────────────────────
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   const getUserId = () => {
     if (user?._id) return user._id;
@@ -197,11 +201,11 @@ export function ExploreWorkouts() {
 
   // ─── Fetch Gym Info when Workout is Selected ───────────────────────────────────
   useEffect(() => {
-    if (selectedWorkout?.gymId) {
+    if (selectedWorkout?.gym_id) {
       const loadGymInfo = async () => {
         setGymLoading(true);
         try {
-          const gym = await fetchGym(selectedWorkout.gymId);
+          const gym = await fetchGym(selectedWorkout.gym_id);
           setGymInfo(gym);
         } catch (err) {
           console.error("Failed to fetch gym info:", err);
@@ -271,13 +275,50 @@ export function ExploreWorkouts() {
     }
   };
 
+  const handleDeleteWorkout = async () => {
+    if (!selectedWorkout?._id) return;
+
+    try {
+      const response = await deleteWorkout(selectedWorkout._id);
+      const deleteSucceeded =
+        response?.ok === true;
+
+      if (!deleteSucceeded) {
+        throw new Error(response?.message || response?.error);
+      }
+
+      setSelectedWorkout(null);
+      await fetchExercises();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      window.alert(`Failed to delete workout: ${message}`);
+    }
+  };
+
+  const handleToggleFavorite = async (workoutId) => {
+    if (!workoutId) return;
+    try {
+      const { reponse, error } = await toggleWorkoutFavorite(workoutId);
+      if (error) {
+        console.error("Failed to toggle favorite:", error);
+        throw new Error(error);
+      }
+      
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="explore-root">
       {/* Page Header with Title, Toggle, and Refresh Button */}
       <header className="explore-header">
-        <h1>Explore Workouts</h1>
+        <h1>Workout History & Personal Exercise Records</h1>
         <div className="header-controls">
+            <button className={`favorite-filter-btn ${showFavoritesOnly ? "active" : ""}`} onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}>
+              {showFavoritesOnly ? "⭐ Favorites" : "☆ All"}
+            </button>
           <button onClick={fetchExercises} disabled={loading} className="refresh-btn">
             {loading ? "Refreshing..." : "Refresh"}
           </button>
@@ -303,9 +344,9 @@ export function ExploreWorkouts() {
                 </div>
               ) : (
                 /* Workout List */
-                workouts.map((workout, idx) => {
+                (showFavoritesOnly ? workouts.filter((w) => w.favorite) : workouts ).map((workout, idx) => {
                   // Generate unique key for each workout item
-                  const key = workout.id || workout._id || workout.title || `workout-${idx}`;
+                  const key = workout._id;
                   return (
                     <div
                       key={key}
@@ -332,29 +373,26 @@ export function ExploreWorkouts() {
                           {workout.endTime && (
                             <span> • End: {new Date(workout.endTime * 1000).toLocaleDateString()}</span>
                           )}
-                          {workout.gymId && <span> • Gym ID: {workout.gymId.slice(0, 8)}...</span>}
+                          {workout.gym_id && <span> • Workout Gym : {workout.gym_id}</span>}
+                          <button
+                          className="workout-favorite-btn"
+                          onClick={() => {
+                            handleToggleFavorite(workout._id);
+                          }}
+                          title={
+                            workout.favorite ? "Remove from favorites" : "Add to favorites"
+                          }
+                        >
+                          {workout.favorite ? "⭐" : "☆"}
+                        </button>
                         </div>
                       </div>
-                      {/* Optional Instructions */}
-                      {workout.instructions && (
-                        <div className="exercise-instructions">{workout.instructions}</div>
-                      )}
                     </div>
                   );
                 })
               )}
             </div>
           )}
-        </div>
-
-        {/* Right Column: Charts and Visualizations */}
-        <div className="explore-right">
-          {/* Interactive Workout History Chart */}
-          {/* Allows users to select different week ranges (4, 6, 8, 12 weeks) */}
-          <WorkoutChart defaultWeeks={6} />
-          {/* Heat Map showing workout frequency over time */}
-
-          <HeatMap />
         </div>
       </div>
 
@@ -384,7 +422,7 @@ export function ExploreWorkouts() {
               </div>
 
               {/* Gym Information */}
-              {selectedWorkout.gymId && (
+              {selectedWorkout.gym_id && (
                 <div className="workout-detail-section">
                   <label className="workout-detail-label">Gym</label>
                   {gymLoading ? (
@@ -521,6 +559,14 @@ export function ExploreWorkouts() {
             </div>
 
             <div className="workout-modal-actions">
+
+              <button
+                className="workout-modal-btn workout-modal-btn-delete"
+                onClick={handleDeleteWorkout}
+              >
+                DELETE
+              </button>
+              
               <button
                 className="workout-modal-btn workout-modal-btn-close"
                 onClick={() => setSelectedWorkout(null)}

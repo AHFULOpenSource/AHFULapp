@@ -1,6 +1,6 @@
-import { store } from "../../../store";
+import { store } from "../store";
 import { setWorkouts, addWorkout, updateWorkout, setError } from "./PullWorkoutSlice";
-import { fetchWorkout } from "../../../QueryFunctions";
+import { fetchWorkout } from "../QueryFunctions";
 
 export async function pullWorkouts() {
   try {
@@ -17,7 +17,6 @@ export async function pullWorkouts() {
       endTime: w.endTime,
       title: w.title,
     }));
-    console.log("Pulled workouts:", metadata);
     store.dispatch(setWorkouts(metadata));
   } 
   catch (err) {

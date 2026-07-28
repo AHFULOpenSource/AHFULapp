@@ -1,16 +1,17 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
-import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
+import { createTransform, persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import calendarReducer from "./Calendar/CalendarSlicer";
+import { normalizeSelectedDate, toLocalDateString } from "./Calendar/UseCalendar";
 import authReducer from "./Auth/AuthSlice";
 import settingsReducer from "./Auth/SettingsSlice";
-import pullExerciseReducer from "./components/Cache/ExerciseCache/PullExerciseSlice";
-import pullTemplateReducer from "./components/Cache/TemplateCache/PullTemplateSlice";
-import pullWorkoutReducer from "./components/Cache/WorkoutCache/PullWorkoutSlice";
+import pullExerciseReducer from "./ExercisesCard/PullExerciseSlice";
+import pullTemplateReducer from "./Templates/PullTemplateSlice.jsx";
+import pullWorkoutReducer from "./WokoutLogger/PullWorkoutSlice.jsx";
 import pullPersonalExerciseReducer from "./components/Cache/PersonalExerciseCache/PersonalExerciseSlice";
-import pullUserFoodReducer from "./components/Cache/FoodCache/PullUserFoodSlice";
-import pullFoodReducer from "./components/Cache/FoodCache/PullFoodSlice";
+import pullUserFoodReducer from "./Food/PullUserFoodSlice";
+import pullFoodReducer from "./Food/PullFoodSlice";
 
 const persistExerciseConfig = {
   key: "pullExercise",
@@ -30,13 +31,22 @@ const persistCalendarConfig = {
   key: "calendar",
   storage,
 };
+
+const calendarTransform = createTransform(
+  (inboundState) => inboundState,
+  (outboundState) => ({
+    ...outboundState,
+    selectedDate: normalizeSelectedDate(outboundState?.selectedDate) || toLocalDateString(new Date()),
+  }),
+  { whitelist: ["calendar"] },
+);
 const persistPersonalExerciseConfig = {
   key: "pullPersonalExercise",
   storage,
 };
 
 const persistUserFoodConfig = {
-  key: "pullFood",
+  key: "pullUserFood",
   storage,
 }
 
@@ -53,7 +63,10 @@ const persistSettingsConfig = {
 const persistedPullExerciseReducer = persistReducer(persistExerciseConfig, pullExerciseReducer);
 const persistedPullTemplateReducer = persistReducer(persistTemplateConfig, pullTemplateReducer);
 const persistedPullWorkoutReducer = persistReducer(persistWorkoutConfig, pullWorkoutReducer);
-const persistedCalendarReducer = persistReducer(persistCalendarConfig, calendarReducer);
+const persistedCalendarReducer = persistReducer(
+  { ...persistCalendarConfig, transforms: [calendarTransform] },
+  calendarReducer,
+);
 const persistedPersonalExerciseReducer = persistReducer(persistPersonalExerciseConfig, pullPersonalExerciseReducer);
 const persistedUserFoodReducer = persistReducer(persistUserFoodConfig, pullUserFoodReducer);
 const persistedFoodReducer = persistReducer(persistFoodConfig, pullFoodReducer);
@@ -69,7 +82,7 @@ export const store = configureStore({
     pullWorkout: persistedPullWorkoutReducer,
     pullPersonalExercise: persistedPersonalExerciseReducer,
     pullUserFood: persistedUserFoodReducer,
-    pullFood: persistedFoodReducer
+    pullAllFood: persistedFoodReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

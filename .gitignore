@@ -9,6 +9,7 @@ __pycache__/
 
 # Backend secret files (CRITICAL - contains secrets!)
 /Backend/firebaseSecret.json
+/Backend/VertexAISecret.json
 /Backend/AHFULGmailCreds.json
 /Backend/runGmailAuth.py
 /Backend/token.json

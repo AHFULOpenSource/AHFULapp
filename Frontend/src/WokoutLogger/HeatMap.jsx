@@ -2,6 +2,7 @@ import Body from "react-muscle-highlighter";
 import "./HeatMap.css";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
+import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
 
 const HEAT_COLORS = ["#ef4444"];
 
@@ -77,34 +78,23 @@ function getDateStringFromTimestamp(timestamp) {
 }
 
 export function HeatMap({ data = {} }) {
-  const selectedDate = useSelector((state) => state.calendar.selectedDate);
+  const selectedDate = useSelector(selectSelectedDateOrToday);
   const workouts = useSelector((state) => state.pullWorkout.workouts);
   const exercises = useSelector((state) => state.pullExercise.exercises);
   const personalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
 
   const [highlightedMuscles, setHighlightedMuscles] = useState([]);
+  
   //Start of logic to determine which muscles to highlight based on selectedDate and workouts/exercises data
   useEffect(() => {
-    //TODO: Mute Logging. 
-    // console.log('selectedDate:', selectedDate);
-    // console.log('workouts:', workouts);
-    // console.log('exercises:', exercises);
-    // console.log('personalExercises:', personalExercises);
 
     if (!selectedDate) {
       setHighlightedMuscles([]);
       return;
     }
-    //Trim date to just YYYY-MM-DD
-    const selectedDateStr = selectedDate.slice(0, 10);
-    console.log('selectedDateStr:', selectedDateStr);
 
-    const todaysWorkout = workouts?.find(w => {
-      const workoutDateStr = getDateStringFromTimestamp(w?.startTime);
-      const match = workoutDateStr === selectedDateStr;
-      console.log('Comparing workout:', w?.title, 'date:', workoutDateStr, '===', selectedDateStr, '=', match);
-      return match;
-    });
+    const selectedWorkoutID = data?.workout;
+    const todaysWorkout = workouts?.find(w => w?._id === selectedWorkoutID); 
 
     console.log('todaysWorkout:', todaysWorkout);
 
@@ -146,7 +136,7 @@ export function HeatMap({ data = {} }) {
 
     console.log('final highlightedMuscles:', Array.from(targetMuscles));
     setHighlightedMuscles(Array.from(targetMuscles));
-  }, [selectedDate, workouts, exercises, personalExercises]);
+  }, [data, workouts, exercises, personalExercises]);
 
   const bodyData = highlightedMuscles.map((slug) => ({
     slug,

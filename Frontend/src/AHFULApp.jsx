@@ -2,7 +2,7 @@ import {  useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { WorkoutLogger } from "./WokoutLogger/WorkoutLogger.jsx";
-import { ExploreWorkouts } from "./ExploreWorkouts/ExploreWorkouts.jsx";
+import { HistoryPRsPage } from "./HistoryPRs/HistoryPRs.jsx";
 import { FoodLog } from "./Food/FoodLog.jsx";
 import { Dashboard } from "./Dashboard/Dashboard.jsx";
 import { Login } from "./Auth/Login.jsx";
@@ -22,13 +22,13 @@ import { TutorialOverlay } from "./Auth/TutorialOverlay.jsx";
 import "./siteStyles.css";
 import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";
-import { whoami, getUserSettings } from "./QueryFunctions.js";
+import { whoami, getUserSettings } from "./Auth/QueryFunctions-Auth.js";
 import { setSettings } from './Auth/SettingsSlice.jsx';
 import { authLogin } from "./Auth/AuthSlice.jsx";
-import { ExploreFriends } from "./Social/ExploreFriends.jsx";
+import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
 import { RequireVerifiedEmail } from "./Auth/EnsureEmailVerify.jsx";
-import { SocialWorkouts } from "./Social/SocialWorkouts.jsx";
-import { Templates } from "./WokoutLogger/Templates.jsx";
+import { SocialWorkouts } from "./SocialWall/SocialWorkouts.jsx";
+import { Templates } from "./Templates/Templates.jsx";
 
 
 function AHFULApp() {
@@ -96,7 +96,7 @@ function AHFULApp() {
             <Route path="/Favorites" element={<FavoritesHub/>}/>
             <Route path="/WorkoutLogger" element={<WorkoutLogger/>} />
             <Route path="/Templates" element={<Templates/>} />
-            <Route path="/ExploreWorkout" element={<ExploreWorkouts/>}/>
+            <Route path="/HistoryPRs" element={<HistoryPRsPage/>}/>
             <Route path="/FoodLog" element={<FoodLog/>}/>
             <Route path="/EmailVerification" element={<VerifyEmail/>}/>
             <Route path="/AIChat" element={<AIChat/>}/>

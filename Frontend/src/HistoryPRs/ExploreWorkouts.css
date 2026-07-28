@@ -406,12 +406,22 @@
   box-shadow: var(--shadow-md);
 }
 
+.workout-modal-btn-delete:hover {
+  background: var(--accent-red-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
 .workout-modal-btn:active {
   transform: translateY(0);
 }
 
 .workout-modal-btn-close {
   background: var(--button-bg);
+}
+
+.workout-modal-btn-delete {
+  background: var(--accent-red-dark);
 }
 
 /* Gym Info Styles */
