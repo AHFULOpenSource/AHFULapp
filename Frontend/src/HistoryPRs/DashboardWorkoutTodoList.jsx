@@ -66,7 +66,7 @@ export function DashboardWorkoutTodoList() {
         </div>
       )}
       <div className="dashboard-todo-footer">
-        <Link to="/ExploreWorkout" className="view-more-link">View More →</Link>
+        <Link to="/WorkoutLogger" className="view-more-link">View More →</Link>
       </div>
     </div>
   );

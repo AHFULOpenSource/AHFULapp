@@ -13,6 +13,7 @@ __pycache__/
 /Backend/AHFULGmailCreds.json
 /Backend/runGmailAuth.py
 /Backend/token.json
+/Backend/VertexAISecret.json
 
 # Backend environment files (CRITICAL - contains secrets!)
 backend/flaskr/.env

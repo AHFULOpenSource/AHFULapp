@@ -505,7 +505,6 @@ body {
 }
 
 .workout-list {
-  max-height: 260px;
   overflow-y: auto;
   margin-bottom: 20px;
 }

@@ -1,7 +1,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect, useRef } from "react";
-import { handle_google_login, getUserSettings } from "../QueryFunctions.js";
+import { handle_google_login, getUserSettings } from "./QueryFunctions-Auth.js";
 import { authLogin } from "./AuthSlice.jsx";
 import { setSettings } from '../Auth/SettingsSlice.jsx';
 import googleIconDay from "../../images/Login/GoogleIcons/web_light_rd_na@2x.png";

@@ -81,7 +81,6 @@ class WorkoutDriver:
             "title": title,
             "startTime": int(startTime),
             "endTime": int(endTime),
-            "template": False,
             "gym_id": ObjectId(gym_id)
         }
 

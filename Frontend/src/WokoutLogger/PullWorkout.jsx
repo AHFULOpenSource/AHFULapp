@@ -1,6 +1,6 @@
-import { store } from "../../../store";
+import { store } from "../store";
 import { setWorkouts, addWorkout, updateWorkout, setError } from "./PullWorkoutSlice";
-import { fetchWorkout } from "../../../QueryFunctions";
+import { fetchWorkout } from "../QueryFunctions";
 
 export async function pullWorkouts() {
   try {

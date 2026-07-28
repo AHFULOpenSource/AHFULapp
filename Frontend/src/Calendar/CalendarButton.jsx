@@ -1,9 +1,11 @@
 import "./Calendar.css";
+import "./CalendarButton.css";
 import { useState, useEffect, useRef } from "react";
 import { Calendar } from "../Calendar/Calendar.jsx";
 import { useSelector } from "react-redux";
-import { fetchPersonalExercises, fetchGym } from "../QueryFunctions";
-import { DashboardWorkoutTodoItem } from "../ExploreWorkouts/DashboardWorkoutTodoItem";
+import { fetchPersonalExercises } from "../QueryFunctions";
+import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
+import { DashboardWorkoutTodoItem } from "../HistoryPRs/DashboardWorkoutTodoItem.jsx";
 import { DashboardFoodTodoItem } from "../Food/DashboardFoodTodoItem";
 import { selectSelectedDateOrToday } from "./CalendarSlicer";
 
@@ -198,7 +200,7 @@ export function CalendarButton({ trigger = undefined, setTrigger = undefined, to
                             </div>
                         )}
                         <div className="dashboard-todo-footer">
-                            <a href="/ExploreWorkout" className="view-more-link">View More →</a>
+                            <a href="/WorkoutLogger" className="view-more-link">View More →</a>
                         </div>
                     </div>
                     <div className="calendar-todo-panel">
