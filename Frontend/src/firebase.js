@@ -7,7 +7,7 @@ import { initializeApp } from 'firebase/app';
 // import { getFirestore } from 'firebase/firestore';
 
 //Import Auth SDK to handle user authentication
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
@@ -33,15 +33,49 @@ const app = initializeApp(firebaseConfig);
 //EXPORTED so other modules can import and use it.
 export const auth = getAuth(app);
 
+/**
+ * 
+ * Login with email and password using Firebase Authentication.
+ * @param {string} email 
+ * @param {string} password 
+ * @returns userCredential Object to send to backend. 
+ */
 export const loginEmailPassword = async (email, password) => {
   try{
     const providedEmail = email;
     const providedPassword = password;
     const userCredential = await signInWithEmailAndPassword(auth, providedEmail, providedPassword);
-    console.log("User logged in:", userCredential.user);
+
+    console.log('User signed in successfully:', userCredential.user);
+    //Retrun the userCredential object.
+    return userCredential.user;
+    
   } catch (error) {
     console.error('Error during email/password login:', error);
-    throw error;
+    throw error; // rethrow the error so the caller can handle it
+  }
+
+}
+
+/**
+ * Creates a user with provided email and password and logs them in. 
+ * @param {*} email 
+ * @param {*} password 
+ * @returns A userCredential object
+ */
+export const createWithEmailPassword = async (email, password) => {
+  try{
+    const providedEmail = email;
+    const providedPassword = password;
+    const userCredential = await createUserWithEmailAndPassword(auth, providedEmail, providedPassword);
+
+    console.log('User created successfully:', userCredential.user);
+    //Retrun the userCredential object.
+    return userCredential.user;
+    
+  } catch (error) {
+    console.error('Error during email/password login:', error);
+    throw error; // rethrow the error so the caller can handle it
   }
 
 }

@@ -10,7 +10,7 @@ import { onLoginCache } from "./OnLoginCache.jsx";
 import { setSettings } from './SettingsSlice.jsx';
 import { StreakCounter } from "../Dashboard/StreakCounter.jsx";
 import { TOS } from "../TOS.jsx";
-import { loginEmailPassword } from "../firebase.js";
+import { loginEmailPassword, createWithEmailPassword } from "../firebase.js";
 
 export function Login() {
   const dispatch = useDispatch();
@@ -29,6 +29,7 @@ export function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState(null);
 
   //Check if we are on a mobile device and if so resize. 
   useEffect(() => {
@@ -82,9 +83,30 @@ export function Login() {
     }
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    loginEmailPassword(email, password );
+
+    try{
+      const user = await loginEmailPassword(email, password );
+      
+    }catch (error) {
+      console.error('Login Login Page Failed:', error);
+      setLoginError(error);
+    }
+
+  };
+
+  const handleSignUpSubmit = async (e) => {
+    e.preventDefault();
+
+    try{
+      const user = await createWithEmailPassword(email, password );
+      
+    }catch (error) {
+      console.error('Sign up on the Login Page Failed:', error);
+      setLoginError(error);
+    }
+
   };
 
   useEffect(() => {
@@ -121,12 +143,14 @@ export function Login() {
           
               <form onSubmit={handleLoginSubmit}>
               <input
+                id="login-email"
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               <input
+                id="login-password"
                 type="password"
                 placeholder="Password"
                 value={password}
@@ -134,7 +158,25 @@ export function Login() {
               />
               <button className="login-google-button" type="submit"> Login with Email</button>
             </form>
-            <button className="login-google-button"> Sign Up with Email</button>
+
+            <form onSubmit={handleSignUpSubmit}>
+              <input
+                id="signup-email"
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+              id="signup-password"
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button className="login-google-button" type="submit"> Sign Up with Email</button>
+            </form>
+            {loginError && <p className="error">There was an error during login: {loginError.message}</p>}
 
             <br/>
             <br/>
