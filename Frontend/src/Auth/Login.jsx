@@ -10,6 +10,7 @@ import { onLoginCache } from "./OnLoginCache.jsx";
 import { setSettings } from './SettingsSlice.jsx';
 import { StreakCounter } from "../Dashboard/StreakCounter.jsx";
 import { TOS } from "../TOS.jsx";
+import { loginEmailPassword } from "../firebase.js";
 
 export function Login() {
   const dispatch = useDispatch();
@@ -25,6 +26,9 @@ export function Login() {
   const [showTOS, setShowTOS] = useState(false);
   const [browser, setBrowser] = useState('');
   const scrollText = "∨ scroll down to learn more ∨";
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   //Check if we are on a mobile device and if so resize. 
   useEffect(() => {
@@ -78,6 +82,11 @@ export function Login() {
     }
   };
 
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    loginEmailPassword(email, password );
+  };
+
   useEffect(() => {
     if (isAuthenticated && user) {
       if (user.email_verified === false) {
@@ -108,10 +117,30 @@ export function Login() {
                 A Helpful Fitness Utilization Logger App
               </div>
           </div>
-                
-          <button className="login-google-button"> Sign Up with Email</button>
-          <button className="login-google-button"> Login with Email</button>
-          <button className="login-google-button"> Login with Gmail</button>
+          
+          
+              <form onSubmit={handleLoginSubmit}>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button className="login-google-button" type="submit"> Login with Email</button>
+            </form>
+            <button className="login-google-button"> Sign Up with Email</button>
+
+            <br/>
+            <br/>
+            <button className="login-google-button"> Login with Gmail</button>
+
+
 
 
           <div className={`scroll-down-text ${showScrollText ? 'fade-in' : ''} ${isScrolled ? 'hidden' : ''}`}>

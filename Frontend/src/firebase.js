@@ -1,11 +1,18 @@
-// src/firebase.js  ← initialize ONCE here
+// src/firebase.js -- App/Root level initialization ONCE, all other sub-modules import from this file.
+
+//Import Main Firebase SDK to Init App
 import { initializeApp } from 'firebase/app';
 
+//Import Commented out as Firestore is not activated. 
 // import { getFirestore } from 'firebase/firestore';
-// import { getAuth } from 'firebase/auth';
 
+//Import Auth SDK to handle user authentication
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+
+//Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
 
+// Firebase configuration object, using environment variables to sheild Auth info. 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,13 +23,30 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+//Initialize Firebase App with the config object. This is done ONCE, HERE. 
+// app itself is never exported — the services are what you use
 const app = initializeApp(firebaseConfig);
 
 // export const db = getFirestore(app);
-// export const auth = getAuth(app);
+
+// Initialize Firebase Authentication and get a reference to the service. 
+//EXPORTED so other modules can import and use it.
+export const auth = getAuth(app);
+
+export const loginEmailPassword = async (email, password) => {
+  try{
+    const providedEmail = email;
+    const providedPassword = password;
+    const userCredential = await signInWithEmailAndPassword(auth, providedEmail, providedPassword);
+    console.log("User logged in:", userCredential.user);
+  } catch (error) {
+    console.error('Error during email/password login:', error);
+    throw error;
+  }
+
+}
 
 export const messaging = getMessaging(app);
-// app itself is rarely exported — the services are what you use
 
 /**
  * Returns the initialized Messaging service instance.
