@@ -7,7 +7,11 @@ import { initializeApp } from 'firebase/app';
 // import { getFirestore } from 'firebase/firestore';
 
 //Import Auth SDK to handle user authentication
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  validatePasswordsignOut, 
+  signOut } from 'firebase/auth';
 
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
@@ -54,7 +58,16 @@ export const loginEmailPassword = async (email, password) => {
     console.error('Error during email/password login:', error);
     throw error; // rethrow the error so the caller can handle it
   }
+}
 
+/**
+ * 
+ * @param {*} password 
+ * @returns Status Object of the Password Policy Validation. True if valid, false with details otherwise.
+ */
+export const validatePasswordPolicy = async (password) => {
+  const status = await validatePassword(auth, password);
+  return status; // Returns true if password meets policy, false /w details otherwise
 }
 
 /**
