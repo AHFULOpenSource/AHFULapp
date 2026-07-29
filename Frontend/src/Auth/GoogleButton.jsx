@@ -1,7 +1,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect, useRef } from "react";
-import { handle_google_login, getUserSettings } from "./QueryFunctions-Auth.js";
+import { handleGoogleLogin, getUserSettings } from "./QueryFunctionsAuth.js";
 import { authLogin } from "./AuthSlice.jsx";
 import { setSettings } from '../Auth/SettingsSlice.jsx';
 import googleIconDay from "../../images/Login/GoogleIcons/web_light_rd_na@2x.png";
@@ -24,7 +24,7 @@ export function GoogleButton({ onSuccess, onError, isScrolled, browser }) {
 
   const handleSuccess = async (response) => {
     try {
-      const res = await handle_google_login(response);
+      const res = await handleGoogleLogin(response);
       if (!res || res?.ok === false) {
         console.error("Google login failed:", res?.error || res);
         onError?.(res?.error || "Google login failed");

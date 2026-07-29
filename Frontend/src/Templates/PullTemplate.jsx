@@ -1,7 +1,7 @@
 import { store } from "../store";
 import { setTemplates, setError } from "./PullTemplateSlice";
 import { fetchPersonalExercises } from "../QueryFunctions";
-import { fetchTemplate } from "./QueryFunctions-Templates";
+import { fetchTemplate } from "./QueryFunctionsTemplates";
 
 export async function pullTemplates() {
   try {

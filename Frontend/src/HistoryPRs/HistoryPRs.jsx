@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import "./ExploreWorkouts.css";
 import "../siteStyles.css";
 import { CalendarButton } from "../Calendar/CalendarButton.jsx";
-import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
+import { fetchGym } from "../Gyms/QueryFunctionsGym.js";
 import { 
   fetchPersonalExercises,  
   deleteWorkout, 

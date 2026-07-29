@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { updateUserSettings, getUserSettings } from './QueryFunctions-Auth.js';
+import { updateUserSettings, getUserSettings } from './QueryFunctionsAuth.js';
 import { setSettings } from './SettingsSlice.jsx';
 
 /**
@@ -121,7 +121,7 @@ export function useTutorial() {
     }
   }, [navigate]);
 
-  const email_redirect = useCallback(() => {
+  const emailRedirect = useCallback(() => {
     navigate("/NotVerified");
   }, [navigate]);
 
@@ -214,10 +214,10 @@ export function useTutorial() {
         startTutorial();
       }
       else {
-        email_redirect();
+        emailRedirect();
       }
     }
-  }, [user, tutorialComplete, startTutorial, email_redirect]);
+  }, [user, tutorialComplete, startTutorial, emailRedirect]);
 
   /**
    * Returned interface for components using this hook

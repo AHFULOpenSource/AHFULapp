@@ -15,7 +15,7 @@ import {
   fetchFoodById,
   updateFood,
   deleteFood
-} from "../Food/QueryFunctions-Food";
+} from "../Food/QueryFunctionsFood";
 
 export function FoodLog() {
     const user = useSelector((state) => state.auth.user);

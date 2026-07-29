@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Calendar } from "../Calendar/Calendar.jsx";
 import { useSelector } from "react-redux";
 import { fetchPersonalExercises } from "../QueryFunctions";
-import { fetchGym } from "../Gyms/QueryFunctions-Gym.js";
+import { fetchGym } from "../Gyms/QueryFunctionsGym.js";
 import { DashboardWorkoutTodoItem } from "../HistoryPRs/DashboardWorkoutTodoItem.jsx";
 import { DashboardFoodTodoItem } from "../Food/DashboardFoodTodoItem";
 import { selectSelectedDateOrToday } from "./CalendarSlicer";

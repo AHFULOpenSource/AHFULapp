@@ -1,5 +1,5 @@
 // ──  Authentication  functions ─────────────────────────────────────────────────────────
-export async function handle_logout() {
+export async function handleLogout() {
   //Define POST URL for Later
   const backendPOSTURL = `http://localhost:5000/api/AHFULauth/logout`;
 
@@ -22,7 +22,7 @@ export async function handle_logout() {
   }
 }
 
-export async function handle_google_login(response) {
+export async function handleGoogleLogin(response) {
   //TODO: need to fetch UserSettings and Set to Redux on Non-localStroage Logins
 
   try {

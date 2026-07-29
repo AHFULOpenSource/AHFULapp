@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { DropdownRow, ActionRow } from "./SettingsHook.jsx";
 import { updateSetting, setSettings } from "./SettingsSlice.jsx";
-import { updateUserSettings } from "./QueryFunctions-Auth.js";
+import { updateUserSettings } from "./QueryFunctionsAuth.js";
 
 export function Settings() {
   const dispatch = useDispatch();

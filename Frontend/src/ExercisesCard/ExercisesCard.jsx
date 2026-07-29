@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { createExercise, getDefaultNewExercise } from "./QueryFunctions-Exercises.js";
+import { createExercise, getDefaultNewExercise } from "./QueryFunctionsExercises.js";
 import { pullExercises } from "./PullExercise.jsx";
 import {
   loadBodyParts,
   loadEquipment,
   loadTargetMuscles,
-} from "../WokoutLogger/QueryFunctions-WorkoutLogger.js";
+} from "../WokoutLogger/QueryFunctionsWorkoutLogger.js";
 
 export function ExercisesCard({ AddSelectedExercises = () => {} }) {
   const cachedExercises = useSelector((state) => state.pullExercise?.exercises);

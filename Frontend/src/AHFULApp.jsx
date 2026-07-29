@@ -22,7 +22,7 @@ import { TutorialOverlay } from "./Auth/TutorialOverlay.jsx";
 import "./siteStyles.css";
 import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";
-import { whoami, getUserSettings } from "./Auth/QueryFunctions-Auth.js";
+import { whoami, getUserSettings } from "./Auth/QueryFunctionsAuth.js";
 import { setSettings } from './Auth/SettingsSlice.jsx';
 import { authLogin } from "./Auth/AuthSlice.jsx";
 import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";

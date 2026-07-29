@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import "../siteStyles.css";
 import { DashboardTaskTodoItem } from "./DashboardTaskTodoItem";
-import { updateTask, toggleTaskFavorite } from "./QueryFunctions-Tasks";
+import { updateTask, toggleTaskFavorite } from "./QueryFunctionsTasks";
 
 export function DashboardTaskTodoList() {
   const [tasks, setTasks] = useState([]);

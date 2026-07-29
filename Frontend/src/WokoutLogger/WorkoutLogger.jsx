@@ -12,8 +12,8 @@ import {
   updatePersonalExercise,
   deletePersonalExercise,
 } from "../QueryFunctions.js";
-import { fetchWorkoutById, fetchExerciseById } from "./QueryFunctions-WorkoutLogger.js"
-import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
+import { fetchWorkoutById, fetchExerciseById } from "./QueryFunctionsWorkoutLogger.js"
+import { fetchAllGyms } from "../Gyms/QueryFunctionsGym.js";
 import { ExercisesCard } from "../ExercisesCard/ExercisesCard.jsx";
 import { pullWorkouts } from "./PullWorkout.jsx";
 import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
