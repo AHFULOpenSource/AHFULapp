@@ -2,8 +2,6 @@ import veniceDesktop from "../../images/Login/Backgrounds/venice desktop with ov
 import veniceMobile from "../../images/Login/Backgrounds/venice mobile with overlay.jpg";
 import "./Auth.css";
 import "../Dashboard/Dashboard.css";
-import { GoogleLogin } from "@react-oauth/google";
-import { GoogleButton } from "./GoogleButton";
 import { useSelector, useDispatch } from "react-redux";
 import { authLogin } from "./AuthSlice.jsx";
 import { useState, useEffect } from "react";
@@ -98,12 +96,9 @@ export function Login() {
   return (
     <div className={`login-page ${isScrolled ? 'scrolled' : ''}`}>
       <div className="login-background" style={{ backgroundImage: `url(${isMobile ? veniceMobile : veniceDesktop})` }}></div>
-      <GoogleButton
-        onSuccess={() => setStatusText("Logged in!")}
-        onError={(err) => setStatusText(err || "Login failed")}
-        isScrolled={isScrolled}
-        browser={browser}
-      />
+
+
+
       <div className="login-top-overlay">
         <div className={`login-content ${showContent ? 'fade-in' : ''}`}>
           <div className="login-title">
@@ -113,6 +108,12 @@ export function Login() {
                 A Helpful Fitness Utilization Logger App
               </div>
           </div>
+                
+          <button className="login-google-button"> Sign Up with Email</button>
+          <button className="login-google-button"> Login with Email</button>
+          <button className="login-google-button"> Login with Gmail</button>
+
+
           <div className={`scroll-down-text ${showScrollText ? 'fade-in' : ''} ${isScrolled ? 'hidden' : ''}`}>
             {typedText}<span className="typing-cursor"></span>
           </div>
