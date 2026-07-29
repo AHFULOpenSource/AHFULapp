@@ -90,7 +90,14 @@ export const createWithEmailPassword = async (email, password) => {
     console.error('Error during email/password login:', error);
     throw error; // rethrow the error so the caller can handle it
   }
+}
 
+export const firebaseAHFULSignOut = () =>{
+  signOut(auth).then(() => {
+    console.log('User signed out successfully.');
+  }).catch((error) => {
+    console.error('Error signing out:', error);
+  });
 }
 
 export const messaging = getMessaging(app);
