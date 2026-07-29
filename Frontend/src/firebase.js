@@ -10,8 +10,10 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  validatePasswordsignOut, 
-  signOut } from 'firebase/auth';
+  validatePassword, 
+  signOut, 
+  signInWithPopup, 
+  GoogleAuthProvider } from 'firebase/auth';
 
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
@@ -36,6 +38,8 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication and get a reference to the service. 
 //EXPORTED so other modules can import and use it.
 export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
 
 /**
  * 
@@ -99,6 +103,33 @@ export const firebaseAHFULSignOut = () =>{
     console.error('Error signing out:', error);
   });
 }
+
+export const signInWithGoogle = async () => {
+
+signInWithPopup(auth, googleProvider)
+  .then((result) => {
+    // This gives you a Google Access Token. You can use it to access the Google API.
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential.accessToken;
+    // The signed-in user info.
+    const user = result.user;
+    // IdP data available using getAdditionalUserInfo(result)
+
+    console.log('User signed in with Google:', user);
+
+  }).catch((error) => {
+    // Handle Errors here.
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    // The email of the user's account used.
+    const email = error.customData.email;
+    // The AuthCredential type that was used.
+    const credential = GoogleAuthProvider.credentialFromError(error);
+    // ...
+  });
+
+}
+
 
 export const messaging = getMessaging(app);
 

@@ -10,7 +10,7 @@ import { onLoginCache } from "./OnLoginCache.jsx";
 import { setSettings } from './SettingsSlice.jsx';
 import { StreakCounter } from "../Dashboard/StreakCounter.jsx";
 import { TOS } from "../TOS.jsx";
-import { loginEmailPassword, createWithEmailPassword } from "../firebase.js";
+import { loginEmailPassword, createWithEmailPassword, signInWithGoogle } from "../firebase.js";
 
 export function Login() {
   const dispatch = useDispatch();
@@ -180,7 +180,7 @@ export function Login() {
 
             <br/>
             <br/>
-            <button className="login-google-button"> Login with Gmail</button>
+            <button className="login-google-button" onClick={signInWithGoogle}> Login with Gmail</button>
 
 
 
