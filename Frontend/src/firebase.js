@@ -15,6 +15,8 @@ import { getAuth,
   signInWithPopup, 
   GoogleAuthProvider } from 'firebase/auth';
 
+  import { handle_google_login } from "./Auth/QueryFunctions-Auth.js";
+
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
 
@@ -105,28 +107,38 @@ export const firebaseAHFULSignOut = () =>{
 }
 
 export const signInWithGoogle = async () => {
+ try{ 
+  const popupResponse = await signInWithPopup(auth, googleProvider);
 
-signInWithPopup(auth, googleProvider)
-  .then((result) => {
-    // This gives you a Google Access Token. You can use it to access the Google API.
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const token = credential.accessToken;
-    // The signed-in user info.
-    const user = result.user;
-    // IdP data available using getAdditionalUserInfo(result)
+  // This gives you a Google Access Token. You can use it to access the Google API.
+  const credential = GoogleAuthProvider.credentialFromResult(popupResponse)
+  const user = popupResponse.user;
 
-    console.log('User signed in with Google:', user);
+  const idToken = await user.getIdToken(true)
 
-  }).catch((error) => {
-    // Handle Errors here.
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    // The email of the user's account used.
-    const email = error.customData.email;
-    // The AuthCredential type that was used.
-    const credential = GoogleAuthProvider.credentialFromError(error);
-    // ...
-  });
+  await handle_google_login(idToken);
+
+  console.log('User signed in with Google:', user);
+}catch (error){
+      // Handle Errors here.
+      const errorCode = error.code;
+      const errorMessage = error.message;
+
+      console.error('Error during Google sign-in:', errorCode, errorMessage);
+
+      // The email of the user's account used.
+      const email = error.customData.email;
+      // The AuthCredential type that was used.
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      // ...
+  };
+
+}
+
+export const getCurrentUser = () => {
+  const user = auth.currentUser;
+
+  return user
 
 }
 

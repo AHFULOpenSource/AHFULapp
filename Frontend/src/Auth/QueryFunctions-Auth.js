@@ -29,10 +29,7 @@ export async function handle_google_login(response) {
     //URL to send POST to later
     const backendPOSTURL = `http://localhost:5000/api/AHFULauth/google-login`;
 
-    //Find ID Token, and maybe details from Google Success Response
-    const googleButtonIdToken = response?.credential;
-    const googleCSFR = response?.g_csrf_token;
-    const googleButtonClientID = response?.client_id;
+    const googleButtonIdToken = response;
 
     //Check IDToken Not Null
     if (googleButtonIdToken) {
