@@ -8,6 +8,7 @@ import { setSettings, settingsInitialState } from "./SettingsSlice.jsx";
 import {registerService} from "../firebase.js";
 import { handle_logout, updateUserSettings } from "./QueryFunctions-Auth.js";
 import { useNavigate } from "react-router-dom";
+import { firebaseAHFULSignOut } from "../firebase.js";
 
 export function Profile() {
   const dispatch = useDispatch();
@@ -156,7 +157,7 @@ export function Profile() {
         <div className="profile-logout-section">
           <button
             className="profile-logout-btn" id="logout-btn"
-            onClick={() => {handle_logout(); dispatch(authLogout()); dispatch(setSettings(settingsInitialState));}}
+            onClick={() => {handle_logout(); firebaseAHFULSignOut(); dispatch(authLogout()); dispatch(setSettings(settingsInitialState));}}
           >
             Logout
           </button>

@@ -23,6 +23,7 @@ class SignInDriver:
 
         # verify JWT
         decodedUserInfo: dict = auth.verify_id_token(token)
+        print(decodedUserInfo)
         if not decodedUserInfo:
             return None, "Invalid google token provided to Backend.  Dont come in here with Sloppily Copied Keys."
 
@@ -36,16 +37,19 @@ class SignInDriver:
             routeUserObject = UserDriver.create_user({
                 "name": decodedUserInfo.get("name"),
                 "email": decodedUserInfo.get("email"),
-                "email_verified": False,
+                "email_verified": decodedUserInfo.get("email_verified"),
                 "phone_number" : "", # No phone number from google, will update later with phone verification.
                 "phone_verified": False,
                 "picture": decodedUserInfo.get("picture"),
                 "updated_at": datetime.now(),
-                "last_login_time": trunc(time()),
+                "last_login_time": decodedUserInfo.get("auth_time"),
+                "last_login_method": decodedUserInfo.get("firebase").get("sign_in_provider"),
                 "last_login_expire" : decodedUserInfo.get("exp"),
                 "deactivated": False, 
                 "magic_bits" : tokenBits,
                 "roles": ["user"],
+                "firebase_id": decodedUserInfo.get("user_id")
+
 
             })
         elif routeUserObject:
@@ -54,7 +58,8 @@ class SignInDriver:
                 return None, "Your account has been disabled"
 
             # Update last login time
-            routeUserObject['last_login_time'] = trunc(time())
+            routeUserObject['last_login_time'] = decodedUserInfo.get("auth_time")
+            routeUserObject["last_login_method"] = decodedUserInfo.get("firebase").get("sign_in_provider")
             routeUserObject["last_login_expire"] = decodedUserInfo.get("exp")
             routeUserObject['magic_bits'] = tokenBits
             

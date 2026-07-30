@@ -15,8 +15,8 @@ import { getAuth,
   signInWithPopup, 
   GoogleAuthProvider } from 'firebase/auth';
 
-  import { handle_google_login } from "./Auth/QueryFunctions-Auth.js";
-
+import { handle_google_login } from "./Auth/QueryFunctions-Auth.js";
+// import { authLogin } from "./Auth/AuthSlice.jsx";
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
 
@@ -117,6 +117,9 @@ export const signInWithGoogle = async () => {
   const idToken = await user.getIdToken(true)
 
   await handle_google_login(idToken);
+
+  //TODO: Update authLogin
+  // dispatch(authLogin(whomstResponse.data.user_info));
 
   console.log('User signed in with Google:', user);
 }catch (error){

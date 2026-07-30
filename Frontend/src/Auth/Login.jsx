@@ -3,7 +3,6 @@ import veniceMobile from "../../images/Login/Backgrounds/venice mobile with over
 import "./Auth.css";
 import "../Dashboard/Dashboard.css";
 import { useSelector, useDispatch } from "react-redux";
-import { authLogin } from "./AuthSlice.jsx";
 import { useState, useEffect } from "react";
 import {useNavigate } from "react-router-dom";
 import { onLoginCache } from "./OnLoginCache.jsx";
