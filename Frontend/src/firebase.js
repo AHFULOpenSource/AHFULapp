@@ -10,7 +10,6 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  validatePassword, 
   signOut, 
   signInWithPopup, 
   GoogleAuthProvider,
@@ -67,15 +66,7 @@ export const loginEmailPassword = async (email, password) => {
   }
 }
 
-/**
- * 
- * @param {*} password 
- * @returns Status Object of the Password Policy Validation. True if valid, false with details otherwise.
- */
-export const validatePasswordPolicy = async (password) => {
-  const status = await validatePassword(auth, password);
-  return status; // Returns true if password meets policy, false /w details otherwise
-}
+
 
 /**
  * Creates a user with provided email and password and logs them in. 
