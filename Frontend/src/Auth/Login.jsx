@@ -12,8 +12,8 @@ import { TOS } from "../TOS.jsx";
 import { loginEmailPassword, 
   createWithEmailPassword, 
   signInWithGoogle, 
-  getCurrentUser,
-  firebaseAHFULSignOut} from "../firebase.js";
+  getCurrentUser} from "../firebase.js";
+  import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
 
 export function Login() {
   const dispatch = useDispatch();
@@ -201,7 +201,7 @@ export function Login() {
 
             <br/>
             <br/>
-            <button className="login-google-button" onClick={firebaseAHFULSignOut}> Log Out</button>
+            <button className="login-google-button" onClick={HandleAHFULSignOut}> Log Out</button>
 
 
 

@@ -1,26 +1,5 @@
 // ──  Authentication  functions ─────────────────────────────────────────────────────────
-export async function handle_logout() {
-  //Define POST URL for Later
-  const backendPOSTURL = `http://localhost:5000/api/AHFULauth/logout`;
 
-  //Try to Get LocalStorage Cookie for data
-  try {
-    // POST response Object to BACKEND API ROUTE for processing.
-    const backendResponse = await fetch(backendPOSTURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: {},
-      credentials: "include",
-    });
-
-    //TODO: UPDATE REDUX
-    //setIsLoggedIn(false);
-    console.log("AHFUL Logout Completed successfully.");
-  } catch (error) {
-    //Catch Spooky Errors that should never occur because you shouldnt log out before login
-    console.log("👻 Logout Error:, ", error);
-  }
-}
 
 export async function handle_google_login(response) {
   //TODO: need to fetch UserSettings and Set to Redux on Non-localStroage Logins

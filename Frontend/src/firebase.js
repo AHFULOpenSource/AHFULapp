@@ -10,7 +10,6 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut, 
   signInWithPopup, 
   GoogleAuthProvider,
   onAuthStateChanged } from 'firebase/auth';
@@ -90,13 +89,7 @@ export const createWithEmailPassword = async (email, password) => {
   }
 }
 
-export const firebaseAHFULSignOut = () =>{
-  signOut(auth).then(() => {
-    console.log('User signed out successfully.');
-  }).catch((error) => {
-    console.error('Error signing out:', error);
-  });
-}
+
 
 export const signInWithGoogle = async () => {
  try{ 
