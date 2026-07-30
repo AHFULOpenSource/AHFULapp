@@ -183,7 +183,16 @@ export function Login() {
 
             <br/>
             <br/>
-            <button className="login-google-button" onClick={signInWithGoogle}> Login with Gmail</button>
+            <button className="login-google-button" 
+            onClick={async () => {
+              try {
+                await signInWithGoogle();
+                navigate('/Dashboard');
+              } catch (error) {
+                console.error('Sign in failed:', error);
+                // handle error (show a message, etc.)
+              }
+            }}> Login with Gmail</button>
 
             <br/>
             <br/>

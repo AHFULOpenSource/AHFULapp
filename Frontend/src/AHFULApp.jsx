@@ -29,6 +29,7 @@ import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
 import { RequireVerifiedEmail } from "./Auth/EnsureEmailVerify.jsx";
 import { SocialWorkouts } from "./SocialWall/SocialWorkouts.jsx";
 import { Templates } from "./Templates/Templates.jsx";
+import { getCurrentUser } from "./firebase.js";
 
 
 function AHFULApp() {
@@ -55,23 +56,20 @@ function AHFULApp() {
     }
   }, [theme]);
 
-  // Apply WhoAmI Check globally - runs on all pages
+  // Apply WhoAmI Check globally - runs on all pages, only want to run this check once on app load, not on every route change.
   useEffect(() => {
     const checkCookies = async () => {
-      // We only want to run this check once on app load, not on every route change.
       const whomstResponse = await whoami();
-      const path = window.location.pathname || '/';
+      const firebaseAuth = getCurrentUser();
 
-      // If whoami fails to return (network or missing cookies),
-      // don't force a redirect when the user is already on the public
-      // root path ('/'). But if they're trying to visit any other
-      // route, send them to the Login page.
-      if (!whomstResponse) {
+      // If whoami fails to return (network or missing cookies) ,send them to the Login page.
+      if (!whomstResponse || !firebaseAuth) {
         navigate('/');
         return;
       }
 
-      if (whomstResponse.ok){
+      // If whoami returned OK, dispatch the user info to Redux and fetch their settings. If not OK, send them to the Login page.
+      if (whomstResponse.ok && firebaseAuth) {
         dispatch(authLogin(whomstResponse.data.user_info));
 
         const userSettingsResponse = await getUserSettings();
