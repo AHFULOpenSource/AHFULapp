@@ -35,43 +35,6 @@ export async function handle_google_login(response) {
   }
 }
 
-export async function whoami() {
-  try {
-    const backendVerificationResponse = await fetch('http://localhost:5000/api/AHFULauth/whoami', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: {},
-      credentials: 'include'
-    });
-
-    const data = await backendVerificationResponse.json();
-
-    if (data.authenticated) {
-      return { ok: true, data };
-    } else {
-      return { ok: false, error: data.error };
-    }
-  } catch (err) {
-    console.error("Query Function Session validation failed:", err);
-  }
-}
-
-// ──  User Settings functions ─────────────────────────────────────────────────────────
-export async function getUserSettings() {
-  const foundUserSettingsResponse = await fetch(`http://localhost:5000/api/AHFULuserSettings`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  if (foundUserSettingsResponse.ok){
-    return foundUserSettingsResponse.json();
-  }else{
-    throw new Error(
-      "Failed to fetch settings" + foundUserSettingsResponse.status,
-    );
-  }
-}
-
 export async function updateUserSettings(userId, settings) {
   const res = await fetch(
     `http://localhost:5000/api/AHFULuserSettings/update/${userId}`,

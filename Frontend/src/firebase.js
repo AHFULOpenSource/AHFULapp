@@ -14,7 +14,7 @@ import { getAuth,
   GoogleAuthProvider,
   onAuthStateChanged } from 'firebase/auth';
 
-import { handle_google_login, whoami } from "./Auth/QueryFunctions-Auth.js";
+import { handle_google_login } from "./Auth/QueryFunctions-Auth.js";
 // import { authLogin } from "./Auth/AuthSlice.jsx";
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
@@ -134,7 +134,6 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     // User is signed in, see docs for a list of available properties
     // https://firebase.google.com/docs/reference/js/auth.user
-    whoami()
 
   } else {
     // User is signed out
