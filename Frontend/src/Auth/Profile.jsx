@@ -157,7 +157,7 @@ export function Profile() {
         <div className="profile-logout-section">
           <button
             className="profile-logout-btn" id="logout-btn"
-            onClick={() => {HandleAHFULSignOut(); dispatch(authLogout()); dispatch(setSettings(settingsInitialState));}}
+            onClick={() => {dispatch(authLogout()); dispatch(setSettings(settingsInitialState));}}
           >
             Logout
           </button>

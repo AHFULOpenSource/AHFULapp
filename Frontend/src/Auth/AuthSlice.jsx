@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
 
 const authSlice = createSlice({
   //Namespace for the slice, used in action types
@@ -22,6 +23,7 @@ const authSlice = createSlice({
     authLogout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
+      HandleAHFULSignOut();
     },
   },
 });
