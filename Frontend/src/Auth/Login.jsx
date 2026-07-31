@@ -197,11 +197,6 @@ export function Login() {
 
             <br/>
             <br/>
-            <button className="login-google-button" onClick={async () => {const user = await getCurrentUser();console.log("Currently Signed In:", user);}}> Am I Logged In?</button>
-
-
-            <br/>
-            <br/>
             <button className="login-google-button" onClick={HandleAHFULSignOut}> Log Out</button>
 
 
