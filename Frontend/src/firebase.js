@@ -14,7 +14,6 @@ import { getAuth,
   GoogleAuthProvider,
   onAuthStateChanged } from 'firebase/auth';
 
-import { handle_google_login } from "./Auth/QueryFunctions-Auth.js";
 // import { authLogin } from "./Auth/AuthSlice.jsx";
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
@@ -39,7 +38,7 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication and get a reference to the service. 
 //EXPORTED so other modules can import and use it.
 export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+export const firebaseAHFULgoogleProvider = new GoogleAuthProvider();
 
 
 /**
@@ -87,40 +86,6 @@ export const createWithEmailPassword = async (email, password) => {
     console.error('Error during email/password login:', error);
     throw error; // rethrow the error so the caller can handle it
   }
-}
-
-
-
-export const signInWithGoogle = async () => {
- try{ 
-  const popupResponse = await signInWithPopup(auth, googleProvider);
-
-  // This gives you a Google Access Token. You can use it to access the Google API.
-  const credential = GoogleAuthProvider.credentialFromResult(popupResponse)
-  const user = popupResponse.user;
-
-  const idToken = await user.getIdToken(true)
-
-  await handle_google_login(idToken);
-
-  //TODO: Update authLogin
-  // dispatch(authLogin(whomstResponse.data.user_info));
-
-  console.log('User signed in with Google:', user);
-}catch (error){
-      // Handle Errors here.
-      const errorCode = error.code;
-      const errorMessage = error.message;
-
-      console.error('Error during Google sign-in:', errorCode, errorMessage);
-
-      // The email of the user's account used.
-      const email = error.customData.email;
-      // The AuthCredential type that was used.
-      const credential = GoogleAuthProvider.credentialFromError(error);
-      // ...
-  };
-
 }
 
 export const getCurrentUser = () => {

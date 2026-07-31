@@ -2,6 +2,7 @@ import { authLogin } from "./AuthSlice.jsx";
 import { setSettings } from './SettingsSlice.jsx';
 import { getCurrentUser } from "../firebase.js"
 import { useSelector, useDispatch } from "react-redux";
+import { FetchUserSettings } from "./FetchUserSettings.js";
 
 
 export async function WhoAmI(dispatch, navigate) {
@@ -35,22 +36,8 @@ export async function WhoAmI(dispatch, navigate) {
                 // Update Redux with User info from backend.
             dispatch(authLogin(backendUserDataUserInfo));
 
-            //Fetch User Settings from Backend and Update Redux
-            const foundUserSettingsResponse = await fetch(`http://localhost:5000/api/AHFULuserSettings`, {
-                method: "GET",
-                credentials: "include",
-            });
-
-            if (foundUserSettingsResponse){
-                const settingsJson = await foundUserSettingsResponse.json();
-                
-                console.log("WhoAmI: Found User Settings Response:", settingsJson);
-                dispatch(setSettings(settingsJson));
-            }else{
-                throw new Error(
-                "Failed to fetch settings" + foundUserSettingsResponse.status,
-                );
-            }
+            // Fetch User Settings from backend and update Redux
+            FetchUserSettings(dispatch); 
 
         }else{
             navigate('/');

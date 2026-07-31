@@ -11,9 +11,10 @@ import { StreakCounter } from "../Dashboard/StreakCounter.jsx";
 import { TOS } from "../TOS.jsx";
 import { loginEmailPassword, 
   createWithEmailPassword, 
-  signInWithGoogle, 
   getCurrentUser} from "../firebase.js";
-  import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
+import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
+import { HandleAHFULGoogleLogin } from "./HandleAHFULGoogleLogin.js";
+
 
 export function Login() {
   const dispatch = useDispatch();
@@ -186,7 +187,7 @@ export function Login() {
             <button className="login-google-button" 
             onClick={async () => {
               try {
-                await signInWithGoogle();
+                await HandleAHFULGoogleLogin(dispatch);
                 navigate('/Dashboard');
               } catch (error) {
                 console.error('Sign in failed:', error);
