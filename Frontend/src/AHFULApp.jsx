@@ -24,7 +24,9 @@ import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
 import { RequireVerifiedEmail } from "./Auth/EnsureEmailVerify.jsx";
 import { SocialWorkouts } from "./SocialWall/SocialWorkouts.jsx";
 import { Templates } from "./Templates/Templates.jsx";
-import { getCurrentUser } from "./firebase.js";
+import { auth } from "./firebase.js";
+import { onAuthStateChanged } from 'firebase/auth';
+import { authLogout } from "./Auth/AuthSlice.jsx";
 import "./siteStyles.css";
 import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";
@@ -53,10 +55,22 @@ function AHFULApp() {
     }
   }, [theme]);
 
-  // TODO: Apply WhoAmI Check globally - runs on all pages, only want to run this check once on app load, not on every route change.
+  // Apply WhoAmI Check globally - runs on all navigate and dispatch calls. 
+  //Logs out user if firebase auth state is signed out, or completed WhoAmI if signed in.
   useEffect(() => {
-    WhoAmI(dispatch, navigate);
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Firebase says the user is signed in — verify against backend + pull settings
+        WhoAmI(dispatch, navigate);
+      } else {
+        // Firebase says signed out — no need to hit the backend, just clear state
+        dispatch(authLogout());
+        navigate("/");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [dispatch, navigate]);
 
 
   return (
