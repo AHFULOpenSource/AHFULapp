@@ -9,6 +9,7 @@ import {registerService} from "../firebase.js";
 import { updateUserSettings } from "./QueryFunctions-Auth.js";
 import { useNavigate } from "react-router-dom";
 import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
+import { HandleAHFULPasswordReset } from "./HandleAHFULPasswordReset.js";
 
 export function Profile() {
   const dispatch = useDispatch();
@@ -150,6 +151,13 @@ export function Profile() {
             onClick={() => navigate("/ExploreFriends")}
           >
             Explore Friends
+          </button>
+
+          <button
+            className="profile-page-btn"
+            onClick={() => HandleAHFULPasswordReset(UserData.email)}
+          >
+            Reset Password
           </button>
         </div>
 
