@@ -8,10 +8,8 @@ from datetime import datetime
 from firebase_admin import auth
 #Services & Drivers know how to implement business Logic related to the Route operations.  Intermediate between Routes and Objects.  Ensures validations and rules are applied before Calling Objects to interact with DB
 
-#Initalizes Google packages. 
-
 class SignInDriver:
-    def google_login(self, postAuthData):
+    def google_login(postAuthData):
         #session_service: SessionService = current_app.session_service
 
         token = postAuthData.get("token")
@@ -84,31 +82,11 @@ class SignInDriver:
                     UserSettingsDriver.create_default_user_settings(routeUserObject["_id"])
                 except Exception as e:
                     return None, "I'm Fried, we just tried to pull user settings on login and failed. {e} "
-            
-            # handle email response if not verified
-            # email_response = "Email already verified"
-            # if routeUserObject.get('email_verified') is False:
-            #     print("Email not verified!")
-            #     email_response, err = VerificationDriver.verify_user_email(routeUserObject.get("_id"))
-            #     if err is None:
-            #         pass
-            #     else:
-            #         return None, err
-            # print(email_response)
 
             # 1. Create the response object with the user info and flags
             response = make_response(jsonify({
-                "message": "Google Login Registered & Logged with Backend.",
-                "user_info": {
-                    "_id": routeUserObject["_id"],
-                    "name": routeUserObject["name"],
-                    "email": routeUserObject["email"],
-                    "picture": routeUserObject["picture"],
-                    "roles": routeUserObject["roles"],
-                    "last_login_time": routeUserObject["last_login_time"],
-                    "phone_verified": routeUserObject["phone_verified"],
-                    "email_verified": routeUserObject["email_verified"],
-                }
+                "backend_authenticated": True,
+                "message": "Firebase Login Registered & Session registered with Backend."
             }))
 
             # 2. Set the cookie with User ID
@@ -144,10 +122,9 @@ class SignInDriver:
             )
 
             #Log to Console & Security Logging. 
-            print (f"Logged in & set cookie(s!) for user_id: {routeUserObject['_id']}")
+            print (f"Logged in & set cookie(s!) for user_id: {routeUserObject['name']}")
             return response, None
         else:
             #Return 500 Error -- User Not Created or Found. This should never happen. 
             return None, "You didn't return a UserObject or an Error.  What in the Heavens, You literally just... Bro. "
 
-            #return [routeUserObject, email_response], None
