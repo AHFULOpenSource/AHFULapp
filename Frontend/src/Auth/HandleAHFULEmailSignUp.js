@@ -46,7 +46,7 @@ export const HandleAHFULEmailSignUp = async (navigate, email, password) => {
                 }
 
             }else{
-                throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULGoogleLogin THROWWWWWWWING.");
+                throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULEmailSignUp THROWWWWWWWING.");
             }
             
             console.log("HandleAHFULEmailSignUp Completed successfully with user:", user);

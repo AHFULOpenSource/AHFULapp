@@ -55,7 +55,7 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
                 }
 
             }else{
-                throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULGoogleLogin THROWWWWWWWING.");
+                throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULEmailLogin THROWWWWWWWING.");
             }
             
             console.log("HandleAHFULEmailLogin Completed successfully with user:", user);
