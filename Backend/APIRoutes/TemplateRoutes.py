@@ -9,8 +9,6 @@ templateRouteBlueprint = Blueprint("template", __name__, url_prefix="/AHFULtempl
 @login_required_user
 def get_templates():
     # Own user request, devs or admins only
-    if (g.user_id) and (g.role != "Developer") and (g.role != "Admin"):
-        return jsonify({"error": "You may only access your own data"}), 403
     workouts, error = TemplateDriver.get_user_templates(g.user_id)
     if error:
         return jsonify({"error": error}), 404
