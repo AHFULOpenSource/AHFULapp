@@ -34,7 +34,7 @@ export async function HandleAHFULGoogleLogin(dispatch) {
         throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULGoogleLogin THROWWWWWWWING.");
     }
     
-    console.log("AHFUL context_login Completed successfully with user:", user);
+    console.log("HandleAHFULGoogleLogin Completed successfully with user:", user);
   } catch (error) {
         // Handle Errors here.
       const errorCode = error.code;
@@ -46,7 +46,7 @@ export async function HandleAHFULGoogleLogin(dispatch) {
       // The AuthCredential type that was used.
     //   const credential = firebaseAHFULgoogleProvider.credentialFromError(error);
       // ...
-    console.log("AHFUL Error in handle_google_login Func Catch.  Not sure how you got here.  But here is a hint: ",error, "Error Code: ", errorCode, "Error Message: ", errorMessage);
+    console.log("AHFUL Error in HandleAHFULGoogleLogin Func Catch.  Not sure how you got here.  But here is a hint: ",error, "Error Code: ", errorCode, "Error Message: ", errorMessage);
     throw error;
   }
 }

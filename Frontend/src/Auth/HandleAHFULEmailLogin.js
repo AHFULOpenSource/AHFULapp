@@ -23,44 +23,42 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
         try {
             //Check IDToken Not Null
             if (idToken) {
-            // POST response Object to BACKEND API ROUTE for processing.
-            const backendResponse = await fetch("http://localhost:5000/api/AHFULauth/google-login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token: idToken }),
-                credentials: "include",
-            });
+                // POST response Object to BACKEND API ROUTE for processing.
+                const backendResponse = await fetch("http://localhost:5000/api/AHFULauth/google-login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token: idToken }),
+                    credentials: "include",
+                });
 
-            if (!backendResponse.ok) {
+                if (!backendResponse.ok) {
 
-                throw new Error(`Backend login failed from frontend with status ${backendResponse.status}`);
-            }else{
-                // Fetch user settings after successful login
-                const backendData = await backendResponse.json();
+                    throw new Error(`Backend login failed from frontend with status ${backendResponse.status}`);
+                }else{
+                    // Fetch user settings after successful login
+                    const backendData = await backendResponse.json();
 
-;
-                if(backendData.backend_authenticated){
-                    FetchUserSettings(dispatch);
+                    if(backendData.backend_authenticated){
+                        FetchUserSettings(dispatch);
 
-                    if (user.emailVerified) {
-                        console.log("Email is verified. Navigating to Dashboard.");
-                        navigate("/Dashboard");
-                    } else {
-                        console.log("Email is not verified. Navigating to NotVerified page.");
-                        navigate("/NotVerified");
+                        if (user.emailVerified) {
+                            console.log("Email is verified. Navigating to Dashboard.");
+                            navigate("/Dashboard");
+                        } else {
+                            console.log("Email is not verified. Navigating to NotVerified page.");
+                            navigate("/NotVerified");
+                        }
+                        
+                    } else{
+                        throw new Error('FetchUserSettings failed: backend_authenticated false.');
                     }
-                    
-                } else{
-                    throw new Error('FetchUserSettings failed: backend_authenticated false.');
                 }
-            }
-
 
             }else{
                 throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULGoogleLogin THROWWWWWWWING.");
             }
             
-            console.log("AHFUL context_login Completed successfully with user:", user);
+            console.log("HandleAHFULEmailLogin Completed successfully with user:", user);
         } catch (error) {
                 // Handle Errors here.
             const errorCode = error.code;
@@ -72,14 +70,14 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
             // The AuthCredential type that was used.
             //   const credential = firebaseAHFULgoogleProvider.credentialFromError(error);
             // ...
-            console.log("AHFUL Error in handle_google_login Func Catch.  Not sure how you got here.  But here is a hint: ",error, "Error Code: ", errorCode, "Error Message: ", errorMessage);
+            console.log("AHFUL Error in HandleAHFULEmailLogin Func Catch.  Not sure how you got here.  But here is a hint: ",error, "Error Code: ", errorCode, "Error Message: ", errorMessage);
             throw error;
         }
 
 
       
     } catch (error) {
-      console.error('Error during email/password login:', error);
+      console.error('Error during HandleAHFULEmailLogin login:', error);
       throw error; // rethrow the error so the caller can handle it
     }
   }
