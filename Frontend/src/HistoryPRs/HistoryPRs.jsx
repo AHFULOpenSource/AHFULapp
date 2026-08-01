@@ -24,7 +24,7 @@ import {
  */
 export function HistoryPRsPage() {
   // ─── State ────────────────────────────────────────────────────────────────────
-  const user = useSelector((state) => state.auth.user);
+  const { user, loading: authLoading } = GetFirebaseUser();
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -44,10 +44,7 @@ export function HistoryPRsPage() {
   // ─── Favorite Filter State ───────────────────────────────────────────────────
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  const getUserId = () => {
-    if (user?._id) return user._id;
-  };
-  const userId = getUserId();
+  const userId = useSelector((state) => state.setting._id);
 
   const getUserEmail = () => {
     if (user?.email) return user.email;

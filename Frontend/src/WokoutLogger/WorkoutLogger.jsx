@@ -21,6 +21,7 @@ import { Loading } from "../Loading.jsx";
 import { useAutosave } from "./useAutosave.js";
 import { HeatMap } from "./HeatMap.jsx";
 import { Calendar } from "../Calendar/Calendar.jsx";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 /**
  * Logger - Main workout tracking page
@@ -40,8 +41,9 @@ import { Calendar } from "../Calendar/Calendar.jsx";
  */
 export function WorkoutLogger() {
   // ─── Redux State ─────────────────────────────────────────────────────────
-  const user = useSelector((state) => state.auth.user);
-  const userAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const { user, loading: authLoading } = GetFirebaseUser();
+    const userId = useSelector((state) => state.setting._id);
+
   const selectedDate = useSelector(selectSelectedDateOrToday);
   const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number)
 
@@ -212,10 +214,6 @@ export function WorkoutLogger() {
     let cancelled = false;
 
     const loadWorkoutForDay = async () => {
-      if (!userAuthenticated) {
-        setWorkoutLoading(false);
-        return;
-      }
 
       const currentDateUnix = Math.floor(new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0).getTime() / 1000);
       const tomorrowUnix = Math.floor(currentDateUnix + 86400); // 24 hours later
@@ -284,7 +282,7 @@ export function WorkoutLogger() {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, userAuthenticated, cachedWorkouts, cachedPersonalExercises, flushWorkoutAutosave]);
+  }, [selectedDate, cachedWorkouts, cachedPersonalExercises, flushWorkoutAutosave]);
 
   // ─── Load Gyms on Mount ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -430,7 +428,7 @@ export function WorkoutLogger() {
       .map((exercise) => ({
         exercise_id: exercise._id,
         workout_id: activeWorkout._id,
-        user_id: user?._id,
+        user_id: userId,
         complete: false,
         reps: 0,
         sets: 0,
@@ -494,7 +492,7 @@ export function WorkoutLogger() {
 
   async function handleCreateWorkout() {
     try {
-      if (!user?._id) return;
+      if (!userId) return;
 
       const workoutDate = new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0);
       const startUnix = Math.floor(workoutDate.getTime() / 1000);
@@ -506,14 +504,14 @@ export function WorkoutLogger() {
       console.log("Creating workout for date (Unix):", startUnix);
 
       // Use selected gym (or fall back to user's home gym if available)
-      const gymId = selectedGymId || user?.settings?.homeGymId || "000000000000000000000000";
+      const gymId = selectedGymId || "000000000000000000000000";
 
       const payload = {
         endTime: startUnix,
         gym_id: gymId,
         startTime: startUnix,
         title: newWorkoutName.trim() || "Workout " + workoutDate.toLocaleDateString(),
-        user_id: user._id,
+        user_id: userId,
       };
 
       // Create workout

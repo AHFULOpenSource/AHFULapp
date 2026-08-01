@@ -9,7 +9,6 @@ export function ExploreTasks() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const user = useSelector((state) => state.auth.user);
 
   // Form state
   const [taskName, setTaskName] = useState("");
@@ -22,14 +21,7 @@ export function ExploreTasks() {
   const [recurrenceType, setRecurrenceType] = useState("daily"); // daily, weekly, monthly, yearly
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
-  const getUserId = () => {
-    if (user?._id) return user._id;
-    try {
-      const stored = JSON.parse(localStorage.getItem("user_data"));
-      return stored?._id || null;
-    } catch { return null; }
-  };
-  const userId = getUserId();
+  const userId = useSelector((state) => state.setting._id);
 
   const fetchTasks = async () => {
     setLoading(true);
