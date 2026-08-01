@@ -60,12 +60,19 @@ function AHFULApp() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
+
+        if (!firebaseUser.emailVerified) {
+          navigate("/NotVerified");
+        }else{
         // Firebase says the user is signed in — verify against backend + pull settings
         WhoAmI(dispatch, navigate);
-      } else {
+        }
+
+      } 
+      else {
         // Firebase says signed out — no need to hit the backend, just clear state
         dispatch(authLogout());
-        navigate("/");
+        // navigate("/");
       }
     });
 
