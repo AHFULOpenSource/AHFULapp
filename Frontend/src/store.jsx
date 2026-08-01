@@ -4,7 +4,6 @@ import { createTransform, persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE,
 import storage from "redux-persist/lib/storage";
 import calendarReducer from "./Calendar/CalendarSlicer";
 import { normalizeSelectedDate, toLocalDateString } from "./Calendar/UseCalendar";
-import authReducer from "./Auth/AuthSlice";
 import settingsReducer from "./Auth/SettingsSlice";
 import pullExerciseReducer from "./ExercisesCard/PullExerciseSlice";
 import pullTemplateReducer from "./Templates/PullTemplateSlice.jsx";
@@ -75,7 +74,6 @@ const persistedSettingsReducer = persistReducer(persistSettingsConfig, settingsR
 export const store = configureStore({
   reducer: {
     calendar: persistedCalendarReducer,
-    auth: authReducer,
     setting: persistedSettingsReducer,
     pullExercise: persistedPullExerciseReducer,
     pullTemplate: persistedPullTemplateReducer,

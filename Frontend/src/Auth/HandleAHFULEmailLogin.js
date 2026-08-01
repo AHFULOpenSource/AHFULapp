@@ -1,6 +1,5 @@
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase.js";
-import { authLogin } from "./AuthSlice.jsx";
 import { FetchUserSettings } from "./FetchUserSettings.js";
 
   /**
@@ -10,7 +9,7 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
    * @param {string} password 
    * @returns userCredential Object to send to backend. 
    */
-  export async function HandleAHFULEmailLogin(dispatch, email, password) {
+  export async function HandleAHFULEmailLogin(navigate, dispatch, email, password) {
     try{
         const providedEmail = email;
         const providedPassword = password;
@@ -32,11 +31,31 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
                 credentials: "include",
             });
 
-            const backendUserData = await backendResponse.json();
-            dispatch(authLogin(backendUserData.user_info));
+            if (!backendResponse.ok) {
 
-            // Fetch user settings after successful login
-            FetchUserSettings(dispatch); 
+                throw new Error(`Backend login failed from frontend with status ${backendResponse.status}`);
+            }else{
+                // Fetch user settings after successful login
+                const backendData = await backendResponse.json();
+
+;
+                if(backendData.backend_authenticated){
+                    FetchUserSettings(dispatch);
+
+                    if (user.emailVerified) {
+                        console.log("Email is verified. Navigating to Dashboard.");
+                        navigate("/Dashboard");
+                    } else {
+                        console.log("Email is not verified. Navigating to NotVerified page.");
+                        navigate("/NotVerified");
+                    }
+                    
+                } else{
+                    throw new Error('FetchUserSettings failed: backend_authenticated false.');
+                }
+            }
+
+
             }else{
                 throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULGoogleLogin THROWWWWWWWING.");
             }

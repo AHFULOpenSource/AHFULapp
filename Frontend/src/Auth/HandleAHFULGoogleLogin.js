@@ -1,6 +1,5 @@
 import { auth, firebaseAHFULgoogleProvider } from "../firebase.js";
 import { signInWithPopup } from "firebase/auth";
-import { authLogin } from "./AuthSlice.jsx";
 import { FetchUserSettings } from "./FetchUserSettings.js";
 
 export async function HandleAHFULGoogleLogin(dispatch) {
@@ -25,11 +24,12 @@ export async function HandleAHFULGoogleLogin(dispatch) {
         credentials: "include",
       });
 
-      const backendUserData = await backendResponse.json();
-      dispatch(authLogin(backendUserData.user_info));
-
-      // Fetch user settings after successful login
-      FetchUserSettings(dispatch); 
+      if (!backendResponse.backend_authenticated) {
+          throw new Error(`Backend login failed with status ${backendResponse.error}`);
+      }else{
+          // Fetch user settings after successful login
+          FetchUserSettings(dispatch); 
+      }
     }else{
         throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULGoogleLogin THROWWWWWWWING.");
     }

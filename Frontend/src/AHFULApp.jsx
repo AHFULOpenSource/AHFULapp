@@ -26,16 +26,17 @@ import { SocialWorkouts } from "./SocialWall/SocialWorkouts.jsx";
 import { Templates } from "./Templates/Templates.jsx";
 import { auth } from "./firebase.js";
 import { onAuthStateChanged } from 'firebase/auth';
-import { authLogout } from "./Auth/AuthSlice.jsx";
 import "./siteStyles.css";
 import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";
+import { GetFirebaseUser } from "./Auth/GetFirebaseUser.js";
 
 function AHFULApp() {
   const theme = useSelector((state) => state.setting.theme);
-  const userData = useSelector((state) => state.auth.user);
+  const userData = auth.currentUser;
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = GetFirebaseUser();
   // const {
   //   isActive: tutorialActive,
   //   currentStep,
@@ -58,27 +59,10 @@ function AHFULApp() {
   // Apply WhoAmI Check globally - runs on all navigate and dispatch calls. 
   //Logs out user if firebase auth state is signed out, or completed WhoAmI if signed in.
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
+    // Firebase says the user is signed in — verify against backend + pull settings
+    WhoAmI(dispatch, navigate);
 
-        if (!firebaseUser.emailVerified) {
-          navigate("/NotVerified");
-        }else{
-        // Firebase says the user is signed in — verify against backend + pull settings
-        WhoAmI(dispatch, navigate);
-        }
-
-      } 
-      else {
-        // Firebase says signed out — no need to hit the backend, just clear state
-        dispatch(authLogout());
-        // navigate("/");
-      }
-    });
-
-    return () => unsubscribe();
-  }, [dispatch, navigate]);
-
+  }, [user]);
 
   return (
     <>
@@ -86,8 +70,8 @@ function AHFULApp() {
         <Route element={<Layout/>}>
           <Route path="/Profile" element={<Profile/>}/>
           <Route path="/NotVerified" element={<NotVerified/>}/>
+          <Route path="/Dashboard" element={<Dashboard/>}/>
           <Route element={<RequireVerifiedEmail />}>
-            <Route path="/Dashboard" element={<Dashboard/>}/>
             <Route path="/Favorites" element={<FavoritesHub/>}/>
             <Route path="/WorkoutLogger" element={<WorkoutLogger/>} />
             <Route path="/Templates" element={<Templates/>} />

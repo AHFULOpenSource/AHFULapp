@@ -19,7 +19,6 @@ import { HandleAHFULEmailLogin } from "./HandleAHFULEmailLogin.js";
 export function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const theme = useSelector((state) => state.setting?.theme || "Light");
   const [statusText, setStatusText] = useState("");
   const [showContent, setShowContent] = useState(false);
@@ -91,7 +90,7 @@ export function Login() {
     e.preventDefault();
 
     try{
-      const user = await HandleAHFULEmailLogin(dispatch, email, password );
+      const user = await HandleAHFULEmailLogin(navigate, dispatch, email, password );
       
     }catch (error) {
       console.error('Login Login Page Failed:', error);
@@ -112,20 +111,6 @@ export function Login() {
     }
 
   };
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.email_verified === false) {
-        setStatusText(`Logged in as ${user.email}, email not verified`);
-        navigate("/NotVerified", { replace: true });
-      }
-      else {
-        setStatusText(`Logged in as ${user.email}`);
-        onLoginCache();
-        navigate("/Dashboard", { replace: true });
-      }
-    }
-  }, [isAuthenticated, user, navigate]);
   
   // ----- LOGIN Page HTML ---------------------------------------------------------------------------
   return (

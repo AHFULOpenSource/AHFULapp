@@ -14,7 +14,6 @@ import { getAuth,
   GoogleAuthProvider,
   onAuthStateChanged } from 'firebase/auth';
 
-// import { authLogin } from "./Auth/AuthSlice.jsx";
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
 
