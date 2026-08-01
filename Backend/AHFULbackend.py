@@ -47,9 +47,9 @@ def create_app():
     #FUN FACT: __name__ is a special variable that is the name of this file.
     app = Flask(__name__)
 
-    #Make an Appwade SignInDriver to reference later
-    app.AHFULSignInDriver = SignInDriver(os.getenv("GOOGLE_CLIENT_ID"))
+    # Load mongoDB
     connect_mongo(app)
+    print("Monogo DB SDK initialized successfully")
 
     #Initialize Firebase Admin SDK
     cred = credentials.Certificate("./firebaseSecret.json")
