@@ -1,5 +1,5 @@
 import { setSettings } from './SettingsSlice.jsx';
-import { getCurrentUser } from "../firebase.js"
+import { auth } from "../firebase.js"
 import { useSelector, useDispatch } from "react-redux";
 import { FetchUserSettings } from "./FetchUserSettings.js";
 
@@ -20,7 +20,7 @@ export async function WhoAmI(dispatch, navigate) {
         const backendUserDataMessage = await backenUserData.message;
 
         // Assign Variable for Firebase Auth Response
-        const firebaseAuth = getCurrentUser();
+        const firebaseAuth = auth.currentUser;
 
         // If backend WhoAmI fails to return (network or missing cookies) ,send them to the Login page.
         // If Firebase Auth Fails to return (user not logged in), send them to the Login page.
@@ -32,14 +32,19 @@ export async function WhoAmI(dispatch, navigate) {
             navigate('/');
             console.error("WhoAmI Firebase Authentication Failed response. firebase is empty");
             return;
+        }else if (!firebaseAuth.emailVerified) {
+            navigate('/NotVerified');
+            console.error("WhoAmI Firebase Authentication Failed response. Email is not verified");
+            return;
         }
 
         // If Authenticated with Firebase and Backend
-        if (backendUserAuthenticated && firebaseAuth) {
+        if (backendUserAuthenticated && firebaseAuth && firebaseAuth.emailVerified) {
 
             // Fetch User Settings from backend and update Redux
             FetchUserSettings(dispatch); 
             console.log("User Settings fetched and updated in Redux by WhoAmI successfully.");
+            navigate('/Dashboard');
 
         }else{
             navigate('/');
