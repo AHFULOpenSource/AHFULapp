@@ -1,18 +1,26 @@
 import { store } from "../store";
 import { setTemplates, setError } from "./PullTemplateSlice";
 import { fetchPersonalExercises } from "../QueryFunctions";
-import { fetchTemplate } from "./QueryFunctions-Templates";
 
 export async function pullTemplates() {
   try {
-    const user = store.getState().auth.user;
-    if (!user?._id) {
-      store.dispatch(setError("No user logged in"));
-      return;
-    }
 
-    const list = await fetchTemplate(user._id);
-    const metaData = list.map(t => ({
+    const res = await fetch(
+      `http://localhost:5000/api/AHFULtemplate/user`,{
+        credentials: 'include'
+      }
+    );
+    if (!res.ok) {
+      let bodyText = "";
+      try {
+        bodyText = await res.text();
+      } catch (e) {}
+      throw new Error(
+        `Server returned ${res.status} ${res.statusText} ${bodyText}`,
+      );
+    }
+    const data = await res.json();
+    const metaData = data.map(t => ({
       _id: t._id,
       title: t.title,
       created_at: t.created_at,

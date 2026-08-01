@@ -1,24 +1,32 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import {pullTemplates} from "./PullTemplateSlice.js";
 
 
 export function Templates() {
 
-    // ─── Template States
-    const [templateSearch, setTemplateSearch] = useState("");
+  // ─── Template States
+  const [templateSearch, setTemplateSearch] = useState("");
   const [templateModal, setTemplateModal] = useState(null);
   const [exerciseNames, setExerciseNames] = useState({});
 
-    //Redux Cache for Templates.
-    const templates = useSelector((state) => state.pullTemplate.templates);
-    const cachedPersonalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
-    
-    const exitOnEnter = (e) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            e.target.blur();
-        }
-    };
+  //Redux Cache for Templates.
+  const dispatch = useDispatch();
+  const { templates, loading, error, hasFetched } = useSelector((state) => state.pullTemplate);
+  const cachedPersonalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
+
+  useEffect(() => {
+    if (!hasFetched) {
+      dispatch(pullTemplates());
+    }
+  }, [hasFetched, dispatch]);
+  
+  const exitOnEnter = (e) => {
+      if (e.key === "Enter") {
+          e.preventDefault();
+          e.target.blur();
+      }
+  };
 
   async function handleApplyTemplate(template) {
     try {
