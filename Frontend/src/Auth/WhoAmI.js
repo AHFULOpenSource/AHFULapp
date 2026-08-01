@@ -36,18 +36,13 @@ export async function WhoAmI(dispatch, navigate) {
             navigate('/NotVerified');
             console.error("WhoAmI Firebase Authentication Failed response. Email is not verified");
             return;
-        }
-
-        // If Authenticated with Firebase and Backend
-        if (backendUserAuthenticated && firebaseAuth && firebaseAuth.emailVerified) {
+        }else {
 
             // Fetch User Settings from backend and update Redux
             FetchUserSettings(dispatch); 
             console.log("User Settings fetched and updated in Redux by WhoAmI successfully.");
             navigate('/Dashboard');
 
-        }else{
-            navigate('/');
         }
   } catch (err) {
         console.error("WhoAmI Failed and Caught this Error:", err);
