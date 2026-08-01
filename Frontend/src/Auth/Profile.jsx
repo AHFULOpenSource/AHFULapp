@@ -22,7 +22,7 @@ export function Profile() {
 
   // prefer settings slice bio so it persists across refreshes
   const settingsBio = useSelector((state) => state.setting?.user_bio);
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export function Profile() {
       <div className="profile-picture-section">
         <img
           className="profile-picture"
-          src={user?.picture || "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"}
+          src={user?.photoURL || "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"}
           alt={`${user?.name || "User"}'s profile`}
           referrerPolicy="no-referrer"
         />
