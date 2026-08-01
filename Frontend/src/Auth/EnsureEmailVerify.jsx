@@ -15,7 +15,7 @@ export function RequireVerifiedEmail() {
     return null; // or loading spinner
   }
 
-  if (emailVerified) {
+  if (!emailVerified) {
     return <Navigate to="/NotVerified" replace />;
   }
 
