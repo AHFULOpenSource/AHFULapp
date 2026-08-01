@@ -6,10 +6,6 @@ import { GetFirebaseUser } from "./GetFirebaseUser.js";
 export function NotVerified() {
   // ----- Verification STATE MANAGEMENT ---------------------------------------------------------------------------
   //Redux Site Wide Auth State
-  const theme = useSelector((state) => state.setting?.theme || "light");
-
-  const [statusText, setStatusText] = useState("");
-
   const handleVerifyEmail = async () => {
     //TODO: implement Firebase Logic to send verification email
   };
