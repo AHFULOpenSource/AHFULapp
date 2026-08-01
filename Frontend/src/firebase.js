@@ -42,31 +42,6 @@ export const firebaseAHFULgoogleProvider = new GoogleAuthProvider();
 
 
 /**
- * 
- * Login with email and password using Firebase Authentication.
- * @param {string} email 
- * @param {string} password 
- * @returns userCredential Object to send to backend. 
- */
-export const loginEmailPassword = async (email, password) => {
-  try{
-    const providedEmail = email;
-    const providedPassword = password;
-    const userCredential = await signInWithEmailAndPassword(auth, providedEmail, providedPassword);
-
-    console.log('User signed in successfully:', userCredential.user);
-    //Retrun the userCredential object.
-    return userCredential.user;
-    
-  } catch (error) {
-    console.error('Error during email/password login:', error);
-    throw error; // rethrow the error so the caller can handle it
-  }
-}
-
-
-
-/**
  * Creates a user with provided email and password and logs them in. 
  * @param {*} email 
  * @param {*} password 

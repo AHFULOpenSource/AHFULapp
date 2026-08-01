@@ -9,11 +9,11 @@ import { onLoginCache } from "./OnLoginCache.jsx";
 import { setSettings } from './SettingsSlice.jsx';
 import { StreakCounter } from "../Dashboard/StreakCounter.jsx";
 import { TOS } from "../TOS.jsx";
-import { loginEmailPassword, 
-  createWithEmailPassword, 
+import {  createWithEmailPassword, 
   getCurrentUser} from "../firebase.js";
 import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
 import { HandleAHFULGoogleLogin } from "./HandleAHFULGoogleLogin.js";
+import { HandleAHFULEmailLogin } from "./HandleAHFULEmailLogin.js";
 
 
 export function Login() {
@@ -91,7 +91,7 @@ export function Login() {
     e.preventDefault();
 
     try{
-      const user = await loginEmailPassword(email, password );
+      const user = await HandleAHFULEmailLogin(dispatch, email, password );
       
     }catch (error) {
       console.error('Login Login Page Failed:', error);
