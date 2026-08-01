@@ -18,6 +18,7 @@ export function Profile() {
   const [isEditingBio, setIsEditingBio] = useState(false);
 
   const { user, loading: authLoading } = GetFirebaseUser();
+  const emailVerified = user?.emailVerified;
 
   // prefer settings slice bio so it persists across refreshes
   const settingsBio = useSelector((state) => state.setting?.user_bio);
@@ -57,98 +58,97 @@ export function Profile() {
           <h1>Profile</h1>
         </div>
     
-        {/* Profile Picture */}
-        <div className="profile-picture-section">
-          <img
-            className="profile-picture"
-            src={user?.picture || "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"}
-            alt={`${user?.name || "User"}'s profile`}
-            referrerPolicy="no-referrer"
-          />
-          <h2 className="profile-name">{user?.name || "User"}</h2>
-          <p className="profile-email">{user?.email || ""}</p>
-        </div>
+      {/* Profile Picture */}
+      <div className="profile-picture-section">
+        <img
+          className="profile-picture"
+          src={user?.picture || "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"}
+          alt={`${user?.name || "User"}'s profile`}
+          referrerPolicy="no-referrer"
+        />
+        <h2 className="profile-name">{user?.name || "User"}</h2>
+        <p className="profile-email">{user?.email || ""}</p>
+      </div>
 
+      {emailVerified && (
+        <>
           {/* Bio Section */}
-        <div className="profile-bio-section">
-          <div className="profile-bio-header">
-            <h3>Bio</h3>
-            <button
-              className="profile-edit-btn"
-              onClick={() => {
-                if (isEditingBio) handleSaveBio();
-                else setIsEditingBio(true);
-              }}
-            >
-              {isEditingBio ? "Save" : "Edit"}
+          <div className="profile-bio-section">
+            <div className="profile-bio-header">
+              <h3>Bio</h3>
+              <button
+                className="profile-edit-btn"
+                onClick={() => {
+                  if (isEditingBio) handleSaveBio();
+                  else setIsEditingBio(true);
+                }}
+              >
+                {isEditingBio ? "Save" : "Edit"}
+              </button>
+            </div>
+            {isEditingBio ? (
+              <textarea
+                className="profile-bio-input"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell us about yourself..."
+                maxLength={300}
+              />
+            ) : (
+              <p className="profile-bio-text">
+                {bio || "No Bio Yet. Click Edit to Add One!"}
+              </p>
+            )}
+          </div>
+
+          {/* Notifications */}
+          <div className="profile-notifications-section">
+            <button className="profile-page-btn" onClick={handleEnableNotifications}>
+              Enable Push Notifications
+            </button>
+            <br />
+            <br />
+            <button className="profile-page-btn" onClick={() => navigate("/ExploreFriends")}>
+              Explore Friends
             </button>
           </div>
-            {isEditingBio ? (
-            <textarea
-              className="profile-bio-input"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell us about yourself..."
-              maxLength={300}
-            />
-          ) : (
-            <p className="profile-bio-text">
-              {bio || "No Bio Yet. Click Edit to Add One!"}
-            </p>
-          )}
-        </div>
+        </>
+      )}
 
-        {/* Notifications */}
-        <div className="profile-notifications-section">
-          <button
-            className="profile-page-btn"
-            onClick={handleEnableNotifications}
-          >
-            Enable Push Notifications
-          </button>
-          <br />
+      <div className="profile-actions-section">
+        <button
+          className="profile-page-btn"
+          onClick={() => HandleAHFULPasswordReset(UserData.email)}
+        >
+          Reset Password
+        </button>
+      </div>
 
-          <br />
-          <button
-            className="profile-page-btn"
-            onClick={() => navigate("/ExploreFriends")}
-          >
-            Explore Friends
-          </button>
+      {/* Logout */}
+      <div className="profile-logout-section">
+        <button
+          className="profile-logout-btn"
+          id="logout-btn"
+          onClick={() => {
+            HandleAHFULSignOut();
+            dispatch(setSettings(settingsInitialState));
+          }}
+        >
+          Logout
+        </button>
+      </div>
 
-          <button
-            className="profile-page-btn"
-            onClick={() => HandleAHFULPasswordReset(UserData.email)}
-          >
-            Reset Password
-          </button>
-        </div>
-
-        {/* Logout */}
-        <div className="profile-logout-section">
-          <button
-            className="profile-logout-btn" id="logout-btn"
-            onClick={() => {HandleAHFULSignOut();dispatch(setSettings(settingsInitialState));}}
-          >
-            Logout
-          </button>
-        </div>
-
-        {/* Settings Bottom-right button */}
-        <div className="profile-settings-wrapper">
-          <button
-            className={`profile-settings-trigger ${open ? "active" : ""}`}
-            // onClick={toggle}
-            onClick={() => navigate("/Settings")}
-            >
-            ⚙️
-          </button>
-        </div>
-
-
-
-
-
+      {/* Settings Bottom-right button */}
+      {emailVerified && (
+      <div className="profile-settings-wrapper">
+        <button
+          className={`profile-settings-trigger ${open ? "active" : ""}`}
+          onClick={() => navigate("/Settings")}
+        >
+          ⚙️
+        </button>
+      </div>
+      )}
 
       </div>
     </div>
