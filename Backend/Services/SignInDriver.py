@@ -11,9 +11,6 @@ from firebase_admin import auth
 #Initalizes Google packages. 
 
 class SignInDriver:
-    def __init__(self, GOOGLE_CLIENT_ID: str):
-        self.client_id: str = GOOGLE_CLIENT_ID
-
     def google_login(self, postAuthData):
         #session_service: SessionService = current_app.session_service
 
