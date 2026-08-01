@@ -9,8 +9,7 @@ import { onLoginCache } from "./OnLoginCache.jsx";
 import { setSettings } from './SettingsSlice.jsx';
 import { StreakCounter } from "../Dashboard/StreakCounter.jsx";
 import { TOS } from "../TOS.jsx";
-import {  createWithEmailPassword, 
-  getCurrentUser} from "../firebase.js";
+import {  HandleAHFULEmailSignUp } from "./HandleAHFULEmailSignUp.js";
 import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
 import { HandleAHFULGoogleLogin } from "./HandleAHFULGoogleLogin.js";
 import { HandleAHFULEmailLogin } from "./HandleAHFULEmailLogin.js";
@@ -103,7 +102,7 @@ export function Login() {
     e.preventDefault();
 
     try{
-      const user = await createWithEmailPassword(email, password );
+      const user = await HandleAHFULEmailSignUp(navigate, email, password );
       
     }catch (error) {
       console.error('Sign up on the Login Page Failed:', error);
