@@ -18,7 +18,6 @@ import { HandleAHFULEmailLogin } from "./HandleAHFULEmailLogin.js";
 export function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const theme = useSelector((state) => state.setting?.theme || "Light");
   const [statusText, setStatusText] = useState("");
   const [showContent, setShowContent] = useState(false);
   const [showScrollText, setShowScrollText] = useState(true);
@@ -171,7 +170,7 @@ export function Login() {
             <button className="login-google-button" 
             onClick={async () => {
               try {
-                await HandleAHFULGoogleLogin(dispatch);
+                await HandleAHFULGoogleLogin(navigate, dispatch);
                 navigate('/Dashboard');
               } catch (error) {
                 console.error('Sign in failed:', error);
