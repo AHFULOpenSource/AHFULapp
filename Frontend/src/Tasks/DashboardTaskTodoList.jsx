@@ -8,7 +8,7 @@ import { updateTask, toggleTaskFavorite } from "./QueryFunctions-Tasks";
 export function DashboardTaskTodoList() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
 
   useEffect(() => {

@@ -16,9 +16,12 @@ import {
   updateFood,
   deleteFood
 } from "../Food/QueryFunctions-Food";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 export function FoodLog() {
-    const user = useSelector((state) => state.auth.user);
+    const { user, loading: authLoading } = GetFirebaseUser();
+    const userID = useSelector((state) => state.setting.user_id);
+
 
     //Define Variables for Date Range Filtering based off of the Current Selected Date on the Calendar.
     const selectedDate = useSelector(selectSelectedDateOrToday);
@@ -124,10 +127,10 @@ export function FoodLog() {
 
     // Fetch foods for the logged-in user on mount
     useEffect(() => {
-        if (!user._id) return;
+        if (!userID) return;
         setLoading(true);
         (async () => {
-            const { data, error } = await fetchFoodsByUser(user._id);
+            const { data, error } = await fetchFoodsByUser(userID);
             if (error) {
                 setFoods([]);
                 console.error("Failed to load foods:", error);
@@ -136,7 +139,7 @@ export function FoodLog() {
             }
             setLoading(false);
         })();
-    }, [user._id]);
+    }, [userID]);
 
     const foodsInPeriod = foods.filter((food) => {
         const foodDate = food.loggedAt;

@@ -42,7 +42,7 @@ import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 export function WorkoutLogger() {
   // ─── Redux State ─────────────────────────────────────────────────────────
   const { user, loading: authLoading } = GetFirebaseUser();
-    const userId = useSelector((state) => state.setting._id);
+    const userId = useSelector((state) => state.setting.user_id);
 
   const selectedDate = useSelector(selectSelectedDateOrToday);
   const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number)

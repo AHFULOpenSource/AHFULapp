@@ -10,7 +10,7 @@ import { auth } from "./firebase.js";
 export function Header({ onMenuToggle = null, isMenuOpen = false, onNavClick = null }) {
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.setting?.theme || "light");
-  const userID = useSelector((state) => state.setting._id);
+  const userID = useSelector((state) => state.setting.user_id);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "light" ? "dark" : "light";

@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { updateUserSettings, getUserSettings } from './QueryFunctions-Auth.js';
 import { setSettings } from './SettingsSlice.jsx';
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
+
 
 /**
  * TUTORIAL_STEPS - Configuration for the onboarding tutorial flow
@@ -87,7 +89,8 @@ export function useTutorial() {
   const navigate = useNavigate();
   
   // Redux state selectors
-  const user = useSelector((state) => state.auth.user);
+  const { user, loading: authLoading } = GetFirebaseUser();
+  const userID = useSelector((state) => state.setting.user_id);
   const tutorialComplete = useSelector((state) => state.setting.tutorialComplete);
   
   // Local state for tutorial UI

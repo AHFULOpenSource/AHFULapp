@@ -7,7 +7,7 @@ import { DashboardFoodTodoItem } from "./DashboardFoodTodoItem";
 export function DashboardFoodTodoList() {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
   useEffect(() => {
     if (!userId) {

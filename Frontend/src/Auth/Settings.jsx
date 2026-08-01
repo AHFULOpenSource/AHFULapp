@@ -10,7 +10,8 @@ import { updateUserSettings } from "./QueryFunctions-Auth.js";
 export function Settings() {
   const dispatch = useDispatch();
   const answers = useSelector((state) => state.setting);
-  const user = useSelector((state)  => state.auth.user);
+  const { user, loading: authLoading } = GetFirebaseUser();
+  const userID = useSelector((state) => state.setting.user_id);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -18,8 +19,8 @@ const update = (key, val) => {
   dispatch(updateSetting({ key, value: val }));
   
   // Auto-save theme changes immediately to backend
-  if (key === "theme" && user && user._id) {
-    updateUserSettings(user._id, { 
+  if (key === "theme" && user && userID) {
+    updateUserSettings(userID, { 
       theme: val === "dark" ? "dark" : "light" 
     }).catch(err => console.error("Failed to save theme:", err));
   }
@@ -34,7 +35,7 @@ const update = (key, val) => {
   }, [answers.theme]);
 
   const handleSave = () => {
-    if (!user || !user._id) return;
+    if (!user || !userID) return;
 
     setSaving(true);
     setSaveSuccess(false);
@@ -54,7 +55,7 @@ const update = (key, val) => {
       tutorialComplete: answers.tutorialComplete ?? false,
     };
 
-    updateUserSettings(user._id, payload)
+    updateUserSettings(userID, payload)
       .then(() => {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);

@@ -9,6 +9,7 @@ import {
   deleteWorkout, 
   toggleWorkoutFavorite
 } from "../QueryFunctions.js";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 /**
  * History & PRs (Personal Exercise Records) - Workout History exploration and Personal Exercise history page
@@ -44,7 +45,7 @@ export function HistoryPRsPage() {
   // ─── Favorite Filter State ───────────────────────────────────────────────────
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
   const getUserEmail = () => {
     if (user?.email) return user.email;

@@ -11,7 +11,7 @@ export function TodayFoodChart() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalCalories, setTotalCalories] = useState(0);
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
   useEffect(() => {
     fetchTodayFood();

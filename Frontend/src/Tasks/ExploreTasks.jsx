@@ -21,7 +21,7 @@ export function ExploreTasks() {
   const [recurrenceType, setRecurrenceType] = useState("daily"); // daily, weekly, monthly, yearly
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
   const fetchTasks = async () => {
     setLoading(true);

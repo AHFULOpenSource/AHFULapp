@@ -23,7 +23,7 @@ export function MeasurementLogger() {
     const [errors, setErrors] = useState("");
     const [editingId, setEditingId] = useState(null);
 
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
     // Conversion functions
     const inchesToCm = (inches) => inches ? (inches * 2.54).toFixed(1) : "";

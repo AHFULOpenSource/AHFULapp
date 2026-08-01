@@ -7,7 +7,7 @@ import { DashboardWorkoutTodoItem } from "./DashboardWorkoutTodoItem";
 export function DashboardWorkoutTodoList() {
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
   useEffect(() => {
     if (!userId) {

@@ -48,7 +48,7 @@ export function WorkoutChart({ defaultWeeks = 6 }) {
   const [weeklyData, setWeeklyData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const userId = useSelector((state) => state.setting._id);
+  const userId = useSelector((state) => state.setting.user_id);
 
   const fetchWorkouts = useCallback(async () => {
     if (!userId) {
