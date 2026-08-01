@@ -1,6 +1,7 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useSearchParams} from "react-router-dom";
 import { useState, useEffect } from "react";
+import { GetFirebaseUser } from "./GetFirebaseUser.js";
 
 export function NotVerified() {
   // ----- Verification STATE MANAGEMENT ---------------------------------------------------------------------------
@@ -8,43 +9,9 @@ export function NotVerified() {
   const theme = useSelector((state) => state.setting?.theme || "light");
 
   const [statusText, setStatusText] = useState("");
-  const user = useSelector((state) => state.auth.user);
 
   const handleVerifyEmail = async () => {
-    try {
-      const res = await fetch(
-        "http://localhost:5000/api/AHFULverify/verify/email/user_id/",
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: user._id,
-          }),
-        }
-      );
-
-      //const data = await res.json();
-      const data = await res.json(); // parse JSON
-      console.log("Response JSON:", data);
-
-      if (!res.ok) {
-        alert(data.error || "Failed to send verification email");
-        return;
-      }
-
-      if (data.message) {
-        alert(data.message);
-      }
-      else {
-        alert(data.error);
-      }
-    } catch (err) {
-      console.error("Verify email failed:", err);
-      alert("Network error sending verification email");
-    }
+    //TODO: implement Firebase Logic to send verification email
   };
 
 // ----- Verification Page HTML ---------------------------------------------------------------------------
