@@ -3,13 +3,13 @@ import "../siteStyles.css";
 
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
-import { authLogout } from "./AuthSlice";
+import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
 import { setSettings, settingsInitialState } from "./SettingsSlice.jsx";
 import {registerService} from "../firebase.js";
 import { updateUserSettings } from "./QueryFunctions-Auth.js";
 import { useNavigate } from "react-router-dom";
-import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
 import { HandleAHFULPasswordReset } from "./HandleAHFULPasswordReset.js";
+import { GetFirebaseUser } from "./GetFirebaseUser.js";
 
 export function Profile() {
   const dispatch = useDispatch();
@@ -17,30 +17,20 @@ export function Profile() {
   const [bio, setBio] = useState("");
   const [isEditingBio, setIsEditingBio] = useState(false);
 
-  const UserData = useSelector((state) => state.auth.user);
+  const { user, loading: authLoading } = GetFirebaseUser();
+
   // prefer settings slice bio so it persists across refreshes
   const settingsBio = useSelector((state) => state.setting?.user_bio);
+  const userId = useSelector((state) => state.setting._id);
+
 
   useEffect(() => {
-    // If there's no user data, redirect to home.
-    if (!UserData) {
-      navigate("/");
-      return;
-    }
-
-    // Prefer the bio from settings (persisted in Redux). Fall back to auth user bio.
-    const sourceBio = settingsBio ?? UserData?.user_bio ?? "";
-    setBio(sourceBio);
-  }, [UserData, settingsBio]);
+    setBio(settingsBio);
+  }, [ settingsBio]);
 
   const handleSaveBio = async () => {
-    // Guard: ensure we have a user id before attempting to save.
-    if (!UserData?._id) {
-      console.error("Cannot save bio: user ID not available");
-      return;
-    }
     try {
-      await updateUserSettings(UserData._id, { user_bio: bio });
+      await updateUserSettings(userId, { user_bio: bio });
       // mirror into Redux so the UI (and refresh) will show the new bio
       dispatch(setSettings({ user_bio: bio }));
       setIsEditingBio(false);
@@ -51,37 +41,10 @@ export function Profile() {
   };
 
   const handleEnableNotifications = () => {
-    if (UserData?._id) {
-      registerService(UserData._id);
+    if (userId) {
+      registerService(userId);
     } else {
       console.error("User ID not available");
-    }
-  };
-  
-  const handleVerifyEmail = async () => {
-    if (!UserData?._id) {
-      console.error("Cannot verify email: user ID not available");
-      alert("User not signed in");
-      return;
-    }
-
-    try {
-      const verifyUserEmailResponse = await fetch(
-        "http://localhost:5000/api/AHFULverify/verify/email/user_id/",
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: UserData._id,
-          }),
-        }
-      );
-    } catch (err) {
-      console.error("Verify email failed:", err);
-      alert("Network error sending verification email");
     }
   };
 
@@ -98,12 +61,12 @@ export function Profile() {
         <div className="profile-picture-section">
           <img
             className="profile-picture"
-            src={UserData?.picture || "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"}
-            alt={`${UserData?.name || "User"}'s profile`}
+            src={user?.picture || "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"}
+            alt={`${user?.name || "User"}'s profile`}
             referrerPolicy="no-referrer"
           />
-          <h2 className="profile-name">{UserData?.name || "User"}</h2>
-          <p className="profile-email">{UserData?.email || ""}</p>
+          <h2 className="profile-name">{user?.name || "User"}</h2>
+          <p className="profile-email">{user?.email || ""}</p>
         </div>
 
           {/* Bio Section */}
@@ -165,7 +128,7 @@ export function Profile() {
         <div className="profile-logout-section">
           <button
             className="profile-logout-btn" id="logout-btn"
-            onClick={() => {dispatch(authLogout()); dispatch(setSettings(settingsInitialState));}}
+            onClick={() => {HandleAHFULSignOut();dispatch(setSettings(settingsInitialState));}}
           >
             Logout
           </button>
