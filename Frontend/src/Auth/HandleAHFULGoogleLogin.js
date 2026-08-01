@@ -2,7 +2,7 @@ import { auth, firebaseAHFULgoogleProvider } from "../firebase.js";
 import { signInWithPopup } from "firebase/auth";
 import { FetchUserSettings } from "./FetchUserSettings.js";
 
-export async function HandleAHFULGoogleLogin(dispatch) {
+export async function HandleAHFULGoogleLogin(navigate, dispatch) {
 
   // Sign in with Google using a Firebase popup
   const popupResponse = await signInWithPopup(auth, firebaseAHFULgoogleProvider);
@@ -24,17 +24,20 @@ export async function HandleAHFULGoogleLogin(dispatch) {
         credentials: "include",
       });
 
-      if (!backendResponse.backend_authenticated) {
-          throw new Error(`Backend login failed with status ${backendResponse.error}`);
+      if (!backendResponse.ok) {
+          throw new Error(`Backend login failed with status ${backendResponse.status}`);
       }else{
-          // Fetch user settings after successful login
-          FetchUserSettings(dispatch); 
+          const backendData = await backendResponse.json();
+          if(backendData.backend_authenticated){
+            FetchUserSettings(dispatch); 
+          }
       }
     }else{
         throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULGoogleLogin THROWWWWWWWING.");
     }
     
     console.log("HandleAHFULGoogleLogin Completed successfully with user:", user);
+    navigate('/Dashboard');
   } catch (error) {
         // Handle Errors here.
       const errorCode = error.code;
