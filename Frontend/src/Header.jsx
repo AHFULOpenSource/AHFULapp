@@ -5,18 +5,19 @@ import { updateUserSettings } from "./Auth/QueryFunctions-Auth.js";
 import "./siteStyles.css";
 import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";
+import { auth } from "./firebase.js";
 
 export function Header({ onMenuToggle = null, isMenuOpen = false, onNavClick = null }) {
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.setting?.theme || "light");
-  const user = useSelector((state) => state.auth.user);
+  const userID = useSelector((state) => state.setting._id);
 
   const handleThemeToggle = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     dispatch(updateSetting({ key: "theme", value: newTheme }));
     
-    if (user && user._id) {
-      updateUserSettings(user._id, { 
+    if (userID) {
+      updateUserSettings(userID, { 
         theme: newTheme === "dark" ? "dark" : "light" 
       }).catch(err => console.error("Failed to save theme:", err));
     }
