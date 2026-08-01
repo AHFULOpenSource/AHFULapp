@@ -7,12 +7,7 @@ import { initializeApp } from 'firebase/app';
 // import { getFirestore } from 'firebase/firestore';
 
 //Import Auth SDK to handle user authentication
-import { getAuth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signInWithPopup, 
-  GoogleAuthProvider,
-  onAuthStateChanged } from 'firebase/auth';
+import { getAuth,GoogleAuthProvider} from 'firebase/auth';
 
 //Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
@@ -38,48 +33,6 @@ const app = initializeApp(firebaseConfig);
 //EXPORTED so other modules can import and use it.
 export const auth = getAuth(app);
 export const firebaseAHFULgoogleProvider = new GoogleAuthProvider();
-
-
-/**
- * Creates a user with provided email and password and logs them in. 
- * @param {*} email 
- * @param {*} password 
- * @returns A userCredential object
- */
-export const createWithEmailPassword = async (email, password) => {
-  try{
-    const providedEmail = email;
-    const providedPassword = password;
-    const userCredential = await createUserWithEmailAndPassword(auth, providedEmail, providedPassword);
-
-    console.log('User created successfully:', userCredential.user);
-    //Retrun the userCredential object.
-    return userCredential.user;
-    
-  } catch (error) {
-    console.error('Error during email/password login:', error);
-    throw error; // rethrow the error so the caller can handle it
-  }
-}
-
-export const getCurrentUser = () => {
-  const user = auth.currentUser;
-
-  return user
-
-}
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // User is signed in, see docs for a list of available properties
-    // https://firebase.google.com/docs/reference/js/auth.user
-
-  } else {
-    // User is signed out
-    // ...
-  }
-});
-
 
 export const messaging = getMessaging(app);
 
