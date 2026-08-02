@@ -22,7 +22,7 @@ export const HandleAHFULEmailSignUp = async (navigate, email, password) => {
             //Check IDToken Not Null
             if (idToken) {
                 // POST response Object to BACKEND API ROUTE for processing.
-                const backendResponse = await fetch("http://localhost:5000/api/AHFULauth/google-login", {
+                const backendResponse = await fetch("http://localhost:5000/api/AHFULauth/firebase-login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ token: idToken }),
