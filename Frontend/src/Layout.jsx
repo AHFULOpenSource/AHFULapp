@@ -5,10 +5,22 @@ import { Footer } from "./Footer.jsx";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { CalendarButton } from "./Calendar/CalendarButton.jsx";
+import { useTutorial } from "./Auth/useTutorial.js";
+import { TutorialOverlay } from "./Auth/TutorialOverlay.jsx";
+
 
 export function Layout() {
     const [isNavOpen, setIsNavOpen] = useState(false);
     const theme = useSelector((state) => state.setting.theme);
+    const {
+        isActive: tutorialActive,
+        currentStep,
+        totalSteps,
+        currentStepData,
+        skipTutorial,
+        nextStep,
+        completeTutorial
+    } = useTutorial();
 
     const toggleNav = () => {
         setIsNavOpen(!isNavOpen);
@@ -35,6 +47,19 @@ export function Layout() {
             <div className="page-content">
                 <CalendarButton />
                 <Outlet />
+                {tutorialActive && currentStepData && (
+                    <TutorialOverlay
+                    step={currentStep}
+                    totalSteps={totalSteps}
+                    title={currentStepData.title}
+                    message={currentStepData.message}
+                    highlightSelector={currentStepData.highlightSelector}
+                    onNext={nextStep}
+                    onSkip={skipTutorial}
+                    onComplete={completeTutorial}
+                    />
+                )}
+
                 <Footer />
             </div>
             </main>
