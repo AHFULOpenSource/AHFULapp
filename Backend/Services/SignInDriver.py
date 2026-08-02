@@ -55,6 +55,7 @@ class SignInDriver:
             # Update last login time
             routeUserObject['last_login_time'] = decodedUserInfo.get("auth_time")
             routeUserObject["last_login_method"] = decodedUserInfo.get("firebase").get("sign_in_provider")
+            routeUserObject["email_verified"] = decodedUserInfo.get("email_verified")
             routeUserObject["last_login_expire"] = decodedUserInfo.get("exp")
             routeUserObject['magic_bits'] = tokenBits
             
