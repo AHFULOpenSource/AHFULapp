@@ -45,7 +45,7 @@ def get_favorite_foods(user_id):
 
 # ── GET specific food by id ────────────────────────────
 @foodRouteBlueprint.route("/id/<id>", methods=["GET"])
-@login_required_dev
+@login_required_user
 def get_food_by_id(id):
     food, error = FoodDriver.get_food_by_id(id)
     if error:

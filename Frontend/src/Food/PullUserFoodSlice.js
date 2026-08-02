@@ -1,5 +1,5 @@
 // PullUserFoodSlice.js
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 
 export const pullUserFood = createAsyncThunk(
   "pullUserFood/pullUserFood",
@@ -39,9 +39,10 @@ export const pullUserFood = createAsyncThunk(
         carbs: e.carbs,
         protein: e.protein,
         fat: e.fat,
-        fdcID: e.fdcID,
+        fdcID: e.fdcId,
         servingSize: e.servingSize ?? 0,
         servingUnit: e.servingUnit ?? "",
+        favorite: e.favorite ?? false,
       }));
     } catch (err) {
       console.error("pullUserFood RAW ERROR:", err);
@@ -58,7 +59,20 @@ const pullUserFoodSlice = createSlice({
     error: null,
     hasFetched: false, // tracks whether we've attempted a fetch this session
   },
-  reducers: {},
+  reducers:{
+    addFood: (state, action) => {
+      state.food.push(action.payload);
+    },
+    updateSliceFood: (state, action) => {
+      const index = state.food.findIndex((f) => f._id === action.payload._id);
+      if (index !== -1) {
+        state.food[index] = action.payload;
+      }
+    },
+    removeFood: (state, action) => {
+      state.food = state.food.filter((f) => f._id !== action.payload);
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(pullUserFood.pending, (state) => {
@@ -78,9 +92,34 @@ const pullUserFoodSlice = createSlice({
   },
 });
 
+export const { addFood, updateFood, removeFood } = pullUserFoodSlice.actions;
+
 // Selectors
 export const selectFood = (state) => state.pullUserFood.food;
 export const selectFoodLoading = (state) => state.pullUserFood.loading;
 export const selectFoodError = (state) => state.pullUserFood.error;
+
+// Derived/normalized selector — computes display-ready fields (including Date
+// objects) on read, so the Redux store itself only ever holds serializable data.
+// createSelector memoizes: it only recomputes when selectFood's result actually changes.
+export const selectNormalizedFood = createSelector([selectFood], (food) =>
+  food.map((doc) => ({
+    id: doc._id,
+    name: doc.name,
+    calories: doc.calories,
+    servings: doc.servings,
+    totalCalories: doc.calories * doc.servings,
+    mealType: doc.type,
+    loggedAt: new Date(doc.time * 1000),
+    timestamp: new Date(doc.time * 1000).toLocaleTimeString(),
+    favorite: doc.favorite || false,
+    carbs: doc.carbs,
+    fat: doc.fat,
+    protein: doc.protein,
+    fdcId: doc.fdcId, 
+    servingSize: doc.servingSize,
+    servingUnit: doc.servingUnit,
+  }))
+);
 
 export default pullUserFoodSlice.reducer;
