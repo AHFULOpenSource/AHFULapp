@@ -12,8 +12,8 @@ from Auth.verification import login_required_user, login_required_dev, login_req
 signInRouteBlueprint = Blueprint('auth', __name__, url_prefix='/AHFULauth')
 
 # ── POST Login with Google Auth ────────────────────────────────────────────────────────────
-@signInRouteBlueprint.route('/google-login', methods=['POST'])
-def google_login():
+@signInRouteBlueprint.route('/firebase-login', methods=['POST'])
+def firebase_backend_route():
     # Get POST Data sent from Google Sign In Button. 
     postAuthData = request.get_json()
     if not postAuthData:
@@ -21,9 +21,9 @@ def google_login():
         return jsonify({"error": "No authentication data provided"}), 400
     print("Logging in with AHFUL Google Auth")
 
-    response, err = SignInDriver.google_login(postAuthData)
+    response, err = SignInDriver.ahful_backend_firebase_login(postAuthData)
     if err:
-        print(f"Error in google_login route: {err}")
+        print(f"Error in firebase_backend_route route: {err}")
         return jsonify({"error": err}), 500
 
     return response
