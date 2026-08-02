@@ -10,7 +10,6 @@ import { setSettings } from './SettingsSlice.jsx';
 import { StreakCounter } from "../Dashboard/StreakCounter.jsx";
 import { TOS } from "../TOS.jsx";
 import {  HandleAHFULEmailSignUp } from "./HandleAHFULEmailSignUp.js";
-import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
 import { HandleAHFULGoogleLogin } from "./HandleAHFULGoogleLogin.js";
 import { HandleAHFULEmailLogin } from "./HandleAHFULEmailLogin.js";
 
@@ -147,21 +146,10 @@ export function Login() {
               <button className="login-google-button" type="submit"> Login with Email</button>
             </form>
 
+            <br/>
+            <br/>
+
             <form onSubmit={handleSignUpSubmit}>
-              <input
-                id="signup-email"
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <input
-              id="signup-password"
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
               <button className="login-google-button" type="submit"> Sign Up with Email</button>
             </form>
             {loginError && <p className="error">There was an error during login: {loginError.message}</p>}
@@ -179,12 +167,6 @@ export function Login() {
                 // handle error (show a message, etc.)
               }
             }}> Login with Gmail</button>
-
-            <br/>
-            <br/>
-            <button className="login-google-button" onClick={HandleAHFULSignOut}> Log Out</button>
-
-
 
 
           <div className={`scroll-down-text ${showScrollText ? 'fade-in' : ''} ${isScrolled ? 'hidden' : ''}`}>
