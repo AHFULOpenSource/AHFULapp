@@ -3119,9 +3119,9 @@ swaggerConfig = {
       }
     },
 
-    "/AHFULauth/google-login": {
+    "/AHFULauth/firebase-login": {
       "post": {
-        "summary": "Login with Google (Public)",
+        "summary": "Login with Firebase (Public)",
         "tags": ["Auth"],
         "requestBody": {
           "required": True,
@@ -3131,7 +3131,7 @@ swaggerConfig = {
                 "type": "object",
                 "required": ["token"],
                 "properties": {
-                  "token": { "type": "string", "description": "Google JWT token", "example": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." }
+                  "token": { "type": "string", "description": "Firebase JWT token", "example": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." }
                 }
               }
             }
