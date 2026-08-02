@@ -15,8 +15,8 @@ import {
 import { fetchWorkoutById, fetchExerciseById } from "./QueryFunctions-WorkoutLogger.js"
 import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
 import { ExercisesCard } from "../ExercisesCard/ExercisesCard.jsx";
-import { pullWorkouts } from "./PullWorkout.jsx";
-import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
+import { pullWorkouts } from "./PullWorkoutSlice.js";
+import { pullPersonalExercises } from "../HistoryPRs/PullPersonalExerciseSlice.js";
 import { Loading } from "../Loading.jsx";
 import { useAutosave } from "./useAutosave.js";
 import { HeatMap } from "./HeatMap.jsx";
@@ -176,8 +176,9 @@ export function WorkoutLogger() {
         return { ok: false, error: workoutRes.error };
       }
 
-      await pullWorkouts();
-      await pullPersonalExercises();
+      //Dispatch the Slice Action for Refreshing Frontend Data aka Cache from Backend. 
+      dispatch(pullWorkouts()); 
+      dispatch(pullPersonalExercises()); // Refresh cached personal exercises in Redux     
       setSaveStatus("saved");
       return { ok: true };
     } catch (err) {
@@ -531,7 +532,7 @@ export function WorkoutLogger() {
       setExercisesInProgressTable([]);
       setSaveStatus("idle");
 
-      await pullWorkouts(); // Refresh cached workouts in Redux
+      dispatch(pullWorkouts()); // Refresh cached workouts in Redux
       resetWorkoutPicker();
       return persisted;
     } catch (err) {
