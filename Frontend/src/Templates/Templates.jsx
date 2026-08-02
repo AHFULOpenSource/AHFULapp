@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {pullTemplates} from "./PullTemplateSlice.js";
+import { selectPersonalExercises } from "../HistoryPRs/PullPersonalExerciseSlice.js";
+import {pullTemplates, selectTemplates} from "./PullTemplateSlice.js";
 
 
 export function Templates() {
@@ -12,14 +13,8 @@ export function Templates() {
 
   //Redux Cache for Templates.
   const dispatch = useDispatch();
-  const { templates, loading, error, hasFetched } = useSelector((state) => state.pullTemplate);
-  const cachedPersonalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
-
-  useEffect(() => {
-    if (!hasFetched) {
-      dispatch(pullTemplates());
-    }
-  }, [hasFetched, dispatch]);
+  const cachedPersonalExercises = useSelector(selectPersonalExercises);
+  const templates = useSelector(selectTemplates);
   
   const exitOnEnter = (e) => {
       if (e.key === "Enter") {
