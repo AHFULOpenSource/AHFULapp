@@ -3,15 +3,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export const pullPersonalExercises = createAsyncThunk(
   "pullExercise/pullPersonalExercises",
-  async (_, { getState, rejectWithValue }) => {
-    const userID = getState().setting.user_id;
-
-    if (!userID) {
-      return rejectWithValue("No user logged in");
-    }
+  async (_, { rejectWithValue }) => {
 
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULpersonalEx/${userID}`, {
+      const res = await fetch(`http://localhost:5000/api/AHFULpersonalEx/userid`, {
         credentials: "include",
       });
 
