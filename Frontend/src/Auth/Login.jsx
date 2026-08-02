@@ -89,6 +89,7 @@ export function Login() {
 
     try{
       const user = await HandleAHFULEmailLogin(navigate, dispatch, email, password );
+      onLoginCache(); // Call the onLoginCache function after successful login
       
     }catch (error) {
       console.error('Login Login Page Failed:', error);
@@ -171,6 +172,7 @@ export function Login() {
             onClick={async () => {
               try {
                 await HandleAHFULGoogleLogin(navigate, dispatch);
+                onLoginCache(); // Call the onLoginCache function after successful login
                 navigate('/Dashboard');
               } catch (error) {
                 console.error('Sign in failed:', error);
