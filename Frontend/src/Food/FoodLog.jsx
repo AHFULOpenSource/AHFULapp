@@ -7,6 +7,7 @@ import "./FoodLog.css";
 import "../siteStyles.css";
 import DateNavigation from "../Calendar/DateNavigation";
 import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
+import { toLocalDateString } from "../Calendar/UseCalendar";
 import {
   toggleFoodFavorite,
   searchUSDAFoods,
@@ -26,6 +27,7 @@ import {
 } from "./PullUserFoodSlice.js";
 
 
+
 export function FoodLog() {
     const dispatch = useDispatch();
     const { user, loading: authLoading } = GetFirebaseUser();
@@ -34,9 +36,8 @@ export function FoodLog() {
 
     //Define Variables for Date Range Filtering based off of the Current Selected Date on the Calendar.
     const selectedDate = useSelector(selectSelectedDateOrToday);
-    //Start of currently selected Day - ROOT DATE OBJECT for Page. 
-    const startOfDay = new Date(selectedDate);
-    //Start of currently selected Week
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const startOfDay = new Date(year, month - 1, day); // month is 0-indexed    //Start of currently selected Week
     const weekStart = new Date(startOfDay);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     //End of currently selected Week
@@ -287,14 +288,14 @@ export function FoodLog() {
     const rangeLabel = (() => {
 
         if (timePeriod === "daily") {
-            return startOfDay.toLocaleString('en-US').slice(0,10);
+            return selectedDate;
         }
 
         if (timePeriod === "weekly") {
             const endInclusive = new Date(weekEnd);
-            endInclusive.setDate(endInclusive.getDate() - 1);
+            endInclusive.setDate(endInclusive.getDate() -1 );
             
-            return `${startOfDay.toLocaleString('en-US')} - ${endInclusive.toLocaleString('en-US')}`;
+            return `${weekStart.toLocaleString('en-US').slice(0, 10)} - ${endInclusive.toLocaleString('en-US').slice(0, 10)}`;
         }
 
         if (timePeriod === "monthly") {
