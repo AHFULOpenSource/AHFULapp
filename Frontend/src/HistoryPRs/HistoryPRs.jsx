@@ -9,6 +9,8 @@ import {
   deleteWorkout, 
   toggleWorkoutFavorite
 } from "../QueryFunctions.js";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
+import { selectWorkouts } from "../WokoutLogger/PullWorkoutSlice.js";
 
 /**
  * History & PRs (Personal Exercise Records) - Workout History exploration and Personal Exercise history page
@@ -24,8 +26,7 @@ import {
  */
 export function HistoryPRsPage() {
   // ─── State ────────────────────────────────────────────────────────────────────
-  const user = useSelector((state) => state.auth.user);
-  const [workouts, setWorkouts] = useState([]);
+  const { user, loading: authLoading } = GetFirebaseUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
@@ -44,53 +45,13 @@ export function HistoryPRsPage() {
   // ─── Favorite Filter State ───────────────────────────────────────────────────
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  const getUserId = () => {
-    if (user?._id) return user._id;
-  };
-  const userId = getUserId();
+  const userId = useSelector((state) => state.setting.user_id);
+  const workouts = useSelector(selectWorkouts);
 
   const getUserEmail = () => {
     if (user?.email) return user.email;
   };
   const userEmail = (getUserEmail() || "").toLowerCase();
-
-  // ─── Fetch Workouts from Backend ─────────────────────────────────────────────
-  const fetchExercises = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (!userId) {
-        throw new Error("User ID not found. Please log in to view your workouts.");
-      }
-      
-      const res = await fetch(`http://localhost:5000/api/AHFULworkouts/${userId}`,{method: "GET",credentials: "include",});
-
-      if (!res.ok) {
-        let bodyText = "";
-        try {
-          bodyText = await res.text();
-        } catch (e) {
-          // Ignore text extraction errors
-        }
-        throw new Error(`Server returned ${res.status} ${res.statusText} ${bodyText}`);
-      }
-
-      const data = await res.json();
-      setWorkouts(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Failed to fetch workouts:", err);
-      const friendly = err && err.name ? `${err.name}: ${err.message}` : String(err);
-      setError(friendly || "Unknown error");
-      setWorkouts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ─── Load Workouts on Mount ───────────────────────────────────────────────────
-  useEffect(() => {
-    fetchExercises();
-  }, [userId]);
 
   const fetchFriends = async () => {
     setFriendsLoading(true);
@@ -288,7 +249,7 @@ export function HistoryPRsPage() {
       }
 
       setSelectedWorkout(null);
-      await fetchExercises();
+      dispatch(pullWorkouts());
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       window.alert(`Failed to delete workout: ${message}`);
@@ -319,7 +280,7 @@ export function HistoryPRsPage() {
             <button className={`favorite-filter-btn ${showFavoritesOnly ? "active" : ""}`} onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}>
               {showFavoritesOnly ? "⭐ Favorites" : "☆ All"}
             </button>
-          <button onClick={fetchExercises} disabled={loading} className="refresh-btn">
+          <button onClick={() => dispatch(pullWorkouts())} disabled={loading} className="refresh-btn">
             {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>

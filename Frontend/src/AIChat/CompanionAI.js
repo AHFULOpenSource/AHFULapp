@@ -85,7 +85,7 @@ export function initCompanionAI({ textInput, sendButton, characterImage, voiceSe
         }
 
         utterance.onstart = () => {
-            console.log('Speech started');
+            // console.log('Speech started');
             // Only animate if not muted
             if (!characterImage || (isMutedRef && isMutedRef.current)) {
                 speechSynthesis.cancel();
@@ -106,7 +106,7 @@ export function initCompanionAI({ textInput, sendButton, characterImage, voiceSe
         };
 
         utterance.onend = utterance.onerror = () => {
-            console.log('Speech ended or error');
+            // console.log('Speech ended or error');
             clearInterval(lipSyncInterval);
             if (characterImage) characterImage.src = closedMouthImg;
         };
@@ -168,19 +168,19 @@ export function initCompanionAI({ textInput, sendButton, characterImage, voiceSe
     return {
         populateVoiceList,
         cancelSpeech: () => {
-            console.log('cancelSpeech called - speechSynthesis.speaking:', speechSynthesis.speaking);
+            // console.log('cancelSpeech called - speechSynthesis.speaking:', speechSynthesis.speaking);
             if (speechSynthesis.speaking) {
                 speechSynthesis.cancel();
-                console.log('Speech canceled');
+                // console.log('Speech canceled');
             }
             clearInterval(lipSyncInterval);
             if (characterImage) {
                 characterImage.src = closedMouthImg;
-                console.log('Image set to closed mouth');
+                // console.log('Image set to closed mouth');
             }
         },
         setMuted: (muted) => {
-            console.log('setMuted called with:', muted);
+            // console.log('setMuted called with:', muted);
             isMutedRef.current = muted;
         },
         destroy: () => {

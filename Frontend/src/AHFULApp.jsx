@@ -1,4 +1,4 @@
-import {  useEffect } from "react";
+import { useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { WorkoutLogger } from "./WokoutLogger/WorkoutLogger.jsx";
@@ -12,39 +12,29 @@ import { Map } from "./Gyms/Map.jsx";
 import { AIChat } from "./AIChat/AIChat.jsx";
 import { MeasurementLogger } from "./MeasurementLogger/MeasurementLogger.jsx";
 import { Profile } from "./Auth/Profile.jsx";
+import { WhoAmI } from "./Auth/WhoAmI.js";
 import { TOS } from "./TOS.jsx";
 import { Layout } from "./Layout.jsx"
 import { Settings } from "./Auth/Settings.jsx";
 import { ExploreTasks } from "./Tasks/ExploreTasks.jsx";
 import { FavoritesHub } from "./Favorites/FavoritesHub.jsx";
-import { useTutorial } from "./Auth/useTutorial.js";
-import { TutorialOverlay } from "./Auth/TutorialOverlay.jsx";
+import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
+import { SocialWorkouts } from "./SocialWall/SocialWorkouts.jsx";
+import { Templates } from "./Templates/Templates.jsx";
 import "./siteStyles.css";
 import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";
-import { whoami, getUserSettings } from "./Auth/QueryFunctions-Auth.js";
-import { setSettings } from './Auth/SettingsSlice.jsx';
-import { authLogin } from "./Auth/AuthSlice.jsx";
-import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
-import { RequireVerifiedEmail } from "./Auth/EnsureEmailVerify.jsx";
-import { SocialWorkouts } from "./SocialWall/SocialWorkouts.jsx";
-import { Templates } from "./Templates/Templates.jsx";
+import { GetFirebaseUser } from "./Auth/GetFirebaseUser.js";
+import { Loading } from "./Loading.jsx";
+
 
 
 function AHFULApp() {
   const theme = useSelector((state) => state.setting.theme);
-  const userData = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const {
-    isActive: tutorialActive,
-    currentStep,
-    totalSteps,
-    currentStepData,
-    skipTutorial,
-    nextStep,
-    completeTutorial
-  } = useTutorial();
+  const { user, loading: authLoading } = GetFirebaseUser();
+
 
   // Apply theme globally - runs on all pages
   useEffect(() => {
@@ -55,35 +45,20 @@ function AHFULApp() {
     }
   }, [theme]);
 
-  // Apply WhoAmI Check globally - runs on all pages
+  // Apply WhoAmI Check globally - runs on all navigate and dispatch calls. 
+  //Logs out user if firebase auth state is signed out, or completed WhoAmI if signed in.
   useEffect(() => {
-    const checkCookies = async () => {
-      // We only want to run this check once on app load, not on every route change.
-      const whomstResponse = await whoami();
-      const path = window.location.pathname || '/';
+    // If auth is still loading, don't run WhoAmI to check session yet. Wait until Firebase is fully loaded.
+    if (authLoading) return;
 
-      // If whoami fails to return (network or missing cookies),
-      // don't force a redirect when the user is already on the public
-      // root path ('/'). But if they're trying to visit any other
-      // route, send them to the Login page.
-      if (!whomstResponse) {
-        navigate('/');
-        return;
-      }
+    // Firebase says the user is signed in — verify against backend + pull settings
+    WhoAmI(dispatch, navigate);
 
-      if (whomstResponse.ok){
-        dispatch(authLogin(whomstResponse.data.user_info));
+  }, [user]);
 
-        const userSettingsResponse = await getUserSettings();
-        dispatch(setSettings(userSettingsResponse));
-      }else{
-        navigate('/');
-      }
-    }
-
-    checkCookies();
-  }, []);
-
+  if (authLoading) {
+    return <Loading />;
+  }
 
   return (
     <>
@@ -91,8 +66,7 @@ function AHFULApp() {
         <Route element={<Layout/>}>
           <Route path="/Profile" element={<Profile/>}/>
           <Route path="/NotVerified" element={<NotVerified/>}/>
-          <Route element={<RequireVerifiedEmail />}>
-            <Route path="/Dashboard" element={<Dashboard/>}/>
+          <Route path="/Dashboard" element={<Dashboard/>}/>
             <Route path="/Favorites" element={<FavoritesHub/>}/>
             <Route path="/WorkoutLogger" element={<WorkoutLogger/>} />
             <Route path="/Templates" element={<Templates/>} />
@@ -107,23 +81,9 @@ function AHFULApp() {
             <Route path="Settings" element={<Settings/>} />
             <Route path="/SocialWorkouts" element={<SocialWorkouts/>}/>
             </Route>
-        </Route>
         {/* Put outside of the Layout so it doesn't show the header/navbar */}
         <Route path="/" element={<Login/>}/>
       </Routes>
-
-      {tutorialActive && currentStepData && (
-        <TutorialOverlay
-          step={currentStep}
-          totalSteps={totalSteps}
-          title={currentStepData.title}
-          message={currentStepData.message}
-          highlightSelector={currentStepData.highlightSelector}
-          onNext={nextStep}
-          onSkip={skipTutorial}
-          onComplete={completeTutorial}
-        />
-      )}
 
     </>
   );

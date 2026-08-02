@@ -14,12 +14,10 @@ def get_all_personal_exs():
     return jsonify(personalExs), 200
 
 # ── GET all personalExs for a specific user ──────────────────────────────────────
-@personalExRouteBlueprint.route("/<user_id>", methods=["GET"])
+@personalExRouteBlueprint.route("/userid", methods=["GET"])
 @login_required_user
-def get_personal_exs_by_user(user_id):
-    if (user_id != g.user_id) and (g.role != "Developer") and (g.role != "Admin"):
-        return jsonify({"error": "You may only access your own data"}), 403
-    personalExs, error = PersonalExDriver.get_personal_exs_by_user(user_id=user_id)
+def get_personal_exs_by_user():
+    personalExs, error = PersonalExDriver.get_personal_exs_by_user(g.user_id)
     if error:
         if "not found" in error.lower():
             return jsonify({"error": error}), 404
@@ -88,7 +86,7 @@ def create_personal_ex():
 # Only update own???, dev for now
 # ── UPDATE personalEx ───────────────────────────────────────────────────────────
 @personalExRouteBlueprint.route("/update/<personal_ex_id>", methods=["PUT"])
-@login_required_dev
+@login_required_user
 def update_personal_ex(personal_ex_id):
     if not personal_ex_id:
         return jsonify({"error": "You must provide a personal ex id to update"}), 400

@@ -7,7 +7,6 @@ export function formatTime(seconds) {
 }
 
 
-
 // ── Workout Functions ───────────────────────────────────────────────────────────
 
 export async function createWorkout(workoutData) {
@@ -23,35 +22,6 @@ export async function createWorkout(workoutData) {
   }
   return res.json();
 }
-
-export async function fetchWorkout(userId) {
-  try {
-    const res = await fetch(`http://localhost:5000/api/AHFULworkouts/${userId}`, {credentials: 'include'});
-
-    // Handle empty or not found responses for new users
-    if (res.status === 404 || res.status === 204) {
-      return [];
-    }
-
-    if (!res.ok) {
-      const bodyText = await res.text().catch(() => "");
-      throw new Error(
-        `Server returned ${res.status} ${res.statusText} ${bodyText}`,
-      );
-    }
-
-    const data = await res.json();
-    return data
-
-  } catch (err) {
-    console.error("fetchWorkout error:", err);
-    // Return empty array for network errors on new user accounts
-    throw err;
-  }
-}
-
-
-
 
 export async function updateWorkout(workoutId, data) {
   const res = await fetch(
@@ -87,28 +57,6 @@ export async function deleteWorkout(workoutId) {
 
 // ── Personal Exercise Functions ─────────────────────────────────────────────────
 
-export async function fetchPersonalExerciseById(userId) {
-  try {
-    const res = await fetch(
-      `http://localhost:5000/api/AHFULpersonalEx/${userId}`, {credentials: 'include'}
-    );
-    if (res.status === 404 || res.status === 204) {
-      return [];
-    }
-    if (!res.ok) {
-      const bodyText = await res.text().catch(() => "");
-      throw new Error(`Server returned ${res.status} ${res.statusText} ${bodyText}`);
-    }
-    const data = await res.json();
-    if (Array.isArray(data)) return data;
-    if (data && Array.isArray(data.exercises)) return data.exercises;
-    if (data && Array.isArray(data.data)) return data.data;
-    return [];
-  } catch (err) {
-    console.error("fetchPersonalExerciseById error:", err);
-    return [];
-  }
-}
 
 export async function fetchPersonalExercises(workoutId) {
   try {
@@ -135,7 +83,7 @@ export async function fetchPersonalExercises(workoutId) {
     return [];
   } catch (err) {
     console.error("fetchPersonalExercises error:", err);
-    return [];
+        throw err;
   }
 }
 
@@ -207,33 +155,6 @@ export async function createPersonalExercises(peData) {
     return { error: err.message || "Failed to create personal exercise" };
   }
 }
-
-export async function updatePersonalExercises(peId, peData) {
-  try {
-    const res = await fetch(
-      `http://localhost:5000/api/AHFULpersonalEx/update/${peId}`,
-      {
-        method: "PUT",
-        credentials: 'include',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(peData),
-      },
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { error: data.error || `Server returned ${res.status}` };
-    }
-
-    return { success: true, data };
-  } catch (err) {
-    console.error("updatePersonalExercise error:", err);
-    return { error: err.message || "Failed to update personal exercise" };
-  }
-}
-
-
 
 // ── Workout Favorite Functions ──────────────────────────────────────────
 export async function toggleWorkoutFavorite(workoutId) {

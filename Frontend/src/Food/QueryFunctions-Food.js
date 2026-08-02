@@ -33,45 +33,12 @@ export async function fetchFood(userId) {
   }
 }
 
-export async function fetchAllFood() {
-  try {
-    const res = await fetch("http://localhost:5000/api/AHFULfoods", {
-      method: "GET",
-      credentials: "include",
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      return {
-        error: data.error || "Failed to fetch all foods",
-      };
-    }
-    return data;
-  } catch (err) {
-    console.error("Failed to fetch all foods:", err);
-    return {
-      error: err.message || "Failed to fetch all foods",
-    };
-  }
-}
-
 export async function searchUSDAFoods(query) {
   try {
     const res = await fetch(`${API_BASE}/search/usda?q=${encodeURIComponent(query)}&limit=8`, { credentials: "include" });
     const data = await res.json();
     if (!res.ok) return { data: [], error: data.error || "USDA search failed" };
     return { data: data.foods || [], error: null };
-  } catch (err) {
-    return { data: [], error: err.message };
-  }
-}
-
-export async function fetchFoodsByUser(userId) {
-  try {
-    const res = await fetch(`${API_BASE}/${userId}`, { credentials: "include" });
-    if (res.status === 404) return { data: [], error: null };
-    const data = await res.json();
-    if (!res.ok) return { data: [], error: data.error || "Failed to fetch foods" };
-    return { data: Array.isArray(data) ? data : [], error: null };
   } catch (err) {
     return { data: [], error: err.message };
   }

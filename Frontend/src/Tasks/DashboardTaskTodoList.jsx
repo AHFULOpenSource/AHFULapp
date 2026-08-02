@@ -8,16 +8,8 @@ import { updateTask, toggleTaskFavorite } from "./QueryFunctions-Tasks";
 export function DashboardTaskTodoList() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const user = useSelector((state) => state.auth.user);
+  const userId = useSelector((state) => state.setting.user_id);
 
-  const getUserId = () => {
-    if (user?._id) return user._id;
-    try {
-      const stored = JSON.parse(localStorage.getItem("user_data"));
-      return stored?._id || null;
-    } catch { return null; }
-  };
-  const userId = getUserId();
 
   useEffect(() => {
     if (!userId) {

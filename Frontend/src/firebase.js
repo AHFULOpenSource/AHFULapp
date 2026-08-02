@@ -1,11 +1,18 @@
-// src/firebase.js  ← initialize ONCE here
+// src/firebase.js -- App/Root level initialization ONCE, all other sub-modules import from this file.
+
+//Import Main Firebase SDK to Init App
 import { initializeApp } from 'firebase/app';
 
+//Import Commented out as Firestore is not activated. 
 // import { getFirestore } from 'firebase/firestore';
-// import { getAuth } from 'firebase/auth';
 
+//Import Auth SDK to handle user authentication
+import { getAuth,GoogleAuthProvider} from 'firebase/auth';
+
+//Import Messaging SDK to handle push notifications
 import { getMessaging, getToken, onMessage} from 'firebase/messaging';
 
+// Firebase configuration object, using environment variables to sheild Auth info. 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,13 +23,18 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+//Initialize Firebase App with the config object. This is done ONCE, HERE. 
+// app itself is never exported — the services are what you use
 const app = initializeApp(firebaseConfig);
 
 // export const db = getFirestore(app);
-// export const auth = getAuth(app);
+
+// Initialize Firebase Authentication and get a reference to the service. 
+//EXPORTED so other modules can import and use it.
+export const auth = getAuth(app);
+export const firebaseAHFULgoogleProvider = new GoogleAuthProvider();
 
 export const messaging = getMessaging(app);
-// app itself is rarely exported — the services are what you use
 
 /**
  * Returns the initialized Messaging service instance.
@@ -44,7 +56,7 @@ async function sendTokenToBackend(token, userId) {
     });
     
     if (response.ok) {
-      console.log("FCM token saved to backend successfully");
+      // console.log("FCM token saved to backend successfully");
       return true;
     } else {
       const error = await response.json();
@@ -72,13 +84,13 @@ export async function registerService(userId) {
     // Ask the user for permission to send notifications
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
-      console.log('Notification permission not granted.');
+      // console.log('Notification permission not granted.');
       return null;
     }
 
     const currentToken = await getToken(messaging, vapidKey);
     if (currentToken) {
-      console.log('Registration token retrieved:', currentToken);
+      // console.log('Registration token retrieved:', currentToken);
       
       // Send token to backend if userId is provided
       if (userId) {
@@ -87,7 +99,7 @@ export async function registerService(userId) {
       
       return currentToken;
     } else {
-      console.log('No registration token available.');
+      // console.log('No registration token available.');
       return null;
     }
   } catch (err) {
@@ -114,20 +126,20 @@ export const validateAndRegisterSW = async (userId) => {
     if (existingWorker) {
       // Check what state it's actually in
       if (existingWorker.active) {
-        console.log('SW is active and healthy, checking for updates...');
+        // console.log('SW is active and healthy, checking for updates...');
         await existingWorker.update();
         return existingWorker;
       }
 
       if (existingWorker.waiting) {
-        console.log('SW is waiting — old worker still in control');
+        // console.log('SW is waiting — old worker still in control');
         // force the new one to take over immediately
         existingWorker.waiting.postMessage({ type: 'SKIP_WAITING' });
         return existingWorker;
       }
 
       if (existingWorker.installing) {
-        console.log('SW is still installing...');
+        // console.log('SW is still installing...');
         return existingWorker;
       }
 
@@ -138,7 +150,7 @@ export const validateAndRegisterSW = async (userId) => {
 
     // Either no SW existed or we just cleared a bad one
     // Let Firebase re-register it fresh via getToken
-    console.log('Registering fresh service worker...');
+    // console.log('Registering fresh service worker...');
     const token = await getToken(messaging, {
       vapidKey: 'YOUR_VAPID_KEY'
     });
@@ -157,7 +169,7 @@ export const validateAndRegisterSW = async (userId) => {
 };
 
 onMessage(messaging, (payload) => {
-  console.log('Foreground message received:', payload);
+  // console.log('Foreground message received:', payload);
 
   new Notification(payload.notification.title, {
     body: payload.notification.body,

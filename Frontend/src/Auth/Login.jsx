@@ -2,22 +2,21 @@ import veniceDesktop from "../../images/Login/Backgrounds/venice desktop with ov
 import veniceMobile from "../../images/Login/Backgrounds/venice mobile with overlay.jpg";
 import "./Auth.css";
 import "../Dashboard/Dashboard.css";
-import { GoogleLogin } from "@react-oauth/google";
-import { GoogleButton } from "./GoogleButton";
 import { useSelector, useDispatch } from "react-redux";
-import { authLogin } from "./AuthSlice.jsx";
 import { useState, useEffect } from "react";
 import {useNavigate } from "react-router-dom";
 import { onLoginCache } from "./OnLoginCache.jsx";
 import { setSettings } from './SettingsSlice.jsx';
 import { StreakCounter } from "../Dashboard/StreakCounter.jsx";
 import { TOS } from "../TOS.jsx";
+import {  HandleAHFULEmailSignUp } from "./HandleAHFULEmailSignUp.js";
+import { HandleAHFULGoogleLogin } from "./HandleAHFULGoogleLogin.js";
+import { HandleAHFULEmailLogin } from "./HandleAHFULEmailLogin.js";
+
 
 export function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const theme = useSelector((state) => state.setting?.theme || "Light");
   const [statusText, setStatusText] = useState("");
   const [showContent, setShowContent] = useState(false);
   const [showScrollText, setShowScrollText] = useState(true);
@@ -27,6 +26,10 @@ export function Login() {
   const [showTOS, setShowTOS] = useState(false);
   const [browser, setBrowser] = useState('');
   const scrollText = "∨ scroll down to learn more ∨";
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState(null);
 
   //Check if we are on a mobile device and if so resize. 
   useEffect(() => {
@@ -80,30 +83,40 @@ export function Login() {
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.email_verified === false) {
-        setStatusText(`Logged in as ${user.email}, email not verified`);
-        navigate("/NotVerified", { replace: true });
-      }
-      else {
-        setStatusText(`Logged in as ${user.email}`);
-        onLoginCache();
-        navigate("/Dashboard", { replace: true });
-      }
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+
+    try{
+      const user = await HandleAHFULEmailLogin(navigate, dispatch, email, password );
+      onLoginCache(); // Call the onLoginCache function after successful login
+      
+    }catch (error) {
+      console.error('Login Login Page Failed:', error);
+      setLoginError(error);
     }
-  }, [isAuthenticated, user, navigate]);
+
+  };
+
+  const handleSignUpSubmit = async (e) => {
+    e.preventDefault();
+
+    try{
+      const user = await HandleAHFULEmailSignUp(navigate, email, password );
+      
+    }catch (error) {
+      console.error('Sign up on the Login Page Failed:', error);
+      setLoginError(error);
+    }
+
+  };
   
   // ----- LOGIN Page HTML ---------------------------------------------------------------------------
   return (
     <div className={`login-page ${isScrolled ? 'scrolled' : ''}`}>
       <div className="login-background" style={{ backgroundImage: `url(${isMobile ? veniceMobile : veniceDesktop})` }}></div>
-      <GoogleButton
-        onSuccess={() => setStatusText("Logged in!")}
-        onError={(err) => setStatusText(err || "Login failed")}
-        isScrolled={isScrolled}
-        browser={browser}
-      />
+
+
+
       <div className="login-top-overlay">
         <div className={`login-content ${showContent ? 'fade-in' : ''}`}>
           <div className="login-title">
@@ -113,6 +126,49 @@ export function Login() {
                 A Helpful Fitness Utilization Logger App
               </div>
           </div>
+          
+          
+              <form onSubmit={handleLoginSubmit}>
+              <input
+                id="login-email"
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+                id="login-password"
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button className="login-google-button" type="submit"> Login with Email</button>
+            </form>
+
+            <br/>
+            <br/>
+
+            <form onSubmit={handleSignUpSubmit}>
+              <button className="login-google-button" type="submit"> Sign Up with Email</button>
+            </form>
+            {loginError && <p className="error">There was an error during login: {loginError.message}</p>}
+
+            <br/>
+            <br/>
+            <button className="login-google-button" 
+            onClick={async () => {
+              try {
+                await HandleAHFULGoogleLogin(navigate, dispatch);
+                onLoginCache(); // Call the onLoginCache function after successful login
+                navigate('/Dashboard');
+              } catch (error) {
+                console.error('Sign in failed:', error);
+                // handle error (show a message, etc.)
+              }
+            }}> Login with Gmail</button>
+
+
           <div className={`scroll-down-text ${showScrollText ? 'fade-in' : ''} ${isScrolled ? 'hidden' : ''}`}>
             {typedText}<span className="typing-cursor"></span>
           </div>

@@ -1,23 +1,4 @@
 // ──  Template functions ─────────────────────────────────────────────────────────
-export async function fetchTemplate(userId) {
-  const res = await fetch(
-    `http://localhost:5000/api/AHFULtemplate/user`,{
-      credentials: 'include'
-    }
-  );
-  if (!res.ok) {
-    let bodyText = "";
-    try {
-      bodyText = await res.text();
-    } catch (e) {}
-    throw new Error(
-      `Server returned ${res.status} ${res.statusText} ${bodyText}`,
-    );
-  }
-  const data = await res.json();
-  return data;
-}
-
 export async function createTemplate(templateData) {
   try {
     const res = await fetch(

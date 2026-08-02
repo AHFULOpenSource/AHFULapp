@@ -1,30 +1,43 @@
 //@author Jonathan Torrence & AuGust Ringelstetter
-//updated 7/6/2026
+//updated 8/2/2026
 
 import React, {useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import "./FoodLog.css";
 import "../siteStyles.css";
 import DateNavigation from "../Calendar/DateNavigation";
 import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
+import { toLocalDateString } from "../Calendar/UseCalendar";
 import {
   toggleFoodFavorite,
   searchUSDAFoods,
-  fetchFoodsByUser,
   createFood,
   fetchFoodById,
-  updateFood,
+  updateFood as updateFoodAPI,
   deleteFood
 } from "../Food/QueryFunctions-Food";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
+import {
+  selectNormalizedFood,
+  selectFoodLoading,
+  selectFoodError,
+  addFood,
+  updateFood as updateFoodCache,
+  removeFood as removeFoodCache,
+} from "./PullUserFoodSlice.js";
+
+
 
 export function FoodLog() {
-    const user = useSelector((state) => state.auth.user);
+    const dispatch = useDispatch();
+    const { user, loading: authLoading } = GetFirebaseUser();
+    const userID = useSelector((state) => state.setting.user_id);
+
 
     //Define Variables for Date Range Filtering based off of the Current Selected Date on the Calendar.
     const selectedDate = useSelector(selectSelectedDateOrToday);
-    //Start of currently selected Day - ROOT DATE OBJECT for Page. 
-    const startOfDay = new Date(selectedDate);
-    //Start of currently selected Week
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const startOfDay = new Date(year, month - 1, day); // month is 0-indexed    //Start of currently selected Week
     const weekStart = new Date(startOfDay);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     //End of currently selected Week
@@ -32,7 +45,9 @@ export function FoodLog() {
     weekEnd.setDate(weekStart.getDate() + 7);
 
 
-    const [foods, setFoods] = useState([]);
+    const foods = useSelector(selectNormalizedFood);   // replaces normalizeFood + local `foods` state
+    const foodsLoading = useSelector(selectFoodLoading);
+    const foodsError = useSelector(selectFoodError);
     const [foodName, setFoodName] = useState("");
     const [calories, setCalories] = useState("");
     const [servings, setServings] = useState("1");
@@ -40,7 +55,6 @@ export function FoodLog() {
     const [errors, setErrors] = useState("");
     const [timePeriod, setTimePeriod] = useState("daily");
     const [searchTerm, setSearchTerm] = useState("");
-    const [loading, setLoading] = useState(false);
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
     // USDA Food Search States
@@ -50,25 +64,6 @@ export function FoodLog() {
     const [showUsda_dropdown, setShowUsda_dropdown] = useState(false);
     const [usda_searchTimeout, setUsda_searchTimeout] = useState(null);
     const [selectedUSDAFood, setSelectedUSDAFood] = useState(null);
-
-
-    const normalizeFood = (doc) => ({
-        id: doc._id,
-        name: doc.name,
-        calories: doc.calories,
-        servings: doc.servings,
-        totalCalories: doc.calories * doc.servings,
-        mealType: doc.type,
-        loggedAt: new Date(doc.time * 1000),
-        timestamp: new Date(doc.time * 1000).toLocaleTimeString(),
-        favorite: doc.favorite || false,
-        carbs: doc.carbs,
-        fat: doc.fat,
-        protein: doc.protein,
-        fdcId: doc.fdcId,
-        servingSize: doc.servingSize,
-        servingUnit: doc.servingUnit
-    });
 
     // USDA Food Search - with debouncing
     const searchUSDAFoodsWrapper = async (query) => {
@@ -122,22 +117,6 @@ export function FoodLog() {
         setShowUsda_dropdown(false);
     };
 
-    // Fetch foods for the logged-in user on mount
-    useEffect(() => {
-        if (!user._id) return;
-        setLoading(true);
-        (async () => {
-            const { data, error } = await fetchFoodsByUser(user._id);
-            if (error) {
-                setFoods([]);
-                console.error("Failed to load foods:", error);
-            } else {
-                setFoods(data.map(normalizeFood));
-            }
-            setLoading(false);
-        })();
-    }, [user._id]);
-
     const foodsInPeriod = foods.filter((food) => {
         const foodDate = food.loggedAt;
 
@@ -172,7 +151,10 @@ export function FoodLog() {
         (!showFavoritesOnly || food.favorite)
     );
 
-    const addFood = async (e) => {
+    const [editingId, setEditingId] = useState(null);
+    const [editFood, setEditFood] = useState(null);
+
+    const addFoodFromPage = async (e) => {
         e.preventDefault();
         setErrors("");
 
@@ -217,9 +199,14 @@ export function FoodLog() {
                 return;
             }
 
+            // IMPORTANT: dispatch the server's response, not the local payload.
+            // The server assigns _id and time — without them, the item fails the
+            // date-range filter below (Invalid Date never matches a range) and
+            // silently doesn't appear, even though it's correctly in Redux state.
             const { data: newDoc, error: fetchError } = await fetchFoodById(createResult.food_id);
-            if (!fetchError && newDoc) {
-                setFoods((prev) => [...prev, normalizeFood(newDoc)]);
+
+            if (createResult && !fetchError && newDoc) {
+                dispatch(addFood(newDoc));
             }
         } catch (err) {
             setErrors("Network error — could not add food");
@@ -239,27 +226,17 @@ export function FoodLog() {
             console.error("Failed to delete food:", error);
             return;
         }
-        setFoods(foods.filter(food => food.id !== id));
+        dispatch(removeFoodCache(id));
     };
 
     const toggleFavorite = async (id) => {
-        console.log("Toggling favorite for food ID:", id);
         const { data, error } = await toggleFoodFavorite(id);
-        console.log("Toggle response - data:", data, "error:", error);
         if (!error && data) {
-            console.log("Updated favorite status:", data.favorite);
-            setFoods((prev) =>
-                prev.map((food) =>
-                    food.id === id ? { ...food, favorite: data.favorite } : food
-                )
-            );
+            dispatch(updateFoodCache(data));
         } else {
             console.error("Failed to toggle favorite:", error);
         }
     };
-
-    const [editingId, setEditingId] = useState(null);
-    const [editFood, setEditFood] = useState(null);
 
     const startEdit = (food) => {
         setEditingId(food.id);
@@ -293,13 +270,13 @@ export function FoodLog() {
             servingUnit: editFood?.servingUnit ?? null,
         };
 
-        const { data: updated, error } = await updateFood(editingId, payload);
+        const { data: updated, error } = await updateFoodAPI(editingId, payload);
         if (error) {
             setErrors(error);
             return;
         }
         if (updated) {
-            setFoods((prev) => prev.map((f) => f.id === editingId ? normalizeFood(updated) : f));
+            dispatch(updateFoodCache(updated));
         }
         cancelEdit();
     };
@@ -311,14 +288,14 @@ export function FoodLog() {
     const rangeLabel = (() => {
 
         if (timePeriod === "daily") {
-            return startOfDay.toLocaleString('en-US').slice(0,10);
+            return selectedDate;
         }
 
         if (timePeriod === "weekly") {
             const endInclusive = new Date(weekEnd);
-            endInclusive.setDate(endInclusive.getDate() - 1);
+            endInclusive.setDate(endInclusive.getDate() -1 );
             
-            return `${startOfDay.toLocaleString('en-US')} - ${endInclusive.toLocaleString('en-US')}`;
+            return `${weekStart.toLocaleString('en-US').slice(0, 10)} - ${endInclusive.toLocaleString('en-US').slice(0, 10)}`;
         }
 
         if (timePeriod === "monthly") {
@@ -351,7 +328,7 @@ export function FoodLog() {
                 {/* Add Food Form -------------------------------------------- */}
                 <div className="add-food-section">
                     <h2>Log New Food</h2>
-                    <form onSubmit={addFood} className="food-form">
+                    <form onSubmit={addFoodFromPage} className="food-form">
                         {/* USDA Food Search */}
                         <div className="form-group usda-search-container">
                             <label htmlFor="usdaSearch">Search USDA Database (Optional)</label>
@@ -580,4 +557,3 @@ export function FoodLog() {
      </div>
     );
 }
-

@@ -6,9 +6,11 @@ import { createWorkout, toggleWorkoutFavorite } from "../QueryFunctions";
 import { getWorkoutFavorites} from "./QueryFunctions-Favorties.js";
 import { toggleTaskFavorite, getTaskFavorites } from "../Tasks/QueryFunctions-Tasks";
 import { getFoodFavorites, toggleFoodFavorite, createFood } from "../Food/QueryFunctions-Food";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 export function FavoritesHub() {
-  const user = useSelector((state) => state.auth.user);
+  const { user, loading: authLoading } = GetFirebaseUser();
+  const userId = useSelector((state) => state.setting.user_id);
   const [activeTab, setActiveTab] = useState("foods"); // foods, workouts, tasks
 
   const [favoriteFoods, setFavoriteFoods] = useState([]);
@@ -18,16 +20,6 @@ export function FavoritesHub() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [addedToday, setAddedToday] = useState(new Set()); // Track items added today
-
-  const getUserId = () => {
-    if (user?._id) return user._id;
-    try {
-      const stored = JSON.parse(localStorage.getItem("user_data"));
-      return stored?._id || null;
-    } catch {
-      return null;
-    }
-  };
 
   // Check if an item was added today
   const wasAddedToday = (itemId) => {
@@ -67,7 +59,6 @@ export function FavoritesHub() {
     setAddedToday(todayAdded);
   }, [favoriteFoods, favoriteWorkouts, favoriteTasks]);
 
-  const userId = getUserId();
 
   useEffect(() => {
     if (!userId) return;

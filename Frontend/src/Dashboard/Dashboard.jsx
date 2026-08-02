@@ -10,6 +10,8 @@ import { TodayFoodChart } from "../Food/TodayFoodChart";
 import { CalendarButton } from "../Calendar/CalendarButton";
 import { StreakCounter } from "./StreakCounter";
 import "../siteStyles.css";
+import { auth } from "../firebase.js";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 export function Dashboard() {
   const [workoutStreak, setWorkoutStreak] = useState({
@@ -17,15 +19,17 @@ export function Dashboard() {
     loading: true,
   });
   const [foodStreak, setFoodStreak] = useState({ streak: 0, loading: true });
-  const user = useSelector((state) => state.auth.user);
+  const { user, loading: authLoading } = GetFirebaseUser();
+  const userID = useSelector((state) => state.setting.user_id);
+
 
   useEffect(() => {
-    if (user?._id) {
+    if (userID) {
       const fetchStreaks = async () => {
         try {
           const [workoutRes, foodRes] = await Promise.all([
-            fetch(`http://localhost:5000/api/AHFULworkouts/streak/${user._id}`, {credentials: "include"}),
-            fetch(`http://localhost:5000/api/AHFULfoods/streak/${user._id}`, {credentials: "include"}),
+            fetch(`http://localhost:5000/api/AHFULworkouts/streak/${userID}`, {credentials: "include"}),
+            fetch(`http://localhost:5000/api/AHFULfoods/streak/${userID}`, {credentials: "include"}),
           ]);
 
           const workoutData = await workoutRes.json();
@@ -41,7 +45,7 @@ export function Dashboard() {
       };
       fetchStreaks();
     }
-  }, [user?._id]);
+  }, [userID]);
 
   return (
     <div className="dashboard-internal">

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import "../HistoryPRs/ExploreWorkouts.css";
 import "../siteStyles.css";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 // SocialWorkouts - social page that resembles ExploreWorkouts what is the Shared workouts a User and their friends have shared
 // Left: Shared workouts list from friends.
@@ -10,8 +11,8 @@ import "../siteStyles.css";
 
 export function SocialWorkouts() {
   const navigate = useNavigate();
-  const user = useSelector((s) => s.auth.user);
-  const userId = user?.id;
+  const { user, loading: authLoading } = GetFirebaseUser();
+  const userId = useSelector((state) => state.setting.user_id);
   const userEmail = user?.email.toLowerCase();
   const cachedExercises = useSelector((state) => state.pullExercise.exercises);
 

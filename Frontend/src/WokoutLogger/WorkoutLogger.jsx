@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import "./WorkoutLogger.css";
 import "../siteStyles.css";
 import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
@@ -15,12 +15,13 @@ import {
 import { fetchWorkoutById, fetchExerciseById } from "./QueryFunctions-WorkoutLogger.js"
 import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
 import { ExercisesCard } from "../ExercisesCard/ExercisesCard.jsx";
-import { pullWorkouts } from "./PullWorkout.jsx";
-import { pullPersonalExercises } from "../components/Cache/PersonalExerciseCache/PersonalExercise.jsx";
+import { pullWorkouts } from "./PullWorkoutSlice.js";
+import { pullPersonalExercises } from "../HistoryPRs/PullPersonalExerciseSlice.js";
 import { Loading } from "../Loading.jsx";
 import { useAutosave } from "./useAutosave.js";
 import { HeatMap } from "./HeatMap.jsx";
 import { Calendar } from "../Calendar/Calendar.jsx";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 /**
  * Logger - Main workout tracking page
@@ -40,8 +41,11 @@ import { Calendar } from "../Calendar/Calendar.jsx";
  */
 export function WorkoutLogger() {
   // ─── Redux State ─────────────────────────────────────────────────────────
-  const user = useSelector((state) => state.auth.user);
-  const userAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const { user, loading: authLoading } = GetFirebaseUser();
+  const userId = useSelector((state) => state.setting.user_id);
+
+  const dispatch = useDispatch();
+
   const selectedDate = useSelector(selectSelectedDateOrToday);
   const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number)
 
@@ -174,8 +178,9 @@ export function WorkoutLogger() {
         return { ok: false, error: workoutRes.error };
       }
 
-      await pullWorkouts();
-      await pullPersonalExercises();
+      //Dispatch the Slice Action for Refreshing Frontend Data aka Cache from Backend. 
+      dispatch(pullWorkouts()); 
+      dispatch(pullPersonalExercises()); // Refresh cached personal exercises in Redux     
       setSaveStatus("saved");
       return { ok: true };
     } catch (err) {
@@ -212,10 +217,6 @@ export function WorkoutLogger() {
     let cancelled = false;
 
     const loadWorkoutForDay = async () => {
-      if (!userAuthenticated) {
-        setWorkoutLoading(false);
-        return;
-      }
 
       const currentDateUnix = Math.floor(new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0).getTime() / 1000);
       const tomorrowUnix = Math.floor(currentDateUnix + 86400); // 24 hours later
@@ -284,7 +285,7 @@ export function WorkoutLogger() {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, userAuthenticated, cachedWorkouts, cachedPersonalExercises, flushWorkoutAutosave]);
+  }, [selectedDate, cachedWorkouts, cachedPersonalExercises, flushWorkoutAutosave]);
 
   // ─── Load Gyms on Mount ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -430,7 +431,7 @@ export function WorkoutLogger() {
       .map((exercise) => ({
         exercise_id: exercise._id,
         workout_id: activeWorkout._id,
-        user_id: user?._id,
+        user_id: userId,
         complete: false,
         reps: 0,
         sets: 0,
@@ -494,26 +495,26 @@ export function WorkoutLogger() {
 
   async function handleCreateWorkout() {
     try {
-      if (!user?._id) return;
+      if (!userId) return;
 
       const workoutDate = new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0);
       const startUnix = Math.floor(workoutDate.getTime() / 1000);
 
-      console.log("I USED selectedDate:", selectedDate, "DONT YELL AT ME.  Split:", [selectedYear, selectedMonth, selectedDay]);
-      console.log("Creating workout for date:", workoutDate);
-      console.log("Creating workout for date (ISO):", workoutDate.toISOString());
-      console.log("Creating workout for date (String):", workoutDate.toString());
-      console.log("Creating workout for date (Unix):", startUnix);
+      // console.log("I USED selectedDate:", selectedDate, "DONT YELL AT ME.  Split:", [selectedYear, selectedMonth, selectedDay]);
+      // console.log("Creating workout for date:", workoutDate);
+      // console.log("Creating workout for date (ISO):", workoutDate.toISOString());
+      // console.log("Creating workout for date (String):", workoutDate.toString());
+      // console.log("Creating workout for date (Unix):", startUnix);
 
       // Use selected gym (or fall back to user's home gym if available)
-      const gymId = selectedGymId || user?.settings?.homeGymId || "000000000000000000000000";
+      const gymId = selectedGymId || "000000000000000000000000";
 
       const payload = {
         endTime: startUnix,
         gym_id: gymId,
         startTime: startUnix,
         title: newWorkoutName.trim() || "Workout " + workoutDate.toLocaleDateString(),
-        user_id: user._id,
+        user_id: userId,
       };
 
       // Create workout
@@ -533,7 +534,7 @@ export function WorkoutLogger() {
       setExercisesInProgressTable([]);
       setSaveStatus("idle");
 
-      await pullWorkouts(); // Refresh cached workouts in Redux
+      dispatch(pullWorkouts()); // Refresh cached workouts in Redux
       resetWorkoutPicker();
       return persisted;
     } catch (err) {
