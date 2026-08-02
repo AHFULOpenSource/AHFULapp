@@ -18,7 +18,7 @@ import { Layout } from "./Layout.jsx"
 import { Settings } from "./Auth/Settings.jsx";
 import { ExploreTasks } from "./Tasks/ExploreTasks.jsx";
 import { FavoritesHub } from "./Favorites/FavoritesHub.jsx";
-// import { useTutorial } from "./Auth/useTutorial.js";
+import { useTutorial } from "./Auth/useTutorial.js";
 import { TutorialOverlay } from "./Auth/TutorialOverlay.jsx";
 import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
 import { RequireVerifiedEmail } from "./Auth/EnsureEmailVerify.jsx";
@@ -37,15 +37,15 @@ function AHFULApp() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, loading: authLoading } = GetFirebaseUser();
-  // const {
-  //   isActive: tutorialActive,
-  //   currentStep,
-  //   totalSteps,
-  //   currentStepData,
-  //   skipTutorial,
-  //   nextStep,
-  //   completeTutorial
-  // } = useTutorial();
+  const {
+    isActive: tutorialActive,
+    currentStep,
+    totalSteps,
+    currentStepData,
+    skipTutorial,
+    nextStep,
+    completeTutorial
+  } = useTutorial();
 
   // Apply theme globally - runs on all pages
   useEffect(() => {
@@ -91,7 +91,7 @@ function AHFULApp() {
         <Route path="/" element={<Login/>}/>
       </Routes>
 
-      {/* {tutorialActive && currentStepData && (
+      {tutorialActive && currentStepData && (
         <TutorialOverlay
           step={currentStep}
           totalSteps={totalSteps}
@@ -102,7 +102,7 @@ function AHFULApp() {
           onSkip={skipTutorial}
           onComplete={completeTutorial}
         />
-      )} */}
+      )}
 
     </>
   );

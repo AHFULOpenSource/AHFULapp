@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { updateUserSettings, getUserSettings } from './QueryFunctions-Auth.js';
+import { updateUserSettings } from './QueryFunctions-Auth.js';
 import { setSettings } from './SettingsSlice.jsx';
 import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
@@ -144,20 +144,10 @@ export function useTutorial() {
 
   const endTutorial = useCallback(async (completed = true) => {
     setIsActive(false);
-    if (user && user._id) {
+    if (user && userID) {
       try {
         // Step 1: Update backend with tutorial completion status
-        await updateUserSettings(user._id, { tutorialComplete: true });
-
-        // Step 2: Re-fetch fresh settings from backend and sync to Redux
-        try {
-          const freshSettings = await getUserSettings();
-          // The backend may return settings directly or under a `data` field.
-          // Dispatch whatever shape we received; setSettings merges into state.
-          dispatch(setSettings(freshSettings));
-        } catch (fetchErr) {
-          console.error('Failed to re-fetch settings after tutorial completion:', fetchErr);
-        }
+        await updateUserSettings(userID, { tutorialComplete: true });
 
       } catch (err) {
         console.error("Failed to update tutorial status:", err);
@@ -210,10 +200,14 @@ export function useTutorial() {
    * without causing additional re-renders itself.
    */
   useEffect(() => {
-    if (hasAutoStarted.current) return;
+    if (hasAutoStarted.current) {
+      console.log("Tutorial has already auto-started this session. Skipping auto-start.");
+      return;
+    }
 
-    if ((tutorialComplete === false || tutorialComplete === undefined) && user && user._id) {
-      if (user.email_verified) {
+    if ((tutorialComplete === false || tutorialComplete === undefined) && user && userID) {
+      if (user.emailVerified) {
+        console.log("Starting tutorial for first-time user:", user.email);
         startTutorial();
       }
       else {
