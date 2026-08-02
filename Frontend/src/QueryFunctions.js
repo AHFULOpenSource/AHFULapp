@@ -106,7 +106,7 @@ export async function fetchPersonalExerciseById(userId) {
     return [];
   } catch (err) {
     console.error("fetchPersonalExerciseById error:", err);
-    return [];
+    throw err;
   }
 }
 
@@ -135,7 +135,7 @@ export async function fetchPersonalExercises(workoutId) {
     return [];
   } catch (err) {
     console.error("fetchPersonalExercises error:", err);
-    return [];
+        throw err;
   }
 }
 
