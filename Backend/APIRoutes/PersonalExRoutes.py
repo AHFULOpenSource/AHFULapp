@@ -86,7 +86,7 @@ def create_personal_ex():
 # Only update own???, dev for now
 # ── UPDATE personalEx ───────────────────────────────────────────────────────────
 @personalExRouteBlueprint.route("/update/<personal_ex_id>", methods=["PUT"])
-@login_required_dev
+@login_required_user
 def update_personal_ex(personal_ex_id):
     if not personal_ex_id:
         return jsonify({"error": "You must provide a personal ex id to update"}), 400
