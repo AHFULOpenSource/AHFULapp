@@ -9,8 +9,7 @@ import pullExerciseReducer from "./ExercisesCard/PullExerciseSlice";
 import pullTemplateReducer from "./Templates/PullTemplateSlice.js";
 import pullWorkoutReducer from "./WokoutLogger/PullWorkoutSlice.js";
 import pullPersonalExerciseReducer from "./HistoryPRs/PullPersonalExerciseSlice.js";
-import pullUserFoodReducer from "./Food/PullUserFoodSlice";
-import pullFoodReducer from "./Food/PullFoodSlice";
+import pullUserFoodReducer from "./Food/PullUserFoodSlice.js";
 
 const persistExerciseConfig = {
   key: "pullExercise",
@@ -49,11 +48,6 @@ const persistUserFoodConfig = {
   storage,
 }
 
-const persistFoodConfig = {
-  key: "food",
-  storage,
-}
-
 const persistSettingsConfig = {
   key: "settings",
   storage,
@@ -68,7 +62,6 @@ const persistedCalendarReducer = persistReducer(
 );
 const persistedPersonalExerciseReducer = persistReducer(persistPersonalExerciseConfig, pullPersonalExerciseReducer);
 const persistedUserFoodReducer = persistReducer(persistUserFoodConfig, pullUserFoodReducer);
-const persistedFoodReducer = persistReducer(persistFoodConfig, pullFoodReducer);
 const persistedSettingsReducer = persistReducer(persistSettingsConfig, settingsReducer);
 
 export const store = configureStore({
@@ -80,7 +73,6 @@ export const store = configureStore({
     pullWorkout: persistedPullWorkoutReducer,
     pullPersonalExercise: persistedPersonalExerciseReducer,
     pullUserFood: persistedUserFoodReducer,
-    pullAllFood: persistedFoodReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
