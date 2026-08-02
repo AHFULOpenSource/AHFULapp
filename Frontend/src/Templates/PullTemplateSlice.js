@@ -5,7 +5,7 @@ export const pullTemplates = createAsyncThunk(
   "pullTemplate/pullTemplates",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULtemplate/user`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULtemplate/user`, {
         credentials: "include",
       });
  

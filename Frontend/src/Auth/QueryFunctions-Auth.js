@@ -2,7 +2,7 @@
 
 export async function updateUserSettings(userId, settings) {
   const res = await fetch(
-    `http://localhost:5000/api/AHFULuserSettings/update/${userId}`,
+    `https://www.ahful.app/api/AHFULuserSettings/update/${userId}`,
     {
       method: "PUT",
       credentials: 'include',

@@ -55,7 +55,7 @@ def verify_phone_by_user_id():
 def verify_email_token(token_id, token):
     res, err = VerificationDriver.confirm_email_token(token_id, token)
 
-    front_end_base = "http://localhost:5173/EmailVerification"
+    front_end_base = "https://ahful.app/EmailVerification"
     
     if err: 
         return redirect(
@@ -71,7 +71,7 @@ def verify_email_token(token_id, token):
 def verify_phone_token(token_id, token):
     res, err = VerificationDriver.confirm_phone_token(token_id, token)
 
-    front_end_base = "http://localhost:5173/PhoneVerification"
+    front_end_base = "https://ahful.app/PhoneVerification"
     
     if err: 
         return redirect(

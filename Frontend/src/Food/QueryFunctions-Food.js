@@ -1,9 +1,9 @@
-const API_BASE = "http://localhost:5000/api/AHFULfoods";
+const API_BASE = "https://www.ahful.app/api/AHFULfoods";
 
 export async function fetchFood(userId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULfoods/${userId}`,
+      `https://www.ahful.app/api/AHFULfoods/${userId}`,
       {
         method: "GET",
         credentials: "include",
@@ -101,7 +101,7 @@ export async function deleteFood(id) {
 export async function toggleFoodFavorite(foodId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULfoods/${foodId}/favorite`,
+      `https://www.ahful.app/api/AHFULfoods/${foodId}/favorite`,
       {
         method: "PUT",
         mode: "cors",
@@ -129,7 +129,7 @@ export async function toggleFoodFavorite(foodId) {
 export async function getFoodFavorites(userId) {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/AHFULfoods/favorites/${userId}`,
+      `https://www.ahful.app/api/AHFULfoods/favorites/${userId}`,
       {
         method: "GET",
         mode: "cors",

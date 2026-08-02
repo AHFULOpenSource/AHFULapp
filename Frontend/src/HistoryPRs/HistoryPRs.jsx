@@ -57,7 +57,7 @@ export function HistoryPRsPage() {
     setFriendsLoading(true);
     setFriendsError(null);
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/user`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/user`, {
         method: "GET",
         credentials: "include",
       });
@@ -136,7 +136,7 @@ export function HistoryPRsPage() {
             continue;
           }
           try {
-            const response = await fetch(`http://localhost:5000/api/AHFULexercises/id/${id}`, {credentials: "include"});
+            const response = await fetch(`https://www.ahful.app/api/AHFULexercises/id/${id}`, {credentials: "include"});
 
             if (!response.ok) {
               results[id] = "Unknown Exercise";
@@ -215,7 +215,7 @@ export function HistoryPRsPage() {
     setShareError(null);
     try {
       const workoutId = selectedWorkout._id;
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/shared-workouts`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/shared-workouts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

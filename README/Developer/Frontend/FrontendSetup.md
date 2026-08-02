@@ -37,7 +37,7 @@
   ```
 
 - **Access the application**
-  - Open your browser to the URL shown in the terminal (typically `http://localhost:5173`)
+  - Open your browser to the URL shown in the terminal (typically `https://ahful.app`)
   - Press `Ctrl+C` in the terminal to stop the server
 
 ### Build for Production

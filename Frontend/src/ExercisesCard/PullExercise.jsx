@@ -2,7 +2,7 @@ import { store } from "../store";
 import { setExercises, setError } from "./PullExerciseSlice";
 
 async function fetchExercisesFromBackend() {
-  const res = await fetch("http://localhost:5000/api/AHFULexercises", {credentials: 'include'});
+  const res = await fetch("https://www.ahful.app/api/AHFULexercises", {credentials: 'include'});
   if (!res.ok) {
     let bodyText = "";
     try {

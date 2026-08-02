@@ -5,7 +5,7 @@ export const pullUserFood = createAsyncThunk(
   "pullUserFood/pullUserFood",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULfoods/userid`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULfoods/userid`, {
         method: "GET",
         credentials: "include",
       });

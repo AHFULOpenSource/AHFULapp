@@ -28,8 +28,8 @@ export function Dashboard() {
       const fetchStreaks = async () => {
         try {
           const [workoutRes, foodRes] = await Promise.all([
-            fetch(`http://localhost:5000/api/AHFULworkouts/streak/${userID}`, {credentials: "include"}),
-            fetch(`http://localhost:5000/api/AHFULfoods/streak/${userID}`, {credentials: "include"}),
+            fetch(`https://www.ahful.app/api/AHFULworkouts/streak/${userID}`, {credentials: "include"}),
+            fetch(`https://www.ahful.app/api/AHFULfoods/streak/${userID}`, {credentials: "include"}),
           ]);
 
           const workoutData = await workoutRes.json();

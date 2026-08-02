@@ -7,7 +7,7 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
 export async function WhoAmI(dispatch, navigate) {
   try {
         // Call the backend to check if the user is authenticated with Cookies.
-        const backendVerificationResponse = await fetch('http://localhost:5000/api/AHFULauth/whoami', {
+        const backendVerificationResponse = await fetch('https://www.ahful.app/api/AHFULauth/whoami', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: {},

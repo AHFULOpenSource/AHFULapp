@@ -24,7 +24,7 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
             //Check IDToken Not Null
             if (idToken) {
                 // POST response Object to BACKEND API ROUTE for processing.
-                const backendResponse = await fetch("http://localhost:5000/api/AHFULauth/firebase-login", {
+                const backendResponse = await fetch("https://www.ahful.app/api/AHFULauth/firebase-login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ token: idToken }),

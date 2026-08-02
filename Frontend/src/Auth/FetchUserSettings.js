@@ -1,7 +1,7 @@
 import { setSettings } from './SettingsSlice.jsx';
 
 export async function FetchUserSettings(dispatch) {
-    const foundUserSettingsResponse = await fetch(`http://localhost:5000/api/AHFULuserSettings`, {
+    const foundUserSettingsResponse = await fetch(`https://www.ahful.app/api/AHFULuserSettings`, {
         method: "GET",
         credentials: "include",
     });

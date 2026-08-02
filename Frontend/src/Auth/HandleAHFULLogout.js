@@ -8,7 +8,7 @@ import { signOut } from "firebase/auth";
  */
 export async function HandleAHFULSignOut() {
   // Backend logout endpoint
-  const backendPOSTURL = `http://localhost:5000/api/AHFULauth/logout`;
+  const backendPOSTURL = `https://www.ahful.app/api/AHFULauth/logout`;
 
   try {
     // Notify backend to invalidate the session/cookie

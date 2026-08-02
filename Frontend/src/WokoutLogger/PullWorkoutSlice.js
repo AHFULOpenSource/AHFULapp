@@ -6,7 +6,7 @@ export const pullWorkouts = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     
     try {
-      const res = await fetch(`http://localhost:5000/api/AHFULworkouts/userid`, {
+      const res = await fetch(`https://www.ahful.app/api/AHFULworkouts/userid`, {
         credentials: "include",
       });
 

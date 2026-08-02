@@ -2,7 +2,7 @@
 export async function createTemplate(templateData) {
   try {
     const res = await fetch(
-      "http://localhost:5000/api/AHFULtemplate/create",
+      "https://www.ahful.app/api/AHFULtemplate/create",
       {
         method: "POST",
         credentials: 'include',
