@@ -13,7 +13,7 @@ export const HandleAHFULEmailSignUp = async (navigate, email, password) => {
     const providedPassword = password;
     const userCredential = await createUserWithEmailAndPassword(auth, providedEmail, providedPassword);
 
-    console.log('User created successfully:', userCredential.user);
+    // console.log('User created successfully:', userCredential.user);
     const user = userCredential.user;
 
     //Retrun the userCredential object.
@@ -49,7 +49,7 @@ export const HandleAHFULEmailSignUp = async (navigate, email, password) => {
                 throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULEmailSignUp THROWWWWWWWING.");
             }
             
-            console.log("HandleAHFULEmailSignUp Completed successfully with user:", user);
+            // console.log("HandleAHFULEmailSignUp Completed successfully with user:", user);
 
         }catch (error) {
                 // Handle Errors here.
@@ -62,7 +62,7 @@ export const HandleAHFULEmailSignUp = async (navigate, email, password) => {
             // The AuthCredential type that was used.
             //   const credential = firebaseAHFULgoogleProvider.credentialFromError(error);
             // ...
-            console.log("AHFUL Error in HandleAHFULEmailSignUp Func Catch.  Not sure how you got here.  But here is a hint: ",error, "Error Code: ", errorCode, "Error Message: ", errorMessage);
+            console.error("AHFUL Error in HandleAHFULEmailSignUp Func Catch.  Not sure how you got here.  But here is a hint: ",error, "Error Code: ", errorCode, "Error Message: ", errorMessage);
             throw error;
         }
   } catch (error) {

@@ -40,7 +40,7 @@ export async function WhoAmI(dispatch, navigate) {
 
             // Fetch User Settings from backend and update Redux
             FetchUserSettings(dispatch); 
-            console.log("User Settings fetched and updated in Redux by WhoAmI successfully.");
+            // console.log("User Settings fetched and updated in Redux by WhoAmI successfully.");
             navigate('/Dashboard');
 
         }

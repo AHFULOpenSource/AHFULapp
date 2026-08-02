@@ -500,11 +500,11 @@ export function WorkoutLogger() {
       const workoutDate = new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0);
       const startUnix = Math.floor(workoutDate.getTime() / 1000);
 
-      console.log("I USED selectedDate:", selectedDate, "DONT YELL AT ME.  Split:", [selectedYear, selectedMonth, selectedDay]);
-      console.log("Creating workout for date:", workoutDate);
-      console.log("Creating workout for date (ISO):", workoutDate.toISOString());
-      console.log("Creating workout for date (String):", workoutDate.toString());
-      console.log("Creating workout for date (Unix):", startUnix);
+      // console.log("I USED selectedDate:", selectedDate, "DONT YELL AT ME.  Split:", [selectedYear, selectedMonth, selectedDay]);
+      // console.log("Creating workout for date:", workoutDate);
+      // console.log("Creating workout for date (ISO):", workoutDate.toISOString());
+      // console.log("Creating workout for date (String):", workoutDate.toString());
+      // console.log("Creating workout for date (Unix):", startUnix);
 
       // Use selected gym (or fall back to user's home gym if available)
       const gymId = selectedGymId || "000000000000000000000000";

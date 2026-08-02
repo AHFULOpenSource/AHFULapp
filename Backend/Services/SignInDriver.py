@@ -18,7 +18,7 @@ class SignInDriver:
 
         # verify JWT
         decodedUserInfo: dict = auth.verify_id_token(token)
-        print(decodedUserInfo)
+        # print(decodedUserInfo)
         if not decodedUserInfo:
             return None, "Invalid google token provided to Backend.  Dont come in here with Sloppily Copied Keys."
 

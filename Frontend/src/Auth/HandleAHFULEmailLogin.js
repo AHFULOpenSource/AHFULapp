@@ -15,7 +15,7 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
         const providedPassword = password;
         const userCredential = await signInWithEmailAndPassword(auth, providedEmail, providedPassword);
 
-        console.log('User signed in successfully:', userCredential.user);
+        // console.log('User signed in successfully:', userCredential.user);
         //Retrun the userCredential object.
         const user = userCredential.user;
 
@@ -42,10 +42,10 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
                         FetchUserSettings(dispatch);
 
                         if (user.emailVerified) {
-                            console.log("Email is verified. Navigating to Dashboard.");
+                            // console.log("Email is verified. Navigating to Dashboard.");
                             navigate("/Dashboard");
                         } else {
-                            console.log("Email is not verified. Navigating to NotVerified page.");
+                            // console.log("Email is not verified. Navigating to NotVerified page.");
                             navigate("/NotVerified");
                         }
                         
@@ -58,7 +58,7 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
                 throw new Error("ID Token is null or undefined. Cannot proceed with HandleAHFULEmailLogin THROWWWWWWWING.");
             }
             
-            console.log("HandleAHFULEmailLogin Completed successfully with user:", user);
+            // console.log("HandleAHFULEmailLogin Completed successfully with user:", user);
         } catch (error) {
                 // Handle Errors here.
             const errorCode = error.code;
@@ -70,7 +70,7 @@ import { FetchUserSettings } from "./FetchUserSettings.js";
             // The AuthCredential type that was used.
             //   const credential = firebaseAHFULgoogleProvider.credentialFromError(error);
             // ...
-            console.log("AHFUL Error in HandleAHFULEmailLogin Func Catch.  Not sure how you got here.  But here is a hint: ",error, "Error Code: ", errorCode, "Error Message: ", errorMessage);
+            console.error("AHFUL Error in HandleAHFULEmailLogin Func Catch.  Not sure how you got here.  But here is a hint: ",error, "Error Code: ", errorCode, "Error Message: ", errorMessage);
             throw error;
         }
 

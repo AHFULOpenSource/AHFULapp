@@ -201,13 +201,13 @@ export function useTutorial() {
    */
   useEffect(() => {
     if (hasAutoStarted.current) {
-      console.log("Tutorial has already auto-started this session. Skipping auto-start.");
+      // console.log("Tutorial has already auto-started this session. Skipping auto-start.");
       return;
     }
 
     if ((tutorialComplete === false || tutorialComplete === undefined) && user && userID) {
       if (user.emailVerified) {
-        console.log("Starting tutorial for first-time user:", user.email);
+        // console.log("Starting tutorial for first-time user:", user.email);
         startTutorial();
       }
       else {

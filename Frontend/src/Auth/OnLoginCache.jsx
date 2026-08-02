@@ -6,7 +6,7 @@ import { pullWorkouts } from "../WokoutLogger/PullWorkoutSlice.js";
 import { pullUserFood } from "../Food/PullUserFoodSlice.js";
 
 export function onLoginCache() {
-  console.log("onLoginCache fired")
+  // console.log("onLoginCache fired")
   store.dispatch(pullWorkouts());
   store.dispatch(pullPersonalExercises());
   store.dispatch(pullTemplates());

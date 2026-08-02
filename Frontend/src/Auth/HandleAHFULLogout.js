@@ -25,9 +25,9 @@ export async function HandleAHFULSignOut() {
     // Sign out of Firebase auth as well
     await signOut(auth);
 
-    console.log("AHFUL Logout Completed successfully.");
+    // console.log("AHFUL Logout Completed successfully.");
   } catch (error) {
     //Catch Spooky Errors that should never occur because you shouldnt log out before login
-    console.log("👻 Logout Error:, ", error);
+    console.error("👻 Logout Error:, ", error);
   }
 }

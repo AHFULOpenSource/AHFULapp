@@ -9,7 +9,7 @@ export async function FetchUserSettings(dispatch) {
     if (foundUserSettingsResponse){
         const settingsJson = await foundUserSettingsResponse.json();
         
-        console.log("WhoAmI: Found User Settings Response:", settingsJson);
+        // console.log("WhoAmI: Found User Settings Response:", settingsJson);
         dispatch(setSettings(settingsJson));
     }else{
         throw new Error(

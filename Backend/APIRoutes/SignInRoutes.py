@@ -19,7 +19,7 @@ def firebase_backend_route():
     if not postAuthData:
         #Return 400 Error -- No Data. 
         return jsonify({"error": "No authentication data provided"}), 400
-    print("Logging in with AHFUL Google Auth")
+    print("Logging in with AHFUL Firebase Auth")
 
     response, err = SignInDriver.ahful_backend_firebase_login(postAuthData)
     if err:
