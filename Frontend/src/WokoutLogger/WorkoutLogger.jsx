@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import "./WorkoutLogger.css";
 import "../siteStyles.css";
 import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
@@ -42,7 +42,9 @@ import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 export function WorkoutLogger() {
   // ─── Redux State ─────────────────────────────────────────────────────────
   const { user, loading: authLoading } = GetFirebaseUser();
-    const userId = useSelector((state) => state.setting.user_id);
+  const userId = useSelector((state) => state.setting.user_id);
+
+  const dispatch = useDispatch();
 
   const selectedDate = useSelector(selectSelectedDateOrToday);
   const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number)
