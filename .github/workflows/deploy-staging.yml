@@ -45,7 +45,7 @@ jobs:
       # Search for files that contain either localhost:5000 or localhost:5173
       - name: Replace localhost URLs with Production URL
         run: |
-          echo ">>> Replacing http://localhost:5000 → https://www.ahful.app and http://localhost:5173 → https://ahful.app"
+          echo ">>> Replacing http://localhost:5000 → https://api.ahful.app and http://localhost:5173 → https://www.ahful.app"
           grep -rl \
             --exclude-dir='.git' \
             --exclude-dir='.github' \
