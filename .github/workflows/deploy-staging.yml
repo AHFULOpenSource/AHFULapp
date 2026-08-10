@@ -54,8 +54,8 @@ jobs:
             -e 'http://localhost:5000' \
             -e 'http://localhost:5173' \
             . | while read file; do
-            sed -i 's|http://localhost:5000|https://www.ahful.app|g' "$file"
-            sed -i 's|http://localhost:5173|https://ahful.app|g' "$file"
+            sed -i 's|http://localhost:5000|https://api.ahful.app|g' "$file"
+            sed -i 's|http://localhost:5173|https://www.ahful.app|g' "$file"
             echo "  patched: $file"
           done
 
