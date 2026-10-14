@@ -63,10 +63,10 @@ export function Profile() {
         <img
           className="profile-picture"
           src={user?.photoURL || "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"}
-          alt={`${user?.name || "User"}'s profile`}
+          alt={`${user?.displayName}'s profile`}
           referrerPolicy="no-referrer"
         />
-        <h2 className="profile-name">{user?.name || "User"}</h2>
+        <h2 className="profile-name">{user?.displayName}</h2>
         <p className="profile-email">{user?.email || ""}</p>
       </div>
 
