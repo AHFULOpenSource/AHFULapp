@@ -1,11 +1,26 @@
+/* ==========================================================================
+   AHFUL Profile & Settings Styles
+   Centered Column Card Architecture
+   ========================================================================== */
+
+.profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px 48px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .profile-card {
   background: var(--gradient-card);
   border: 3px solid var(--color-border);
-  padding: 24px;
-  border-radius: 8px;
+  padding: 28px;
+  border-radius: var(--radius-lg, 12px);
   box-shadow: var(--shadow-md);
   width: 100%;
-  max-width: 600px;
+  max-width: 680px;
+  box-sizing: border-box;
 }
 
 .profile-title {
@@ -14,11 +29,13 @@
 }
 
 .profile-title h1 {
-  font-size: 48px;
+  font-size: 36px;
   margin: 0;
-  line-height: 1.1;
+  line-height: 1.2;
+  color: var(--text-primary);
 }
 
+/* Profile Picture & User Info */
 .profile-picture-section {
   display: flex;
   flex-direction: column;
@@ -27,16 +44,19 @@
 }
 
 .profile-picture {
-  width: 150px;
-  height: 150px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   border: 3px solid var(--color-border);
   object-fit: cover;
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-name {
   margin: 12px 0 4px;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .profile-email {
@@ -45,11 +65,13 @@
   font-size: 0.95rem;
 }
 
+/* Bio Section */
 .profile-bio-section {
   background: var(--color-surface);
   border: 2px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md, 8px);
   padding: 16px;
+  margin-bottom: 20px;
 }
 
 .profile-bio-header {
@@ -61,132 +83,248 @@
 
 .profile-bio-header h3 {
   margin: 0;
-  font-size: 1.2rem;
-}
-
-.profile-edit-btn {
   font-size: 1.1rem;
-  font-weight: bold;
-  padding: 6px 12px;
-  background: var(--button-bg);
-  border: 2px solid var(--color-border);
-  border-radius: 6px;
-  cursor: pointer;
-  min-width: 80px;
-  text-align: center;
   color: var(--text-primary);
 }
 
+.profile-edit-btn {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 5px 14px;
+  background: var(--button-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
 .profile-edit-btn:hover {
-  transform: scale(1.05);
-  box-shadow: var(--shadow-md);
+  background: var(--button-hover);
+  transform: translateY(-1px);
 }
 
 .profile-bio-input {
   width: 100%;
-  min-height: 100px;
+  min-height: 80px;
   padding: 10px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 1rem;
+  font-family: inherit;
+  font-size: var(--text-sm);
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   resize: vertical;
   box-sizing: border-box;
   background: var(--input-bg);
-  color: var(--input-text);
+  color: var(--text-primary);
 }
 
 .profile-bio-text {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--text-sm);
   color: var(--text-primary);
   white-space: pre-wrap;
+  line-height: 1.4;
 }
 
-.profile-notifications-section {
-  margin-top: 16px;
-  text-align: center;
-  flex-direction: column;
+/* Section Headings */
+.profile-section-heading {
+  margin-top: 28px;
+  margin-bottom: 8px;
 }
 
-.profile-page-btn {
-  font-size: 1.1rem;
-  font-weight: bold;
-  padding: 10px 20px;
-  background: var(--button-bg);
-  border: 2px solid var(--color-border);
-  border-radius: 6px;
-  cursor: pointer;
-  min-width: 200px;
+.profile-section-heading h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--color-border);
+}
+
+/* Setting Rows & Controls */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.setting-label {
+  font-weight: 500;
+  font-size: var(--text-sm);
   color: var(--text-primary);
 }
 
-.profile-page-btn:hover {
-  transform: scale(1.05);
-  box-shadow: var(--shadow-md);
+.setting-control {
+  width: 180px;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
 }
 
-@media (max-width: 480px) {
-  .profile-title h1 {
-    font-size: 32px;
-  }
-
-  .profile-picture {
-    width: 100px;
-    height: 100px;
-  }
-}
-
-.profile-logout-section {
-  margin-top: 24px;
-  text-align: center;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
-}
-
-.profile-logout-btn {
-  font-size: 1.1rem;
-  font-weight: bold;
-  padding: 10px 24px;
-  background: var(--accent-red);
-  color: var(--input-bg);
-  border: 2px solid var(--color-border);
-  border-radius: 6px;
+.setting-action {
+  width: 160px;
+  height: 38px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--text-primary);
   cursor: pointer;
-  min-width: 120px;
-}
-
-.profile-logout-btn:hover {
-  background: var(--accent-red);
-  transform: scale(1.05);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-}
-
-.profile-settings-wrapper {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 10000;
-}
-
-.profile-settings-trigger {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: var(--text-sm);
+  transition: all 0.2s ease;
+}
 
-  height: 75px;
-  width: 75px;
+.setting-action:hover {
+  background: var(--button-hover);
+  border-color: var(--accent-blue);
+}
 
-  border-radius: 50%;
-  border: none;
-  background: transparent;
+.dropdown-trigger {
+  position: relative;
+}
 
-  font-size: 24px;
-  cursor: pointer;
-
+.arrow {
+  font-size: var(--text-xs);
   transition: transform 0.2s ease;
 }
 
-.profile-settings-trigger:hover {
-  transform: scale(1.1);
+.dropdown-trigger.open .arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 160px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-md);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+  background: var(--button-hover);
+}
+
+.dropdown-item.selected {
+  background: var(--accent-blue);
+  color: #fff;
+  font-weight: 600;
+}
+
+.setting-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  box-sizing: border-box;
+}
+
+.setting-input:focus {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 1px;
+}
+
+/* Save Section */
+.settings-save-section {
+  margin-top: 28px;
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.settings-save-button {
+  padding: 10px 28px;
+  border-radius: var(--radius-md, 8px);
+  border: none;
+  background: var(--accent-blue);
+  color: white;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-save-button:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.settings-save-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.save-success {
+  color: var(--accent-green, #10b981);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .profile-card {
+    padding: 16px;
+  }
+
+  .profile-title h1 {
+    font-size: 28px;
+  }
+
+  .profile-picture {
+    width: 90px;
+    height: 90px;
+  }
+
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .setting-control {
+    width: 100%;
+  }
+
+  .setting-action {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dropdown-menu {
+    width: 100%;
+  }
+
+  .settings-save-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-save-button {
+    width: 100%;
+  }
 }

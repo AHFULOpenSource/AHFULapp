@@ -1,38 +1,53 @@
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import "./Profile.css";
 import "../siteStyles.css";
-
-import { useDispatch, useSelector } from "react-redux";
-import { useState, useEffect } from "react";
-import { HandleAHFULSignOut } from "./HandleAHFULLogout.js";
-import { setSettings, settingsInitialState } from "./SettingsSlice.jsx";
-import {registerService} from "../firebase.js";
+import { DropdownRow, ActionRow } from "./SettingsHook.jsx";
+import { updateSetting, setSettings } from "./SettingsSlice.jsx";
 import { updateUserSettings } from "./QueryFunctions-Auth.js";
-import { useNavigate } from "react-router-dom";
 import { HandleAHFULPasswordReset } from "./HandleAHFULPasswordReset.js";
 import { GetFirebaseUser } from "./GetFirebaseUser.js";
+import { registerService } from "../firebase.js";
 
 export function Profile() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [bio, setBio] = useState("");
-  const [isEditingBio, setIsEditingBio] = useState(false);
+  const answers = useSelector((state) => state.setting);
+  const userId = useSelector((state) => state.setting?.user_id);
+  const settingsBio = useSelector((state) => state.setting?.user_bio);
 
   const { user, loading: authLoading } = GetFirebaseUser();
-  const emailVerified = user?.emailVerified;
-
-  // prefer settings slice bio so it persists across refreshes
-  const settingsBio = useSelector((state) => state.setting?.user_bio);
-  const userId = useSelector((state) => state.setting.user_id);
-
+  const [bio, setBio] = useState("");
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [notificationStatus, setNotificationStatus] = useState("");
 
   useEffect(() => {
-    setBio(settingsBio);
-  }, [ settingsBio]);
+    setBio(settingsBio || "");
+  }, [settingsBio]);
+
+  useEffect(() => {
+    if (answers.theme === "dark") {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+  }, [answers.theme]);
+
+  const update = (key, val) => {
+    dispatch(updateSetting({ key, value: val }));
+
+    // Auto-save theme changes immediately to backend
+    if (key === "theme" && user && userId) {
+      updateUserSettings(userId, {
+        theme: val === "dark" ? "dark" : "light",
+      }).catch((err) => console.error("Failed to save theme:", err));
+    }
+  };
 
   const handleSaveBio = async () => {
     try {
       await updateUserSettings(userId, { user_bio: bio });
-      // mirror into Redux so the UI (and refresh) will show the new bio
       dispatch(setSettings({ user_bio: bio }));
       setIsEditingBio(false);
     } catch (err) {
@@ -44,115 +59,246 @@ export function Profile() {
   const handleEnableNotifications = () => {
     if (userId) {
       registerService(userId);
+      setNotificationStatus("Push notifications registered.");
+      setTimeout(() => setNotificationStatus(""), 60000);
     } else {
       console.error("User ID not available");
     }
   };
 
+  const handleSaveSettings = () => {
+    if (!user || !userId) return;
+
+    setSaving(true);
+    setSaveSuccess(false);
+
+    const payload = {
+      theme: answers.theme === "dark" ? "dark" : "light",
+      units: (answers.units || "imperial").toLowerCase(),
+      goals: (answers.goals || "maintain").toLowerCase().replace(" ", "_"),
+      shameLevel: answers.shame === "Off" ? "low" : "medium",
+      availableEquipment: (answers.equipment).toLowerCase().replace(" ", "_"),
+      gender: answers.gender || "",
+      pronouns: answers.pronouns || "",
+      dateOfBirth: answers.dateOfBirth || "",
+      locations: answers.locations || [],
+      tutorialComplete: answers.tutorialComplete ?? false,
+    };
+
+    updateUserSettings(userId, payload)
+      .then(() => {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      })
+      .catch((err) => {
+        console.error("Failed to save settings:", err);
+      })
+      .finally(() => {
+        setSaving(false);
+      });
+  };
+
   return (
-  <div className="page-layout">
-    <div className="left-column" />
-    <div className="center-column">
+    <div className="profile-container">
       <div className="profile-card">
         <div className="profile-title">
-          <h1>Profile</h1>
+          <h1>Profile & Settings</h1>
         </div>
-    
-      {/* Profile Picture */}
-      <div className="profile-picture-section">
-        <img
-          className="profile-picture"
-          src={user?.photoURL || "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"}
-          alt={`${user?.displayName}'s profile`}
-          referrerPolicy="no-referrer"
+
+        {/* Profile Picture & User Info */}
+        <div className="profile-picture-section">
+          <img
+            className="profile-picture"
+            src={
+              user?.photoURL ||
+              "https://ui-avatars.com/api/?name=AH&background=c3cfe2&color=333&size=150"
+            }
+            alt={`${user?.displayName || "AHFUL Athlete"}'s profile`}
+            referrerPolicy="no-referrer"
+          />
+          <h2 className="profile-name">{user?.displayName || "AHFUL Athlete"}</h2>
+          <p className="profile-email">{user?.email || ""}</p>
+        </div>
+
+        {/* Bio Section */}
+        <div className="profile-bio-section">
+          <div className="profile-bio-header">
+            <h3>Bio</h3>
+            <button
+              type="button"
+              className="profile-edit-btn"
+              onClick={() => {
+                if (isEditingBio) handleSaveBio();
+                else setIsEditingBio(true);
+              }}
+            >
+              {isEditingBio ? "Save" : "Edit"}
+            </button>
+          </div>
+          {isEditingBio ? (
+            <textarea
+              className="profile-bio-input"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell us about yourself..."
+              maxLength={300}
+            />
+          ) : (
+            <p className="profile-bio-text">
+              {bio || "No Bio Yet. Click Edit to Add One!"}
+            </p>
+          )}
+        </div>
+
+        {/* Personal Settings */}
+        <div className="profile-section-heading">
+          <h2>Personal Settings</h2>
+        </div>
+
+        <DropdownRow
+          label="Theme"
+          options={["light", "dark"]}
+          value={answers.theme}
+          onChange={(v) => update("theme", v)}
         />
-        <h2 className="profile-name">{user?.displayName}</h2>
-        <p className="profile-email">{user?.email || ""}</p>
-      </div>
 
-      {emailVerified && (
-        <>
-          {/* Bio Section */}
-          <div className="profile-bio-section">
-            <div className="profile-bio-header">
-              <h3>Bio</h3>
-              <button
-                className="profile-edit-btn"
-                onClick={() => {
-                  if (isEditingBio) handleSaveBio();
-                  else setIsEditingBio(true);
-                }}
-              >
-                {isEditingBio ? "Save" : "Edit"}
-              </button>
-            </div>
-            {isEditingBio ? (
-              <textarea
-                className="profile-bio-input"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us about yourself..."
-                maxLength={300}
-              />
-            ) : (
-              <p className="profile-bio-text">
-                {bio || "No Bio Yet. Click Edit to Add One!"}
-              </p>
-            )}
+        <DropdownRow
+          label="Goals"
+          options={["Lose Fat", "Build Muscle", "Maintain"]}
+          value={answers.goals}
+          onChange={(v) => update("goals", v)}
+        />
+
+        <DropdownRow
+          label="Shame Level"
+          options={["Off", "Light", "Intense", "Brutal"]}
+          value={answers.shame}
+          onChange={(v) => update("shame", v)}
+        />
+
+        <DropdownRow
+          label="Units"
+          options={["Imperial", "Metric"]}
+          value={answers.units}
+          onChange={(v) => update("units", v)}
+        />
+
+        <DropdownRow
+          label="Timezone"
+          options={["PST", "MST", "CST", "EST"]}
+          value={answers.timezone}
+          onChange={(v) => update("timezone", v)}
+        />
+
+        <div className="setting-row">
+          <span className="setting-label">Gender</span>
+          <div className="setting-control">
+            <input
+              type="text"
+              value={answers.gender || ""}
+              onChange={(e) => update("gender", e.target.value)}
+              placeholder="Enter gender"
+              className="setting-input"
+            />
           </div>
+        </div>
 
-          {/* Notifications */}
-          <div className="profile-notifications-section">
-            <button className="profile-page-btn" onClick={handleEnableNotifications}>
-              Enable Push Notifications
-            </button>
-            <br />
-            <br />
-            <button className="profile-page-btn" onClick={() => navigate("/ExploreFriends")}>
-              Explore Friends
-            </button>
+        <div className="setting-row">
+          <span className="setting-label">Pronouns</span>
+          <div className="setting-control">
+            <input
+              type="text"
+              value={answers.pronouns || ""}
+              onChange={(e) => update("pronouns", e.target.value)}
+              placeholder="e.g. they/them"
+              className="setting-input"
+            />
           </div>
-        </>
-      )}
+        </div>
 
-      <div className="profile-actions-section">
-        <button
-          className="profile-page-btn"
-          onClick={() => HandleAHFULPasswordReset(UserData.email)}
-        >
-          Reset Password
-        </button>
-      </div>
+        <div className="setting-row">
+          <span className="setting-label">Date of Birth</span>
+          <div className="setting-control">
+            <input
+              type="date"
+              value={answers.dateOfBirth || ""}
+              onChange={(e) => update("dateOfBirth", e.target.value)}
+              className="setting-input"
+            />
+          </div>
+        </div>
 
-      {/* Logout */}
-      <div className="profile-logout-section">
-        <button
-          className="profile-logout-btn"
-          id="logout-btn"
+        {/* Workout Settings */}
+        <div className="profile-section-heading">
+          <h2>Workout Settings</h2>
+        </div>
+
+        <DropdownRow
+          label="Available Equipment"
+          options={["Bodyweight Only", "Dumbbells", "Bands", "Full Gym"]}
+          value={answers.equipment}
+          onChange={(v) => update("equipment", v)}
+        />
+
+        {/* Account Settings */}
+        <div className="profile-section-heading">
+          <h2>Account Settings</h2>
+        </div>
+
+        <ActionRow
+          label="Push Notifications"
+          buttonText="Enable"
+          onClick={handleEnableNotifications}
+        />
+
+        <ActionRow
+          label="Password"
+          buttonText="Reset Password"
           onClick={() => {
-            HandleAHFULSignOut();
-            dispatch(setSettings(settingsInitialState));
+            if (user?.email) {
+              HandleAHFULPasswordReset(user.email);
+              alert("Password reset email sent to " + user.email);
+            }
           }}
-        >
-          Logout
-        </button>
-      </div>
+        />
 
-      {/* Settings Bottom-right button */}
-      {emailVerified && (
-      <div className="profile-settings-wrapper">
-        <button
-          className={`profile-settings-trigger ${open ? "active" : ""}`}
-          onClick={() => navigate("/Settings")}
-        >
-          ⚙️
-        </button>
-      </div>
-      )}
+        <ActionRow
+          label="Download Workout Data"
+          buttonText="Download"
+          onClick={() => alert("UNDER CONSTRUCTION: Alerting Workout data download request initiated.")}
+        />
+        <ActionRow
+          label="Export Progress"
+          buttonText="Export"
+          onClick={() => alert("UNDER CONSTRUCTION: Alerting Progress export initiated.")}
+        />
+        <ActionRow
+          label="Delete Account"
+          buttonText="Delete"
+          onClick={() => alert("UNDER CONSTRUCTION: Alerting Account deletion requires confirmation.")}
+        />
 
+        {notificationStatus && (
+          <p className="save-success" style={{ marginTop: 12, textAlign: "right" }}>
+            {notificationStatus}
+          </p>
+        )}
+
+        <div className="settings-save-section">
+          <button
+            type="button"
+            className="settings-save-button"
+            onClick={handleSaveSettings}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Settings"}
+          </button>
+
+          {saveSuccess && (
+            <span className="save-success">Settings saved!</span>
+          )}
+        </div>
       </div>
     </div>
-    <div className="right-column" />
-  </div>
   );
 }

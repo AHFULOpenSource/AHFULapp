@@ -619,6 +619,30 @@ tbody tr:hover {
   font-size: var(--text-md);
   color: var(--text-secondary);
   text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.profile-link:hover {
+  color: var(--text-primary);
+}
+
+.header-logout-btn {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.header-logout-btn:hover {
+  background: var(--accent-red);
+  color: #fff;
+  border-color: var(--accent-red);
 }
 
 /* Hamburger Menu - Hidden on desktop */
@@ -658,6 +682,11 @@ tbody tr:hover {
 
   .profile-link {
     font-size: 0.9rem;
+  }
+
+  .header-logout-btn {
+    font-size: 0.8rem;
+    padding: 3px 8px;
   }
 
   .header {

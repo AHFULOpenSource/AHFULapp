@@ -96,4 +96,89 @@ test('Theme Tokens & CSS Verification', async (t) => {
     assert.ok(dashJsx.includes('dashboard-widget-food-chart'));
     assert.ok(dashJsx.includes('dashboard-widget-workout-chart'));
   });
+
+  await t.test('Navbar.jsx includes Explore Friends link', () => {
+    const navbarJsx = fs.readFileSync(
+      path.join(__dirname, '../src/navbar.jsx'),
+      'utf8'
+    );
+    assert.ok(navbarJsx.includes('to="/ExploreFriends"'));
+    assert.ok(navbarJsx.includes('Explore Friends'));
+  });
+
+  await t.test('Header.jsx includes Logout button and Profile link', () => {
+    const headerJsx = fs.readFileSync(
+      path.join(__dirname, '../src/Header.jsx'),
+      'utf8'
+    );
+    assert.ok(headerJsx.includes('to="/Profile"'));
+    assert.ok(headerJsx.includes('header-logout-btn'));
+    assert.ok(headerJsx.includes('HandleAHFULSignOut'));
+  });
+
+  await t.test('siteStyles.css defines header-logout-btn styles', () => {
+    const siteCss = fs.readFileSync(
+      path.join(__dirname, '../src/siteStyles.css'),
+      'utf8'
+    );
+    assert.ok(siteCss.includes('.header-logout-btn'));
+    assert.ok(siteCss.includes('.header-logout-btn:hover'));
+  });
+
+  await t.test('Profile.jsx integrates settings and removes obsolete buttons', () => {
+    const profileJsx = fs.readFileSync(
+      path.join(__dirname, '../src/Auth/Profile.jsx'),
+      'utf8'
+    );
+    // Combined settings sections
+    assert.ok(profileJsx.includes('Personal Settings'));
+    assert.ok(profileJsx.includes('Workout Settings'));
+    assert.ok(profileJsx.includes('Account Settings'));
+    assert.ok(profileJsx.includes('handleSaveSettings'));
+    assert.ok(profileJsx.includes('handleEnableNotifications'));
+    assert.ok(profileJsx.includes('HandleAHFULPasswordReset'));
+
+    // Obsolete items removed from Profile.jsx
+    assert.ok(!profileJsx.includes('profile-settings-wrapper'));
+    assert.ok(!profileJsx.includes('profile-logout-section'));
+    assert.ok(!profileJsx.includes('navigate("/ExploreFriends")'));
+  });
+
+  await t.test('Profile.css defines centered card and pruned dead classes', () => {
+    const profileCss = fs.readFileSync(
+      path.join(__dirname, '../src/Auth/Profile.css'),
+      'utf8'
+    );
+    assert.ok(profileCss.includes('.profile-container'));
+    assert.ok(profileCss.includes('.profile-card'));
+    assert.ok(profileCss.includes('.setting-row'));
+    assert.ok(profileCss.includes('.dropdown-menu'));
+    assert.ok(profileCss.includes('.settings-save-button'));
+
+    // Pruned dead classes
+    assert.ok(!profileCss.includes('.profile-settings-wrapper'));
+    assert.ok(!profileCss.includes('.profile-settings-trigger'));
+    assert.ok(!profileCss.includes('.profile-logout-section'));
+    assert.ok(!profileCss.includes('.profile-logout-btn'));
+    assert.ok(!profileCss.includes('.page-layout'));
+  });
+
+  await t.test('AHFULApp.jsx eliminates Settings route and obsolete Settings files are removed', () => {
+    const appJsx = fs.readFileSync(
+      path.join(__dirname, '../src/AHFULApp.jsx'),
+      'utf8'
+    );
+    assert.ok(!appJsx.includes('import { Settings }'));
+    assert.ok(!appJsx.includes('path="Settings"'));
+
+    assert.strictEqual(
+      fs.existsSync(path.join(__dirname, '../src/Auth/Settings.jsx')),
+      false
+    );
+    assert.strictEqual(
+      fs.existsSync(path.join(__dirname, '../src/Auth/Settings.css')),
+      false
+    );
+  });
 });
+
