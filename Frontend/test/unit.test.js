@@ -134,11 +134,13 @@ test('Theme Tokens & CSS Verification', async (t) => {
     assert.ok(profileJsx.includes('Personal Settings'));
     assert.ok(profileJsx.includes('Workout Settings'));
     assert.ok(profileJsx.includes('Account Settings'));
-    assert.ok(profileJsx.includes('handleSaveSettings'));
+    assert.ok(profileJsx.includes('getBackendSettingsPayload'));
     assert.ok(profileJsx.includes('handleEnableNotifications'));
     assert.ok(profileJsx.includes('HandleAHFULPasswordReset'));
 
-    // Obsolete items removed from Profile.jsx
+    // Obsolete items and manual save feature removed from Profile.jsx
+    assert.ok(!profileJsx.includes('handleSaveSettings'));
+    assert.ok(!profileJsx.includes('settings-save-section'));
     assert.ok(!profileJsx.includes('profile-settings-wrapper'));
     assert.ok(!profileJsx.includes('profile-logout-section'));
     assert.ok(!profileJsx.includes('navigate("/ExploreFriends")'));
@@ -153,9 +155,10 @@ test('Theme Tokens & CSS Verification', async (t) => {
     assert.ok(profileCss.includes('.profile-card'));
     assert.ok(profileCss.includes('.setting-row'));
     assert.ok(profileCss.includes('.dropdown-menu'));
-    assert.ok(profileCss.includes('.settings-save-button'));
 
     // Pruned dead classes
+    assert.ok(!profileCss.includes('.settings-save-section'));
+    assert.ok(!profileCss.includes('.settings-save-button'));
     assert.ok(!profileCss.includes('.profile-settings-wrapper'));
     assert.ok(!profileCss.includes('.profile-settings-trigger'));
     assert.ok(!profileCss.includes('.profile-logout-section'));

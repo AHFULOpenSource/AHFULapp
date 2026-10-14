@@ -18,8 +18,6 @@ export function Profile() {
   const { user, loading: authLoading } = GetFirebaseUser();
   const [bio, setBio] = useState("");
   const [isEditingBio, setIsEditingBio] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState("");
 
   useEffect(() => {
@@ -34,14 +32,40 @@ export function Profile() {
     }
   }, [answers.theme]);
 
+  const getBackendSettingsPayload = (key, val) => {
+    switch (key) {
+      case "theme":
+        return { theme: val === "dark" ? "dark" : "light" };
+      case "goals":
+        return { goals: String(val).toLowerCase().replace(/ /g, "_") };
+      case "shame":
+        return { shame: val, shameLevel: String(val).toLowerCase() };
+      case "units":
+        return { units: String(val).toLowerCase() };
+      case "timezone":
+        return { timezone: val };
+      case "equipment":
+        return { equipment: val, availableEquipment: String(val).toLowerCase().replace(/ /g, "_") };
+      case "gender":
+        return { gender: val };
+      case "pronouns":
+        return { pronouns: val };
+      case "dateOfBirth":
+        return { dateOfBirth: val };
+      default:
+        return { [key]: val };
+    }
+  };
+
   const update = (key, val) => {
     dispatch(updateSetting({ key, value: val }));
 
-    // Auto-save theme changes immediately to backend
-    if (key === "theme" && user && userId) {
-      updateUserSettings(userId, {
-        theme: val === "dark" ? "dark" : "light",
-      }).catch((err) => console.error("Failed to save theme:", err));
+    // Auto-save setting changes immediately to backend
+    if (userId) {
+      const payload = getBackendSettingsPayload(key, val);
+      updateUserSettings(userId, payload).catch((err) =>
+        console.error(`Failed to auto-save ${key}:`, err)
+      );
     }
   };
 
@@ -64,38 +88,6 @@ export function Profile() {
     } else {
       console.error("User ID not available");
     }
-  };
-
-  const handleSaveSettings = () => {
-    if (!user || !userId) return;
-
-    setSaving(true);
-    setSaveSuccess(false);
-
-    const payload = {
-      theme: answers.theme === "dark" ? "dark" : "light",
-      units: (answers.units || "imperial").toLowerCase(),
-      goals: (answers.goals || "maintain").toLowerCase().replace(" ", "_"),
-      shameLevel: answers.shame === "Off" ? "low" : "medium",
-      availableEquipment: (answers.equipment).toLowerCase().replace(" ", "_"),
-      gender: answers.gender || "",
-      pronouns: answers.pronouns || "",
-      dateOfBirth: answers.dateOfBirth || "",
-      locations: answers.locations || [],
-      tutorialComplete: answers.tutorialComplete ?? false,
-    };
-
-    updateUserSettings(userId, payload)
-      .then(() => {
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
-      })
-      .catch((err) => {
-        console.error("Failed to save settings:", err);
-      })
-      .finally(() => {
-        setSaving(false);
-      });
   };
 
   return (
@@ -196,7 +188,8 @@ export function Profile() {
             <input
               type="text"
               value={answers.gender || ""}
-              onChange={(e) => update("gender", e.target.value)}
+              onChange={(e) => dispatch(updateSetting({ key: "gender", value: e.target.value }))}
+              onBlur={(e) => update("gender", e.target.value)}
               placeholder="Enter gender"
               className="setting-input"
             />
@@ -209,7 +202,8 @@ export function Profile() {
             <input
               type="text"
               value={answers.pronouns || ""}
-              onChange={(e) => update("pronouns", e.target.value)}
+              onChange={(e) => dispatch(updateSetting({ key: "pronouns", value: e.target.value }))}
+              onBlur={(e) => update("pronouns", e.target.value)}
               placeholder="e.g. they/them"
               className="setting-input"
             />
@@ -283,21 +277,6 @@ export function Profile() {
             {notificationStatus}
           </p>
         )}
-
-        <div className="settings-save-section">
-          <button
-            type="button"
-            className="settings-save-button"
-            onClick={handleSaveSettings}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Settings"}
-          </button>
-
-          {saveSuccess && (
-            <span className="save-success">Settings saved!</span>
-          )}
-        </div>
       </div>
     </div>
   );
