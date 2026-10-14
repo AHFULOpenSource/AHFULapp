@@ -65,4 +65,35 @@ test('Theme Tokens & CSS Verification', async (t) => {
     assert.ok(!authCss.includes('.google-login-centered'));
     assert.ok(!authCss.includes('.google-button-fixed'));
   });
+
+  await t.test('Dashboard.css defines 3-tier responsive layout and prunes dead classes', () => {
+    const dashCss = fs.readFileSync(
+      path.join(__dirname, '../src/Dashboard/Dashboard.css'),
+      'utf8'
+    );
+    // Desktop 12-column grid
+    assert.ok(dashCss.includes('repeat(12, 1fr)'));
+    assert.ok(dashCss.includes('.dashboard-widget-streaks'));
+    assert.ok(dashCss.includes('.dashboard-widget-food-chart'));
+
+    // Tablet dual-column unified scroll
+    assert.ok(dashCss.includes('minmax(0, 1.15fr) minmax(0, 0.85fr)'));
+
+    // Mobile single continuous scroll
+    assert.ok(dashCss.includes('@media (max-width: 767px)'));
+  });
+
+  await t.test('Dashboard.jsx renders all modular widget sections', () => {
+    const dashJsx = fs.readFileSync(
+      path.join(__dirname, '../src/Dashboard/Dashboard.jsx'),
+      'utf8'
+    );
+    assert.ok(dashJsx.includes('dashboard-widget-streaks'));
+    assert.ok(dashJsx.includes('dashboard-widget-calendar'));
+    assert.ok(dashJsx.includes('dashboard-widget-food-todo'));
+    assert.ok(dashJsx.includes('dashboard-widget-workout-todo'));
+    assert.ok(dashJsx.includes('dashboard-widget-tasks'));
+    assert.ok(dashJsx.includes('dashboard-widget-food-chart'));
+    assert.ok(dashJsx.includes('dashboard-widget-workout-chart'));
+  });
 });

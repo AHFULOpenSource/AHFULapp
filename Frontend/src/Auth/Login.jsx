@@ -1,7 +1,6 @@
 import veniceDesktop from "../../images/Login/Backgrounds/venice desktop with overlay.jpg";
 import veniceMobile from "../../images/Login/Backgrounds/venice mobile with overlay.jpg";
 import "./Auth.css";
-import "../Dashboard/Dashboard.css";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect } from "react";
 import {useNavigate } from "react-router-dom";

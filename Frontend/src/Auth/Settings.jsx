@@ -2,6 +2,7 @@ import "./Settings.css";
 import "../Stylesheets/Themes/Lightmode.css";
 import "../Stylesheets/Themes/Darkmode.css";
 import { useEffect, useState } from "react";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 import { useSelector, useDispatch } from "react-redux";
 import { DropdownRow, ActionRow } from "./SettingsHook.jsx";
 import { updateSetting, setSettings } from "./SettingsSlice.jsx";
