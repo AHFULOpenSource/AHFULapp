@@ -41,12 +41,23 @@ main {
 	display: flex;
 	gap: 24px;
 	align-items: flex-start;
+	width: 100%;
 }
 
 .dual-page-sub-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .dual-page-sub-right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .AHFUL_footer {
@@ -179,6 +190,11 @@ tbody tr:hover {
 
   .dual-page-container {
     flex-direction: column;
+  }
+
+  .dual-page-sub-left,
+  .dual-page-sub-right {
+    width: 100%;
   }
 }
 
