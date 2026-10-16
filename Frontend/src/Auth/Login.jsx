@@ -1,7 +1,6 @@
 import veniceDesktop from "../../images/Login/Backgrounds/venice desktop with overlay.jpg";
 import veniceMobile from "../../images/Login/Backgrounds/venice mobile with overlay.jpg";
 import "./Auth.css";
-import "../Dashboard/Dashboard.css";
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect } from "react";
 import {useNavigate } from "react-router-dom";
@@ -120,21 +119,21 @@ export function Login() {
       <div className="login-top-overlay">
         <div className={`login-content ${showContent ? 'fade-in' : ''}`}>
           <div className="login-title">
-            <br/>
-              <div>
-                <h1>AHFUL</h1>
-                A Helpful Fitness Utilization Logger App
-              </div>
+            <div>
+              <h1>AHFUL</h1>
+              A Helpful Fitness Utilization Logger App
+            </div>
           </div>
-          
-          
-              <form onSubmit={handleLoginSubmit}>
+
+          <div className="solo-page-container">
+            <form onSubmit={handleLoginSubmit}>
               <input
                 id="login-email"
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
               <input
                 id="login-password"
@@ -142,31 +141,45 @@ export function Login() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
-              <button className="login-google-button" type="submit"> Login with Email</button>
+              <button
+                className="login-button"
+                type="submit"
+                disabled={!email.trim() || !password.trim()}
+              >
+                Login with Email
+              </button>
             </form>
-
-            <br/>
-            <br/>
 
             <form onSubmit={handleSignUpSubmit}>
-              <button className="login-google-button" type="submit"> Sign Up with Email</button>
+              <button
+                className="login-google-button"
+                type="submit"
+                disabled={!email.trim() || !password.trim()}
+              >
+                Sign Up with Email
+              </button>
             </form>
+
             {loginError && <p className="error">There was an error during login: {loginError.message}</p>}
 
-            <br/>
-            <br/>
-            <button className="login-google-button" 
-            onClick={async () => {
-              try {
-                await HandleAHFULGoogleLogin(navigate, dispatch);
-                onLoginCache(); // Call the onLoginCache function after successful login
-                navigate('/Dashboard');
-              } catch (error) {
-                console.error('Sign in failed:', error);
-                // handle error (show a message, etc.)
-              }
-            }}> Login with Gmail</button>
+            <button
+              className="login-google-button"
+              type="button"
+              onClick={async () => {
+                try {
+                  await HandleAHFULGoogleLogin(navigate, dispatch);
+                  onLoginCache(); // Call the onLoginCache function after successful login
+                  navigate('/Dashboard');
+                } catch (error) {
+                  console.error('Sign in failed:', error);
+                }
+              }}
+            >
+              Login with Gmail
+            </button>
+          </div>
 
 
           <div className={`scroll-down-text ${showScrollText ? 'fade-in' : ''} ${isScrolled ? 'hidden' : ''}`}>
