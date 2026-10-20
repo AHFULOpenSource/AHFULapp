@@ -1,72 +1,56 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import "./TodayFoodChart.css";
-
-const API_BASE = "http://localhost:5000/api/AHFULfoods";
+import { pullUserFood } from "./PullUserFoodSlice.js";
 
 const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444"];
 
 export function TodayFoodChart() {
+  const dispatch = useDispatch();
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [totalCalories, setTotalCalories] = useState(0);
-  const userId = useSelector((state) => state.setting.user_id);
+
+  const cachedFoods = useSelector((state) => state.pullUserFood?.food || []);
+  const foodLoading = useSelector((state) => state.pullUserFood?.loading);
+  const userId = useSelector((state) => state.setting?.user_id);
 
   useEffect(() => {
-    fetchTodayFood();
-  }, [userId]);
-
-  function fetchTodayFood() {
-    try {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
-
-      fetch(`${API_BASE}/${userId}`, {credentials: "include"})
-        .then(async (res) => {
-          if (!res.ok) return [];
-          return res.json();
-        })
-        .then((foods) => {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const tomorrow = new Date(today);
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          const todayStart = Math.floor(today.getTime() / 1000);
-          const tomorrowStart = Math.floor(tomorrow.getTime() / 1000);
-
-          const todayFoods = foods.filter((food) => {
-            const foodTime = food.time || 0;
-            return foodTime >= todayStart && foodTime < tomorrowStart;
-          });
-
-          const meals = ["Breakfast", "Lunch", "Dinner", "Snack"];
-          const chartData = meals
-            .map((meal) => {
-              const mealFoods = todayFoods.filter((f) => f.type === meal);
-              const calories = mealFoods.reduce(
-                (sum, f) => sum + (f.calories) * f.servings,
-                0
-              );
-              return { name: meal, calories };
-            })
-            .filter((d) => d.calories > 0);
-
-          setData(chartData);
-          setTotalCalories(chartData.reduce((sum, d) => sum + d.calories, 0));
-        })
-        .catch((err) => {
-          console.error("Failed to load food data:", err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } catch (err) {
-      setLoading(false);
+    if (cachedFoods.length === 0) {
+      dispatch(pullUserFood());
     }
-  }
+  }, [dispatch, cachedFoods.length]);
+
+  useEffect(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const todayStart = Math.floor(today.getTime() / 1000);
+    const tomorrowStart = Math.floor(tomorrow.getTime() / 1000);
+
+    const todayFoods = (Array.isArray(cachedFoods) ? cachedFoods : []).filter((food) => {
+      const foodTime = food.time || 0;
+      return foodTime >= todayStart && foodTime < tomorrowStart;
+    });
+
+    const meals = ["Breakfast", "Lunch", "Dinner", "Snack"];
+    const chartData = meals
+      .map((meal) => {
+        const mealFoods = todayFoods.filter((f) => f.type === meal);
+        const calories = mealFoods.reduce(
+          (sum, f) => sum + (Number(f.calories) || 0) * (Number(f.servings) || 1),
+          0
+        );
+        return { name: meal, calories };
+      })
+      .filter((d) => d.calories > 0);
+
+    setData(chartData);
+    setTotalCalories(chartData.reduce((sum, d) => sum + d.calories, 0));
+  }, [cachedFoods]);
+
+  const loading = foodLoading && cachedFoods.length === 0;
 
   if (loading) {
     return <div className="today-food-chart"><p>Loading...</p></div>;
