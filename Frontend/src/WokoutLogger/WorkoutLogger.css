@@ -1404,6 +1404,33 @@ input[type="number"] {
   color: var(--text-primary);
 }
 
+.share-friends-loading {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.share-no-friends-notice {
+  padding: 16px;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.share-no-friends-notice p {
+  margin: 0 0 6px 0;
+}
+
+.share-no-friends-sub {
+  font-size: 0.8rem !important;
+  color: var(--text-tertiary, #888);
+}
+
+.share-friend-select,
 .share-email-input {
   width: 100%;
   padding: 10px 14px;
@@ -1414,6 +1441,7 @@ input[type="number"] {
   color: var(--text-primary);
 }
 
+.share-friend-select:focus,
 .share-email-input:focus {
   outline: 2px solid var(--accent-blue);
   outline-offset: 1px;
