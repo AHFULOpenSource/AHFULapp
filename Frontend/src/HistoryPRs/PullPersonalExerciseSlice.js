@@ -41,6 +41,8 @@ export const pullPersonalExercises = createAsyncThunk(
         exercise_id: e.exercise_id,
         user_id: e.user_id,
         workout_id: e.workout_id,
+        order: e.order !== undefined ? e.order : 0,
+        setDetails: Array.isArray(e.setDetails) ? e.setDetails : [],
       }));
     } catch (err) {
       console.error("pullPersonalExercises error:", err);
