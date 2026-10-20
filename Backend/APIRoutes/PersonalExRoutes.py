@@ -76,7 +76,9 @@ def create_personal_ex():
         duration=data.get("duration"),
         distance=data.get("distance"),
         complete=data.get("complete"),
-        template=template
+        template=template,
+        order=data.get("order", 0),
+        setDetails=data.get("setDetails", [])
     )
     
     if error:

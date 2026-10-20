@@ -51,7 +51,7 @@ class PersonalExDriver:
 
     # ── Create ─────────────────────────────────────────────────────────────────
     @staticmethod
-    def create_personal_ex(user_id, exercise_id, workout_id, reps, sets, weight, duration, distance, complete, template=None):
+    def create_personal_ex(user_id, exercise_id, workout_id, reps, sets, weight, duration, distance, complete, template=None, order=0, setDetails=None):
         # Validate required fields
         if (not user_id) or (not exercise_id) or (not workout_id):
             return None, "You are missing a user_id, workout_id or exercise_id. Please fix, then attempt to create personalEx again"
@@ -91,12 +91,14 @@ class PersonalExDriver:
             "user_id": ObjectId(user_id),
             "exercise_id": ObjectId(exercise_id),
             "workout_id": ObjectId(workout_id),
-            "reps": int(reps),
-            "sets": int(sets),
+            "reps": int(reps) if str(reps).isdigit() else 0,
+            "sets": int(sets) if str(sets).isdigit() else 0,
             "weight": int(weight) if str(weight).isdigit() else weight, # sets to int if possible
             "duration": int(duration) if str(duration).isdigit() else duration, # sets to int if possible
             "distance": int(distance) if str(distance).isdigit() else distance, # sets to int if possible
-            "complete": complete
+            "complete": complete,
+            "order": int(order) if order is not None and str(order).isdigit() else 0,
+            "setDetails": setDetails if isinstance(setDetails, list) else []
         }
 
         try:
@@ -184,6 +186,8 @@ class PersonalExDriver:
             "duration",
             "distance",
             "complete",
+            "order",
+            "setDetails",
         }
 
         # Filter only allowed fields
