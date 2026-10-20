@@ -1,6 +1,12 @@
-const test = require('node:test');
-const assert = require('node:assert');
-const { formatTime } = require('../src/QueryFunctions.js');
+import test from 'node:test';
+import assert from 'node:assert';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { formatTime } from '../src/QueryFunctions.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 test('QueryFunctions - formatTime utility', async (t) => {
   await t.test('formats zero seconds correctly', () => {
@@ -17,8 +23,6 @@ test('QueryFunctions - formatTime utility', async (t) => {
 });
 
 test('Theme Tokens & CSS Verification', async (t) => {
-  const fs = require('fs');
-  const path = require('path');
 
   await t.test('Lightmode.css defines essential root CSS variables', () => {
     const lightCss = fs.readFileSync(
@@ -184,4 +188,123 @@ test('Theme Tokens & CSS Verification', async (t) => {
     );
   });
 });
+
+test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) => {
+  await t.test('WorkoutLandingView.jsx defines calendar, workout list, quick add, and templates', () => {
+    const landingJsx = fs.readFileSync(
+      path.join(__dirname, '../src/WokoutLogger/WorkoutLandingView.jsx'),
+      'utf8'
+    );
+    assert.ok(landingJsx.includes('workout-landing-container'));
+    assert.ok(landingJsx.includes('calendar-card-wrapper'));
+    assert.ok(landingJsx.includes('selectedDate'));
+    assert.ok(landingJsx.includes('workouts-list-card'));
+    assert.ok(landingJsx.includes('quick-create-card'));
+    assert.ok(landingJsx.includes('onStartFromTemplate'));
+    assert.ok(landingJsx.includes('templates-chip-list'));
+    assert.ok(landingJsx.includes('WorkoutChart'));
+  });
+
+  await t.test('ActiveWorkoutView.jsx defines header controls, HeatMap, exercise cards, and drawer trigger', () => {
+    const activeJsx = fs.readFileSync(
+      path.join(__dirname, '../src/WokoutLogger/ActiveWorkoutView.jsx'),
+      'utf8'
+    );
+    assert.ok(activeJsx.includes('active-workout-container'));
+    assert.ok(activeJsx.includes('back-btn'));
+    assert.ok(activeJsx.includes('workout-timer-pill'));
+    assert.ok(activeJsx.includes('HeatMap'));
+    assert.ok(activeJsx.includes('ShareWorkoutModal'));
+    assert.ok(activeJsx.includes('AddExerciseDrawer'));
+    assert.ok(activeJsx.includes('ExerciseSetTable'));
+    assert.ok(activeJsx.includes('template-btn'));
+    assert.ok(activeJsx.includes('share-btn'));
+    assert.ok(activeJsx.includes('summary-stats-grid'));
+  });
+
+  await t.test('ExerciseSetTable.jsx supports set types, BW toggle, lock-in done button, and reordering', () => {
+    const tableJsx = fs.readFileSync(
+      path.join(__dirname, '../src/WokoutLogger/ExerciseSetTable.jsx'),
+      'utf8'
+    );
+    assert.ok(tableJsx.includes('set-type-select'));
+    assert.ok(tableJsx.includes('bw-toggle-btn'));
+    assert.ok(tableJsx.includes('set-done-btn'));
+    assert.ok(tableJsx.includes('set-row-completed'));
+    assert.ok(tableJsx.includes('add-set-btn'));
+    assert.ok(tableJsx.includes('onMoveUp'));
+    assert.ok(tableJsx.includes('onMoveDown'));
+  });
+
+  await t.test('AddExerciseDrawer.jsx supports search and category tabs', () => {
+    const drawerJsx = fs.readFileSync(
+      path.join(__dirname, '../src/WokoutLogger/AddExerciseDrawer.jsx'),
+      'utf8'
+    );
+    assert.ok(drawerJsx.includes('drawer-backdrop'));
+    assert.ok(drawerJsx.includes('drawer-container'));
+    assert.ok(drawerJsx.includes('All Exercises'));
+    assert.ok(drawerJsx.includes('By Muscle Group'));
+    assert.ok(drawerJsx.includes('By Equipment'));
+    assert.ok(drawerJsx.includes('drawer-search-input'));
+    assert.ok(drawerJsx.includes('CreateExerciseModal'));
+    assert.ok(drawerJsx.includes('drawer-create-btn'));
+    assert.ok(drawerJsx.includes('drawer-empty-create-btn'));
+  });
+
+  await t.test('CreateExerciseModal.jsx allows creating and saving custom exercises', () => {
+    const createModalJsx = fs.readFileSync(
+      path.join(__dirname, '../src/WokoutLogger/CreateExerciseModal.jsx'),
+      'utf8'
+    );
+    assert.ok(createModalJsx.includes('create-exercise-modal-content'));
+    assert.ok(createModalJsx.includes('createExercise'));
+    assert.ok(createModalJsx.includes('pullExercises'));
+    assert.ok(createModalJsx.includes('new-exercise-name-input'));
+    assert.ok(createModalJsx.includes('chips-selection-box'));
+    assert.ok(createModalJsx.includes('create-exercise-submit-btn'));
+  });
+
+  await t.test('ShareWorkoutModal.jsx allows sharing workout with friends via email', () => {
+    const shareJsx = fs.readFileSync(
+      path.join(__dirname, '../src/WokoutLogger/ShareWorkoutModal.jsx'),
+      'utf8'
+    );
+    assert.ok(shareJsx.includes('share-modal-content'));
+    assert.ok(shareJsx.includes('/AHFULsocial/shared-workouts'));
+    assert.ok(shareJsx.includes('to_user_email'));
+    assert.ok(shareJsx.includes('share-email-input'));
+  });
+
+  await t.test('WorkoutLogger.jsx coordinates view switching and autosave', () => {
+    const loggerJsx = fs.readFileSync(
+      path.join(__dirname, '../src/WokoutLogger/WorkoutLogger.jsx'),
+      'utf8'
+    );
+    assert.ok(loggerJsx.includes('activeView'));
+    assert.ok(loggerJsx.includes('WorkoutLandingView'));
+    assert.ok(loggerJsx.includes('ActiveWorkoutView'));
+    assert.ok(loggerJsx.includes('useAutosave'));
+    assert.ok(loggerJsx.includes('handleSelectWorkout'));
+    assert.ok(loggerJsx.includes('handleBackToLanding'));
+  });
+
+  await t.test('WorkoutLogger.css provides comprehensive responsive styles for both screens', () => {
+    const loggerCss = fs.readFileSync(
+      path.join(__dirname, '../src/WokoutLogger/WorkoutLogger.css'),
+      'utf8'
+    );
+    assert.ok(loggerCss.includes('.workout-landing-container'));
+    assert.ok(loggerCss.includes('.active-workout-container'));
+    assert.ok(loggerCss.includes('.workout-row-item'));
+    assert.ok(loggerCss.includes('.set-table'));
+    assert.ok(loggerCss.includes('.set-row-completed'));
+    assert.ok(loggerCss.includes('.drawer-container'));
+    assert.ok(loggerCss.includes('.drawer-create-btn'));
+    assert.ok(loggerCss.includes('.create-exercise-modal-content'));
+    assert.ok(loggerCss.includes('.share-modal-content'));
+    assert.ok(loggerCss.includes('@media (max-width: 768px)'));
+  });
+});
+
 
