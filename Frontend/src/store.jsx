@@ -1,7 +1,17 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
-import { createTransform, persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import {
+  createTransform,
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from "redux-persist";
+
 import calendarReducer from "./Calendar/CalendarSlicer";
 import { normalizeSelectedDate, toLocalDateString } from "./Calendar/UseCalendar";
 import settingsReducer from "./Auth/SettingsSlice";
@@ -11,68 +21,41 @@ import pullWorkoutReducer from "./WokoutLogger/PullWorkoutSlice.js";
 import pullPersonalExerciseReducer from "./HistoryPRs/PullPersonalExerciseSlice.js";
 import pullUserFoodReducer from "./Food/PullUserFoodSlice.js";
 
-const persistExerciseConfig = {
-  key: "pullExercise",
-  storage,
-};
-
-const persistTemplateConfig = {
-  key: "pullTemplate",
-  storage,
-};
-
-const persistWorkoutConfig = {
-  key: "pullWorkout",
-  storage,
-};
-const persistCalendarConfig = {
-  key: "calendar",
-  storage,
+// Native localStorage adapter for redux-persist (avoids CJS/ESM bundling quirks)
+const storage = {
+  getItem: (key) =>
+    Promise.resolve(typeof window !== "undefined" ? window.localStorage.getItem(key) : null),
+  setItem: (key, item) =>
+    Promise.resolve(typeof window !== "undefined" ? window.localStorage.setItem(key, item) : undefined),
+  removeItem: (key) =>
+    Promise.resolve(typeof window !== "undefined" ? window.localStorage.removeItem(key) : undefined),
 };
 
 const calendarTransform = createTransform(
   (inboundState) => inboundState,
   (outboundState) => ({
     ...outboundState,
-    selectedDate: normalizeSelectedDate(outboundState?.selectedDate) || toLocalDateString(new Date()),
+    selectedDate:
+      normalizeSelectedDate(outboundState?.selectedDate) || toLocalDateString(new Date()),
   }),
   { whitelist: ["calendar"] },
 );
-const persistPersonalExerciseConfig = {
-  key: "pullPersonalExercise",
-  storage,
-};
-
-const persistUserFoodConfig = {
-  key: "pullUserFood",
-  storage,
-}
-
-const persistSettingsConfig = {
-  key: "settings",
-  storage,
-};
-
-const persistedPullExerciseReducer = persistReducer(persistExerciseConfig, pullExerciseReducer);
-const persistedPullTemplateReducer = persistReducer(persistTemplateConfig, pullTemplateReducer);
-const persistedPullWorkoutReducer = persistReducer(persistWorkoutConfig, pullWorkoutReducer);
-const persistedCalendarReducer = persistReducer(
-  { ...persistCalendarConfig, transforms: [calendarTransform] },
-  calendarReducer,
-);
-const persistedPersonalExerciseReducer = persistReducer(persistPersonalExerciseConfig, pullPersonalExerciseReducer);
-const persistedUserFoodReducer = persistReducer(persistUserFoodConfig, pullUserFoodReducer);
-const persistedSettingsReducer = persistReducer(persistSettingsConfig, settingsReducer);
 
 export const store = configureStore({
   reducer: {
-    calendar: persistedCalendarReducer,
-    setting: persistedSettingsReducer,
-    pullExercise: persistedPullExerciseReducer,
-    pullTemplate: persistedPullTemplateReducer,
-    pullWorkout: persistedPullWorkoutReducer,
-    pullPersonalExercise: persistedPersonalExerciseReducer,
-    pullUserFood: persistedUserFoodReducer,
+    calendar: persistReducer(
+      { key: "calendar", storage, transforms: [calendarTransform] },
+      calendarReducer
+    ),
+    setting: persistReducer({ key: "settings", storage }, settingsReducer),
+    pullExercise: persistReducer({ key: "pullExercise", storage }, pullExerciseReducer),
+    pullTemplate: persistReducer({ key: "pullTemplate", storage }, pullTemplateReducer),
+    pullWorkout: persistReducer({ key: "pullWorkout", storage }, pullWorkoutReducer),
+    pullPersonalExercise: persistReducer(
+      { key: "pullPersonalExercise", storage },
+      pullPersonalExerciseReducer
+    ),
+    pullUserFood: persistReducer({ key: "pullUserFood", storage }, pullUserFoodReducer),
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
