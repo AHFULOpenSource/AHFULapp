@@ -1,94 +1,67 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import "./WorkoutLogger.css";
 import "../siteStyles.css";
 import { selectSelectedDateOrToday } from "../Calendar/CalendarSlicer";
 import {
-  formatTime as formatTimeFn,
-  
   createWorkout,
   updateWorkout,
+  deleteWorkout,
   createPersonalExercise,
   updatePersonalExercise,
   deletePersonalExercise,
+  toggleWorkoutFavorite,
 } from "../QueryFunctions.js";
-import { fetchWorkoutById, fetchExerciseById } from "./QueryFunctions-WorkoutLogger.js"
+import { fetchWorkoutById, fetchExerciseById } from "./QueryFunctions-WorkoutLogger.js";
 import { fetchAllGyms } from "../Gyms/QueryFunctions-Gym.js";
-import { ExercisesCard } from "../ExercisesCard/ExercisesCard.jsx";
 import { pullWorkouts } from "./PullWorkoutSlice.js";
 import { pullPersonalExercises } from "../HistoryPRs/PullPersonalExerciseSlice.js";
+import { pullTemplates, selectTemplates } from "../Templates/PullTemplateSlice.js";
+import { pullExercises } from "../ExercisesCard/PullExercise.jsx";
 import { Loading } from "../Loading.jsx";
 import { useAutosave } from "./useAutosave.js";
-import { HeatMap } from "./HeatMap.jsx";
-import { Calendar } from "../Calendar/Calendar.jsx";
 import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
+import { WorkoutLandingView } from "./WorkoutLandingView.jsx";
+import { ActiveWorkoutView } from "./ActiveWorkoutView.jsx";
 
-/**
- * Logger - Main workout tracking page
- *
- * Features:
- * - Create/manage daily workouts
- * - Add exercises from the database
- * - Create custom exercises
- * - Track reps, sets, weight for each exercise
- * - Workout timer
- * - Heatmap visualization of target muscles worked in current workout
- *
- * Auth Flow:
- * - Gets user from Redux auth state
- * - Creates a default workout for today if none exists
- * - Loads existing personal exercises for the workout
- */
 export function WorkoutLogger() {
-  // ─── Redux State ─────────────────────────────────────────────────────────
+  // ─── Redux & Auth State ──────────────────────────────────────────────────
   const { user, loading: authLoading } = GetFirebaseUser();
   const userId = useSelector((state) => state.setting.user_id);
-
   const dispatch = useDispatch();
 
   const selectedDate = useSelector(selectSelectedDateOrToday);
-  const [selectedYear, selectedMonth, selectedDay] = selectedDate.split('-').map(Number)
-
   const cachedWorkouts = useSelector((state) => state.pullWorkout.workouts);
-  const cachedPersonalExercises = useSelector((state) => state.pullPersonalExercise.personalExercises);
+  const cachedPersonalExercises = useSelector(
+    (state) => state.pullPersonalExercise.personalExercises
+  );
+  const cachedTemplates = useSelector(selectTemplates);
+  const cachedExercises = useSelector((state) => state.pullExercise?.exercises || []);
 
-  // ─── Personal Exercise State ──────────────────────────────────────────────────
-  // Tracks exercises to be deleted when workout is submitted (removed from UI but need DB deletion)
-  const [personalExToRemove, setPersonalExToRemove] = useState({});
-  // Maps exercise IDs to their display names (fetched from backend)
-  const [personalExNames, setPersonalExNames] = useState({});
-  // Exercises currently in the workout (reps, sets, weight, completed status)
-  /* Hook to track state of the InProgressTable on the Workout Page */
-  const [exercisesInProgressTable, setExercisesInProgressTable] = useState([]);
+  // ─── View State: "landing" (Screen 1) vs "active" (Screen 2) ─────────────
+  const [activeView, setActiveView] = useState("landing");
 
-  // ─── Workout State ───────────────────────────────────────────────────────────
-  // Daily workouts for the date
-  const [dailyWorkouts, setDailyWorkouts] = useState([]);
-  // Current workout object from database
-  const [selectedEditableWorkout, setWorkout] = useState(null);
-  // User-editable workout title
+  // ─── Active Workout State ────────────────────────────────────────────────
+  const [selectedEditableWorkout, setSelectedWorkout] = useState(null);
   const [workoutTitle, setWorkoutTitle] = useState("");
-  // Workout loading state
+  const [selectedGymId, setSelectedGymId] = useState("");
+  const [exercisesInProgressTable, setExercisesInProgressTable] = useState([]);
+  const [personalExNames, setPersonalExNames] = useState({});
+  const [personalExToRemove, setPersonalExToRemove] = useState({});
+
+  // ─── Gyms & General State ────────────────────────────────────────────────
+  const [availableGyms, setAvailableGyms] = useState([]);
   const [workoutLoading, setWorkoutLoading] = useState(false);
-  // Workout error state
   const [workoutError, setWorkoutError] = useState(null);
 
-  // ─── Workout Picker UI State ─────────────────────────────────────────────────
-  // Which workout is selected inside the picker
-  const [selectedWorkoutIdForPicker, setSelectedWorkoutIdForPicker] = useState(null);
-  // New workout name (for creation)
-  const [newWorkoutName, setNewWorkoutName] = useState("");
-  // Available gyms and selected gym for new workouts
-  const [availableGyms, setAvailableGyms] = useState([]);
-  const [selectedGymId, setSelectedGymId] = useState("");
-
-  // ─── Timer State ─────────────────────────────────────────────────────────────
+  // ─── Timer State ─────────────────────────────────────────────────────────
   const [isRunning, setIsRunning] = useState(false);
   const [time, setTime] = useState(0);
 
+  // ─── Autosave State ──────────────────────────────────────────────────────
   const [saveStatus, setSaveStatus] = useState("idle");
 
-  // ─── Refs ───────────────────────────────────────────────────────────────────
+  // ─── Refs for Autosave ───────────────────────────────────────────────────
   const workoutRef = useRef(selectedEditableWorkout);
   const workoutTitleRef = useRef(workoutTitle);
   const selectedGymIdRef = useRef(selectedGymId);
@@ -98,806 +71,597 @@ export function WorkoutLogger() {
 
   useEffect(() => {
     workoutRef.current = selectedEditableWorkout;
-    workoutTitleRef.current = workoutTitle;
-    selectedGymIdRef.current = selectedGymId;
-    exercisesInProgressTableRef.current = exercisesInProgressTable;
-    personalExToRemoveRef.current = personalExToRemove;
-    timeRef.current = time;
-  }, [selectedEditableWorkout, workoutTitle, selectedGymId, exercisesInProgressTable, personalExToRemove, time]);
+  }, [selectedEditableWorkout]);
 
-  const persistWorkout = useCallback(async () => {
-    const activeWorkout = workoutRef.current;
-
-    if (!activeWorkout?._id) {
-      return { ok: false, reason: "no-workout" };
-    }
-
-    setSaveStatus("saving");
-
-    try {
-      const currentExercises = exercisesInProgressTableRef.current;
-
-      const invalid = currentExercises.some((ex) => ex.sets < 0 || ex.reps < 0);
-      if (invalid) {
-        setSaveStatus("error");
-        return { ok: false, reason: "invalid-values" };
-      }
-
-      const saveRequests = currentExercises.map((ex) => {
-        const isNew = !ex._id;
-
-        const peData = isNew
-          ? {
-              complete: ex.complete,
-              distance: ex.distance,
-              duration: ex.duration,
-              exercise_id: ex.exercise_id,
-              reps: ex.reps,
-              sets: ex.sets,
-              user_id: ex.user_id,
-              weight: ex.weight,
-              workout_id: ex.workout_id,
-            }
-          : {
-              complete: ex.complete,
-              distance: ex.distance,
-              duration: ex.duration,
-              reps: ex.reps,
-              sets: ex.sets,
-              weight: ex.weight,
-            };
-
-        return isNew ? createPersonalExercise(peData) : updatePersonalExercise(ex._id, peData);
-      });
-
-      const deleteRequests = Object.values(personalExToRemoveRef.current)
-        .filter((ex) => ex._id)
-        .map((ex) => deletePersonalExercise(ex._id));
-
-      const responses = await Promise.all([...saveRequests, ...deleteRequests]);
-      const failed = responses.filter((response) => response == null || response.error);
-
-      if (failed.length > 0) {
-        setSaveStatus("error");
-        console.error("Some operations failed:", failed);
-        return { ok: false, failed };
-      }
-
-      const workoutUpdatePayload = {
-        endTime: (activeWorkout.startTime || 0) + timeRef.current,
-        startTime: activeWorkout.startTime,
-        title: workoutTitleRef.current,
-        gym_id: selectedGymIdRef.current,
-      };
-
-      const workoutRes = await updateWorkout(activeWorkout._id, workoutUpdatePayload);
-
-      if (workoutRes?.error) {
-        setSaveStatus("error");
-        console.error("Failed to update workout:", workoutRes.error);
-        return { ok: false, error: workoutRes.error };
-      }
-
-      //Dispatch the Slice Action for Refreshing Frontend Data aka Cache from Backend. 
-      dispatch(pullWorkouts()); 
-      dispatch(pullPersonalExercises()); // Refresh cached personal exercises in Redux     
-      setSaveStatus("saved");
-      return { ok: true };
-    } catch (err) {
-      setSaveStatus("error");
-      console.error("Error submitting workout:", err);
-      return { ok: false, error: err };
-    }
-  }, []);
-
-  const { trigger: triggerWorkoutAutosave, flush: flushWorkoutAutosave } = useAutosave(
-    persistWorkout,
-  );
-
-  const queueWorkoutAutosave = () => {
-    setSaveStatus((current) => (current === "saving" ? current : "pending"));
-    triggerWorkoutAutosave();
-  };
-
-  // ─── Timer Logic ──────────────────────────────────────────────────────────────
   useEffect(() => {
-    let interval = null;
+    workoutTitleRef.current = workoutTitle;
+  }, [workoutTitle]);
+
+  useEffect(() => {
+    selectedGymIdRef.current = selectedGymId;
+  }, [selectedGymId]);
+
+  useEffect(() => {
+    exercisesInProgressTableRef.current = exercisesInProgressTable;
+  }, [exercisesInProgressTable]);
+
+  useEffect(() => {
+    personalExToRemoveRef.current = personalExToRemove;
+  }, [personalExToRemove]);
+
+  useEffect(() => {
+    timeRef.current = time;
+  }, [time]);
+
+  // ─── Timer Interval ──────────────────────────────────────────────────────
+  useEffect(() => {
+    let intervalId;
     if (isRunning) {
-      interval = setInterval(() => {
-        setTime((t) => t + 1);
+      intervalId = setInterval(() => {
+        setTime((prev) => prev + 1);
       }, 1000);
-    } else {
-      clearInterval(interval);
     }
-    return () => clearInterval(interval);
+    return () => clearInterval(intervalId);
   }, [isRunning]);
 
-  // ─── Load Today's Workout by date ────────────────────────────────
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadWorkoutForDay = async () => {
-
-      const currentDateUnix = Math.floor(new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0).getTime() / 1000);
-      const tomorrowUnix = Math.floor(currentDateUnix + 86400); // 24 hours later
-
-      const workoutsFoundBetweenCurrDateAndTomorrow = Array.isArray(cachedWorkouts)
-        ? cachedWorkouts.filter(
-            (w) => w?.startTime >= currentDateUnix && w?.startTime < tomorrowUnix,
-          )
-        : [];
-
-      setDailyWorkouts(workoutsFoundBetweenCurrDateAndTomorrow);
-
-      let todaysWorkout;
-      if (workoutsFoundBetweenCurrDateAndTomorrow.length === 1) {
-        todaysWorkout = workoutsFoundBetweenCurrDateAndTomorrow[0];
-
-      } else {
-        todaysWorkout = null;
-
-      }
-      const activeWorkoutId = workoutRef.current?._id || selectedEditableWorkout?._id || null;
-
-
-      const workoutId = todaysWorkout?._id || null;
-      const tableMatchesWorkout =
-        activeWorkoutId &&
-        workoutId === activeWorkoutId &&
-        exercisesInProgressTable.length > 0 &&
-        exercisesInProgressTable.every((exercise) => exercise?.workout_id === workoutId);
-
-      try {
-        if (cancelled) return;
-
-        if (todaysWorkout) {
-          setWorkout(todaysWorkout);
-          setWorkoutTitle(todaysWorkout.title);
-          setSelectedGymId(todaysWorkout.gym_id);
-          setSaveStatus("idle");
-
-          if (!tableMatchesWorkout) {
-            const workoutPersonalExercises =
-              cachedPersonalExercises?.filter(
-                (pe) => pe?.workout_id === todaysWorkout._id,
-              ) || [];
-            setExercisesInProgressTable(workoutPersonalExercises);
-          }
-
-          return;
-        }
-
-        await flushWorkoutAutosave();
-        setWorkout(null);
-        setWorkoutTitle("");
-        setSelectedGymId("");
-        setExercisesInProgressTable([]);
-        setSaveStatus("idle");
-      } finally {
-        if (!cancelled) {
-          setWorkoutLoading(false);
-        }
-      }
-    };
-
-    loadWorkoutForDay();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedDate, cachedWorkouts, cachedPersonalExercises, flushWorkoutAutosave]);
-
-  // ─── Load Gyms on Mount ─────────────────────────────────────────────────────
+  // ─── Fetch Gyms & Initial Caches ─────────────────────────────────────────
   useEffect(() => {
     let mounted = true;
-
-    //Load Gyms
     (async () => {
-      const res = await fetchAllGyms();
-      if (!mounted) return;
-      setAvailableGyms(Array.isArray(res) ? res : []);
+      try {
+        const gyms = await fetchAllGyms();
+        if (mounted && Array.isArray(gyms)) setAvailableGyms(gyms);
+      } catch (err) {
+        console.error("Failed to load gyms:", err);
+      }
     })();
 
+    dispatch(pullWorkouts());
+    dispatch(pullPersonalExercises());
+    dispatch(pullTemplates());
+    pullExercises().catch((err) => console.error("Failed to load exercises:", err));
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [dispatch]);
 
-  const unixToDate = (unix) => {
-    return new Date(unix * 1000).toLocaleDateString("en-US");
-  };
+  // ─── Filter Daily Workouts for Selected Date ─────────────────────────────
+  const dailyWorkouts = useMemo(() => {
+    if (!selectedDate || !Array.isArray(cachedWorkouts)) return [];
 
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0).getTime() / 1000;
+    const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999).getTime() / 1000;
 
-  // ─── Toggle Exercise Completion ───────────────────────────────────────────────
-  const toggleCompleted = (index) => {
-    setExercisesInProgressTable((prev) => {
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        complete: !updated[index].complete,
-      };
-      return updated;
-    });
-    queueWorkoutAutosave();
-  };
+    return cachedWorkouts.filter(
+      (w) => w.startTime && w.startTime >= startOfDay && w.startTime <= endOfDay
+    );
+  }, [selectedDate, cachedWorkouts]);
 
-  // ─── Update Exercise Field (reps, sets, weight) ───────────────────────────────
-  const updateField = (index, field, value) => {
-    setExercisesInProgressTable((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
-    queueWorkoutAutosave();
-  };
-
-  // ─── Load Exercise Names for Display ─────────────────────────────────────────
-  // When exercises are added to the workout or showing the template preview ,
-  // we need to fetch their display names
-  useEffect(() => {
-    // Collect IDs from workout table
-    const exerciesInProgressIds = exercisesInProgressTable.map((ex) => {
-      return ex.exercise_id;
-    });
-
-    // Combine and dedupe
-    const allIds = [...new Set([...exerciesInProgressIds])];
-
-    if (allIds.length === 0) return;
-
-    // Filter missing names
-    const missing = allIds.filter((id) => !personalExNames[id]);
-
+  // ─── Helper: Fetch & Cache Exercise Names ────────────────────────────────
+  const loadMissingExerciseNames = useCallback(async (exerciseIds = []) => {
+    const missing = exerciseIds.filter((id) => id && !personalExNames[id]);
     if (missing.length === 0) return;
 
-    const loadNames = async () => {
-      try {
-        const results = {};
-
-        for (const id of missing) {
+    try {
+      const entries = await Promise.all(
+        missing.map(async (id) => {
           try {
             const data = await fetchExerciseById(id);
-            results[id] = data.name;
-          } catch (err) {
-            console.error("Error fetching exercise name for", id, err);
-            results[id] = "Unknown Exercise";
+            return [id, data?.name || "Exercise"];
+          } catch {
+            return [id, "Exercise"];
           }
-        }
-
-        setPersonalExNames((prev) => ({ ...prev, ...results }));
-      } catch (err) {
-        console.error("Error fetching exercise names:", err);
-      }
-    };
-
-    loadNames();
-  }, [exercisesInProgressTable]);
-
-  // Keep the table aligned with whichever workout is currently active.
-  useEffect(() => {
-    if (!selectedEditableWorkout?._id) {
-      setExercisesInProgressTable([]);
-      setPersonalExToRemove({});
-      return;
+        })
+      );
+      setPersonalExNames((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+    } catch (err) {
+      console.error("Failed to load exercise names:", err);
     }
+  }, [personalExNames]);
 
-    const workoutPersonalExercises =
-      cachedPersonalExercises?.filter(
-        (pe) => pe?.workout_id === selectedEditableWorkout._id,
-      ) || [];
+  // ─── Autosave Persistence Engine ─────────────────────────────────────────
+  const persistWorkout = useCallback(async () => {
+    const activeWorkout = workoutRef.current;
+    if (!activeWorkout?._id) return { ok: true };
 
-    setExercisesInProgressTable(workoutPersonalExercises);
-    setPersonalExToRemove({});
-  }, [selectedEditableWorkout?._id, cachedPersonalExercises]);
-
-  const handleManualSave = async () => {
-    const saved = await flushWorkoutAutosave();
-
-    if (!saved) {
-      await persistWorkout();
-    }
-  };
-
-  // ─── Remove Exercise from Workout ─────────────────────────────────────────────
-  // Removes from UI but queues for deletion on submit
-  const removePersonalEx = (index) => {
-    setExercisesInProgressTable((prev) => {
-      const removed = prev[index]; // the exercise being removed
-
-      // Add removed exercise to personalExToRemove
-      setPersonalExToRemove((prevRemoved) => ({
-        ...prevRemoved,
-        [removed._id || removed.exerciseId]: removed,
-      }));
-      return prev.filter((_, i) => i !== index);
-    });
-    queueWorkoutAutosave();
-  };
-
-  const AddSelectedExercises = async (selectedExercises = []) => {
-    if (!Array.isArray(selectedExercises) || selectedExercises.length === 0) return;
-
-    let activeWorkout = workoutRef.current;
-
-    if (!activeWorkout?._id) {
-      activeWorkout = await handleCreateWorkout(selectedDate ? new Date(selectedDate) : new Date());
-    }
-
-    if (!activeWorkout?._id) return;
-
-    const newExercises = selectedExercises
-      .filter((exercise) => exercise?._id)
-      .map((exercise) => ({
-        exercise_id: exercise._id,
-        workout_id: activeWorkout._id,
-        user_id: userId,
-        complete: false,
-        reps: 0,
-        sets: 0,
-        weight: "0",
-        distance: "0",
-        duration: 0,
-      }));
-
-    if (newExercises.length === 0) return;
-
-    setExercisesInProgressTable((prev) => [...prev, ...newExercises]);
-    queueWorkoutAutosave();
-  };
-
-  // ─── Select Workout Picker logic ──────────────────────────────────────────────────────────────
-  function resetWorkoutPicker() {
-    setSelectedWorkoutIdForPicker(null); // reset selection
-    setNewWorkoutName(""); // reset input
-  }
-
-  const exitOnEnter = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      e.target.blur();
-    }
-  };
-
-  async function handleLoadWorkout() {
-    if (!selectedWorkoutIdForPicker) return;
-
-    await flushWorkoutAutosave();
-
+    setSaveStatus("saving");
     try {
-      const selected = dailyWorkouts.find(
-        (w) => w._id === selectedWorkoutIdForPicker,
+      // 1. Save all exercises currently in the table
+      const savedExercises = await Promise.all(
+        exercisesInProgressTableRef.current.map(async (ex, idx) => {
+          const isNew = !ex._id;
+          const totalSets = Array.isArray(ex.setDetails) ? ex.setDetails.length : ex.sets || 1;
+          const isComplete = Array.isArray(ex.setDetails)
+            ? ex.setDetails.length > 0 && ex.setDetails.every((s) => s.completed)
+            : Boolean(ex.complete);
+
+          // Derive representative weight/reps for backward compatibility
+          const lastSet = Array.isArray(ex.setDetails) ? ex.setDetails[ex.setDetails.length - 1] : null;
+          const weight = lastSet?.weight !== undefined && lastSet?.weight !== "" ? lastSet.weight : ex.weight || 0;
+          const reps = lastSet?.reps !== undefined ? lastSet.reps : ex.reps || 10;
+
+          const peData = isNew
+            ? {
+                user_id: ex.user_id || userId,
+                exercise_id: ex.exercise_id,
+                workout_id: activeWorkout._id,
+                complete: isComplete,
+                distance: ex.distance || 0,
+                duration: ex.duration || 0,
+                reps,
+                sets: totalSets,
+                weight,
+                order: idx,
+                setDetails: ex.setDetails || [],
+              }
+            : {
+                complete: isComplete,
+                distance: ex.distance || 0,
+                duration: ex.duration || 0,
+                reps,
+                sets: totalSets,
+                weight,
+                order: idx,
+                setDetails: ex.setDetails || [],
+              };
+
+          if (isNew) {
+            const res = await createPersonalExercise(peData);
+            const newId = res?.personal_ex_id || res?._id || res?.data?._id;
+            return { ...ex, ...peData, _id: newId, id: newId || ex.id };
+          } else {
+            await updatePersonalExercise(ex._id, peData);
+            return { ...ex, ...peData, id: ex._id || ex.id };
+          }
+        })
       );
 
-      if (!selected) return;
+      // Keep exercisesInProgressTable in sync with assigned IDs
+      setExercisesInProgressTable(savedExercises);
 
-      // Fetch full workout from DB (ensures fresh data)
-      const fullWorkout = await fetchWorkoutById(selected._id);
+      // 2. Delete exercises marked for removal
+      const deleteRequests = Object.values(personalExToRemoveRef.current)
+        .filter((ex) => ex?._id)
+        .map((ex) => deletePersonalExercise(ex._id));
 
-      setWorkout(fullWorkout);
-      setWorkoutTitle(fullWorkout.title);
-      setSelectedGymId(fullWorkout.gym_id || "");
+      await Promise.all(deleteRequests);
 
-      // Reset timer based on workout times
-      if (fullWorkout.startTime && fullWorkout.endTime) {
-        setTime(fullWorkout.endTime - fullWorkout.startTime);
-      } else {
-        setTime(0);
-      }
-
-      setSaveStatus("idle");
-
-      resetWorkoutPicker();
-    } catch (err) {
-      console.error("Error loading workout:", err);
-    }
-  }
-
-  async function handleCreateWorkout() {
-    try {
-      if (!userId) return;
-
-      const workoutDate = new Date(selectedYear, selectedMonth - 1, selectedDay, 0, 0, 0, 0);
-      const startUnix = Math.floor(workoutDate.getTime() / 1000);
-
-      // console.log("I USED selectedDate:", selectedDate, "DONT YELL AT ME.  Split:", [selectedYear, selectedMonth, selectedDay]);
-      // console.log("Creating workout for date:", workoutDate);
-      // console.log("Creating workout for date (ISO):", workoutDate.toISOString());
-      // console.log("Creating workout for date (String):", workoutDate.toString());
-      // console.log("Creating workout for date (Unix):", startUnix);
-
-      // Use selected gym (or fall back to user's home gym if available)
-      const gymId = selectedGymId || "000000000000000000000000";
-
-      const payload = {
-        endTime: startUnix,
-        gym_id: gymId,
-        startTime: startUnix,
-        title: newWorkoutName.trim() || "Workout " + workoutDate.toLocaleDateString(),
-        user_id: userId,
+      // 3. Update workout title, gym, and duration
+      const workoutPayload = {
+        title: workoutTitleRef.current || activeWorkout.title,
+        gym_id: selectedGymIdRef.current || activeWorkout.gym_id || "000000000000000000000000",
+        startTime: activeWorkout.startTime,
+        endTime: (activeWorkout.startTime || 0) + timeRef.current,
       };
 
-      // Create workout
-      const created = await createWorkout(payload);
+      await updateWorkout(activeWorkout._id, workoutPayload);
 
-      // Fetch persisted version
-      const persisted = await fetchWorkoutById(created.workout_id);
+      // Refresh Redux caches in background
+      dispatch(pullWorkouts());
+      dispatch(pullPersonalExercises());
 
-      // Add to daily list
-      setDailyWorkouts((prev) => (prev ? [...prev, persisted] : [persisted]));
-
-      // Load it immediately
-      setWorkout(persisted);
-      setWorkoutTitle(persisted.title);
-      setSelectedGymId(persisted.gym_id);
-      setTime(0);
-      setExercisesInProgressTable([]);
-      setSaveStatus("idle");
-
-      dispatch(pullWorkouts()); // Refresh cached workouts in Redux
-      resetWorkoutPicker();
-      return persisted;
+      setPersonalExToRemove({});
+      setSaveStatus("saved");
+      return { ok: true };
     } catch (err) {
-      console.error("Error creating workout:", err);
-      return null;
+      console.error("Autosave error:", err);
+      setSaveStatus("error");
+      return { ok: false, error: err };
     }
-  }
+  }, [dispatch, userId]);
 
-  const toggleTimer = () => {
-    setIsRunning((r) => !r);
+  const { trigger: triggerWorkoutAutosave, flush: flushWorkoutAutosave } = useAutosave(
+    persistWorkout
+  );
+
+  const queueAutosave = () => {
+    setSaveStatus((curr) => (curr === "saving" ? curr : "pending"));
+    triggerWorkoutAutosave();
   };
 
-  const saveButtonLabel = {
-    idle: "Save",
-    pending: "Save Now",
-    saving: "Saving…",
-    saved: "Saved ✓",
-    error: "Retry Save",
-  }[saveStatus];
+  // ─── Action: Select and Open Workout (Transition to Screen 2) ────────────
+  const handleSelectWorkout = useCallback(
+    async (workout) => {
+      if (!workout) return;
 
-  const saveButtonClass = `workout-submit-button save-status-${saveStatus}`;
+      setSelectedWorkout(workout);
+      setWorkoutTitle(workout.title || "");
+      setSelectedGymId(workout.gym_id || "");
+      setTime(
+        workout.startTime && workout.endTime && workout.endTime > workout.startTime
+          ? workout.endTime - workout.startTime
+          : 0
+      );
+      setIsRunning(false);
+      setSaveStatus("idle");
+      setPersonalExToRemove({});
 
-  // ─── Loading State ────────────────────────────────────────────────────────────
-  if (workoutLoading) {
-    return (
-      <Loading message="Please wait while we set up your workout..." />
-      
+      // Find exercises for this workout from cache
+      const workoutExercises = (cachedPersonalExercises || [])
+        .filter((pe) => pe?.workout_id === workout._id)
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
+        .map((pe, idx) => {
+          let setDetails = Array.isArray(pe.setDetails) && pe.setDetails.length > 0 ? pe.setDetails : null;
+          if (!setDetails) {
+            const count = Math.max(1, Number(pe.sets) || 1);
+            setDetails = Array.from({ length: count }, (_, sIdx) => ({
+              id: `set-${sIdx + 1}`,
+              setNum: sIdx + 1,
+              setType: sIdx === 0 && count > 1 ? "W" : "N",
+              weight: pe.weight !== undefined && pe.weight !== null ? pe.weight : "",
+              reps: pe.reps || 10,
+              completed: Boolean(pe.complete),
+              prev: "-",
+            }));
+          }
+          return {
+            ...pe,
+            id: pe._id || `pe-${pe.exercise_id}-${idx}`,
+            order: pe.order !== undefined ? pe.order : idx,
+            setDetails,
+          };
+        });
+
+      setExercisesInProgressTable(workoutExercises);
+
+      // Load exercise display names
+      const exerciseIds = workoutExercises.map((pe) => pe.exercise_id);
+      loadMissingExerciseNames(exerciseIds);
+
+      setActiveView("active");
+    },
+    [cachedPersonalExercises, loadMissingExerciseNames]
+  );
+
+  // ─── Action: Create New Workout ──────────────────────────────────────────
+  const handleCreateWorkout = async ({ title, gym_id }) => {
+    if (!selectedDate || !userId) return;
+
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const startUnix = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
+
+    const payload = {
+      user_id: userId,
+      title: title || `Workout ${selectedDate}`,
+      gym_id: gym_id || "000000000000000000000000",
+      startTime: startUnix,
+      endTime: startUnix,
+    };
+
+    try {
+      const created = await createWorkout(payload);
+      const persisted = await fetchWorkoutById(created.workout_id);
+
+      dispatch(pullWorkouts());
+      handleSelectWorkout(persisted);
+      return persisted;
+    } catch (err) {
+      console.error("Failed to create workout:", err);
+      alert("Failed to create workout. Please try again.");
+    }
+  };
+
+  // ─── Action: Delete Workout ──────────────────────────────────────────────
+  const handleDeleteWorkout = async (workoutId) => {
+    try {
+      await deleteWorkout(workoutId);
+      dispatch(pullWorkouts());
+      if (selectedEditableWorkout?._id === workoutId) {
+        handleBackToLanding();
+      }
+    } catch (err) {
+      console.error("Failed to delete workout:", err);
+      alert("Failed to delete workout.");
+    }
+  };
+
+  // ─── Action: Toggle Workout Favorite ─────────────────────────────────────
+  const handleToggleFavorite = async (workoutId) => {
+    const targetId = workoutId || selectedEditableWorkout?._id;
+    if (!targetId) return;
+
+    try {
+      const res = await toggleWorkoutFavorite(targetId);
+      if (res?.data) {
+        dispatch(pullWorkouts());
+        if (selectedEditableWorkout?._id === targetId) {
+          setSelectedWorkout((prev) => ({ ...prev, favorite: !prev.favorite }));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+    }
+  };
+
+  // ─── Action: Start from Template ─────────────────────────────────────────
+  const handleStartFromTemplate = async (template) => {
+    if (!template || !selectedDate || !userId) return;
+
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const startUnix = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
+
+    const payload = {
+      user_id: userId,
+      title: template.title || `Workout ${selectedDate}`,
+      gym_id: "000000000000000000000000",
+      startTime: startUnix,
+      endTime: startUnix,
+    };
+
+    try {
+      const created = await createWorkout(payload);
+      const persisted = await fetchWorkoutById(created.workout_id);
+
+      // Create personal exercises from template exercises
+      const templateExercises =
+        template.exercises ||
+        (cachedPersonalExercises || []).filter((pe) => pe.workout_id === template._id);
+
+      if (templateExercises.length > 0) {
+        await Promise.all(
+          templateExercises.map((tplEx, idx) =>
+            createPersonalExercise({
+              user_id: userId,
+              exercise_id: tplEx.exercise_id,
+              workout_id: persisted._id,
+              reps: tplEx.reps || 10,
+              sets: tplEx.sets || 3,
+              weight: tplEx.weight || 0,
+              order: idx,
+              complete: false,
+              setDetails: tplEx.setDetails || [],
+            })
+          )
+        );
+      }
+
+      dispatch(pullWorkouts());
+      dispatch(pullPersonalExercises());
+      handleSelectWorkout(persisted);
+    } catch (err) {
+      console.error("Failed to create workout from template:", err);
+      alert("Failed to start from template.");
+    }
+  };
+
+  // ─── Action: Save Active Workout as Template ─────────────────────────────
+  const handleSaveAsTemplate = async () => {
+    if (!selectedEditableWorkout?._id || !userId) return;
+
+    const titlePrompt = window.prompt(
+      "Enter a name for this template:",
+      workoutTitle || selectedEditableWorkout.title || "My Routine Template"
     );
+    if (!titlePrompt || !titlePrompt.trim()) return;
+
+    try {
+      const exercisesPayload = exercisesInProgressTable.map((ex, idx) => ({
+        exercise_id: ex.exercise_id,
+        order: idx,
+        sets: ex.sets || 3,
+        reps: ex.reps || 10,
+        weight: ex.weight || 0,
+        setDetails: ex.setDetails || [],
+      }));
+
+      const res = await fetch("http://localhost:5000/api/AHFULtemplate/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: titlePrompt.trim(),
+          exercises: exercisesPayload,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to save template.");
+      }
+
+      dispatch(pullTemplates());
+      alert(`"${titlePrompt.trim()}" saved to your templates!`);
+    } catch (err) {
+      console.error("Save template error:", err);
+      alert("Failed to save template: " + (err.message || "Unknown error"));
+    }
+  };
+
+  // ─── Active Workout Handlers ─────────────────────────────────────────────
+  const handleAddExerciseToActiveWorkout = (catalogExercise) => {
+    if (!catalogExercise?._id || !selectedEditableWorkout?._id) return;
+
+    const newIdx = exercisesInProgressTable.length;
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const defaultSets = [
+      { id: `s1-${Date.now()}`, setNum: 1, setType: "W", weight: "", reps: 10, completed: false, prev: "-" },
+      { id: `s2-${Date.now() + 1}`, setNum: 2, setType: "N", weight: "", reps: 10, completed: false, prev: "-" },
+      { id: `s3-${Date.now() + 2}`, setNum: 3, setType: "N", weight: "", reps: 10, completed: false, prev: "-" },
+    ];
+
+    const newPersonalEx = {
+      id: tempId,
+      exercise_id: catalogExercise._id,
+      workout_id: selectedEditableWorkout._id,
+      user_id: userId,
+      order: newIdx,
+      complete: false,
+      sets: 3,
+      reps: 10,
+      weight: "",
+      setDetails: defaultSets,
+    };
+
+    setPersonalExNames((prev) => ({
+      ...prev,
+      [catalogExercise._id]: catalogExercise.name || "Exercise",
+    }));
+
+    setExercisesInProgressTable((prev) => [...prev, newPersonalEx]);
+    queueAutosave();
+  };
+
+  const handleUpdateExerciseSetDetails = (identifier, newSetDetails) => {
+    setExercisesInProgressTable((prev) => {
+      const targetIdx =
+        typeof identifier === "number"
+          ? identifier
+          : prev.findIndex(
+              (ex) =>
+                (ex._id && ex._id === identifier) ||
+                (ex.id && ex.id === identifier)
+            );
+
+      if (targetIdx === -1 || !prev[targetIdx]) return prev;
+
+      const updated = [...prev];
+      const target = { ...updated[targetIdx] };
+      target.setDetails = newSetDetails;
+      target.sets = newSetDetails.length;
+      target.complete =
+        newSetDetails.length > 0 && newSetDetails.every((s) => s.completed);
+
+      const lastSet = newSetDetails[newSetDetails.length - 1];
+      if (lastSet) {
+        target.weight = lastSet.weight;
+        target.reps = lastSet.reps;
+      }
+
+      updated[targetIdx] = target;
+      return updated;
+    });
+    queueAutosave();
+  };
+
+  const handleReorderExercise = (fromIndex, toIndex) => {
+    setExercisesInProgressTable((prev) => {
+      if (
+        fromIndex < 0 ||
+        fromIndex >= prev.length ||
+        toIndex < 0 ||
+        toIndex >= prev.length
+      ) {
+        return prev;
+      }
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      return updated.map((item, idx) => ({ ...item, order: idx }));
+    });
+    queueAutosave();
+  };
+
+  const handleRemoveExercise = (identifier) => {
+    setExercisesInProgressTable((prev) => {
+      const targetIdx =
+        typeof identifier === "number"
+          ? identifier
+          : prev.findIndex(
+              (ex) =>
+                (ex._id && ex._id === identifier) ||
+                (ex.id && ex.id === identifier)
+            );
+
+      if (targetIdx === -1 || !prev[targetIdx]) return prev;
+
+      const target = prev[targetIdx];
+      if (target?._id) {
+        setPersonalExToRemove((curr) => ({ ...curr, [target._id]: target }));
+      }
+      return prev
+        .filter((_, idx) => idx !== targetIdx)
+        .map((item, idx) => ({ ...item, order: idx }));
+    });
+    queueAutosave();
+  };
+
+  const handleBackToLanding = async () => {
+    await flushWorkoutAutosave();
+    setSelectedWorkout(null);
+    setExercisesInProgressTable([]);
+    setActiveView("landing");
+  };
+
+  const handleFinishWorkout = async () => {
+    // Mark all sets completed
+    setExercisesInProgressTable((prev) =>
+      prev.map((ex) => {
+        const sets = (ex.setDetails || []).map((s) => ({ ...s, completed: true }));
+        return { ...ex, complete: true, setDetails: sets };
+      })
+    );
+    setIsRunning(false);
+    await flushWorkoutAutosave();
+    alert("Workout completed! Great effort today!");
+  };
+
+  // ─── Render ──────────────────────────────────────────────────────────────
+  if (workoutLoading || authLoading) {
+    return <Loading message="Loading your workout logger..." />;
   }
 
-  // ─── Error State ─────────────────────────────────────────────────────────────
   if (workoutError) {
     return (
-      <div className="page-layout">
-        <div className="center-column">
-          <div className="workout-card">
-            <h2>Error Loading Workout</h2>
-            <p>{workoutError}</p>
-            <button onClick={() => window.location.reload()}>Retry</button>
-          </div>
-        </div>
+      <div className="workout-error-container">
+        <h2>Error Loading Workout</h2>
+        <p>{workoutError}</p>
+        <button className="btn btn-primary" onClick={() => window.location.reload()}>
+          Retry
+        </button>
       </div>
     );
   }
 
-  // ─── Main Render ─────────────────────────────────────────────────────────────
+  if (activeView === "active" && selectedEditableWorkout) {
+    return (
+      <ActiveWorkoutView
+        workout={selectedEditableWorkout}
+        workoutTitle={workoutTitle}
+        onChangeWorkoutTitle={(title) => {
+          setWorkoutTitle(title);
+          queueAutosave();
+        }}
+        selectedGymId={selectedGymId}
+        onChangeGymId={(gymId) => {
+          setSelectedGymId(gymId);
+          queueAutosave();
+        }}
+        availableGyms={availableGyms}
+        exercisesInProgress={exercisesInProgressTable}
+        personalExNames={personalExNames}
+        cachedExerciseCatalog={cachedExercises}
+        onUpdateExerciseSetDetails={handleUpdateExerciseSetDetails}
+        onRemoveExercise={handleRemoveExercise}
+        onReorderExercise={handleReorderExercise}
+        onAddExercise={handleAddExerciseToActiveWorkout}
+        onToggleFavorite={() => handleToggleFavorite(selectedEditableWorkout._id)}
+        onSaveAsTemplate={handleSaveAsTemplate}
+        onBack={handleBackToLanding}
+        time={time}
+        isRunning={isRunning}
+        onToggleTimer={() => setIsRunning((r) => !r)}
+        saveStatus={saveStatus}
+        onFinishWorkout={handleFinishWorkout}
+      />
+    );
+  }
+
+  // Default: Screen 1 Landing View
   return (
-  <div className="page-layout">
-
-
-      <div className="workout-picker-panel">
-        <div className="workout-picker-inline">
-
-        
-        {/* Zone 1 + 2: Filter, scrollable list, load button */}
-        <div className="workout-list">
-
-            <p>Showing workout for {selectedDate}</p>
-
-            {dailyWorkouts.length === 0 && (
-              <div className="no-workouts">
-                No workouts for this day. Create a workout or select a new date on the Calendar. 
-
-                <Calendar />
-                <br />
-                <div className="create-workout-section">
-                  <input
-                    type="text"
-                    id="new-workout-name-textbox"
-                    placeholder="Add a New Workout by Entering a Name"
-                    value={newWorkoutName}
-                    onChange={(e) => setNewWorkoutName(e.target.value)}
-                    onKeyDown={exitOnEnter}
-                  />
-                  <select
-                    id="select-gym-dropdown"
-                    value={selectedGymId}
-                    onChange={(e) => setSelectedGymId(e.target.value)}
-                  >
-                    <option value="">New Workout - No Gym</option>
-                    {availableGyms.map((g) => (
-                      <option key={g._id} value={g._id}>
-                        {g.name || g.address || "Ambiguous Gym"}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    id="create-new-workout-button"
-                    className="create-workout-button"
-                    disabled={!newWorkoutName.trim()}
-                    onClick={() => handleCreateWorkout()}
-                  >
-                    Create New Workout
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {dailyWorkouts &&
-               dailyWorkouts.map((w) => (
-                <div
-                  key={w._id}
-                  className={
-                    "workout-list-item " +
-                    (selectedWorkoutIdForPicker === w._id ? "selected" : "")
-                  }
-                >
-                  <div
-                    className="workout-list-content"
-                    onClick={() =>
-                      setSelectedWorkoutIdForPicker(
-                        selectedWorkoutIdForPicker === w._id ? null : w._id,
-                      )
-                    }
-                  >
-                    <div className="workout-list-title">{w.title}</div>
-                    <div className="workout-list-date">
-                      {unixToDate(w.startTime)}
-                    </div>
-                  </div>
-
-                  <button className="load-workout-button"
-                  disabled={selectedWorkoutIdForPicker !== w._id}
-                    onClick={handleLoadWorkout}
-                  >
-                    Load Existing Workout
-                  </button>
-
-                </div>
-                
-              ))}
-
-            {dailyWorkouts.length > 0 && (
-                <div className="create-workout-section">
-                  <input
-                    type="text"
-                    id="new-workout-name-textbox"
-                    placeholder="Add a New Workout by Entering a Name"
-                    value={newWorkoutName}
-                    onChange={(e) => setNewWorkoutName(e.target.value)}
-                    onKeyDown={exitOnEnter}
-                  />
-                  <select
-                    id="select-gym-dropdown"
-                    value={selectedGymId}
-                    onChange={(e) => setSelectedGymId(e.target.value)}
-                  >
-                    <option value="">New Workout - No Gym</option>
-                    {availableGyms.map((g) => (
-                      <option key={g._id} value={g._id}>
-                        {g.name || g.address || "Ambiguous Gym"}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    id="create-new-workout-button"
-                    className="create-workout-button"
-                    disabled={newWorkoutName.trim() === ""}
-                    onClick={() => handleCreateWorkout()}
-                  >
-                    Create New Workout
-                  </button>
-                </div>
-            )}
-
-        </div>
-      </div>
-    </div>
-
-
-
-      {/* Center Column: Workout Card */}
-        {selectedEditableWorkout ? (
-          <>
-            <ExercisesCard AddSelectedExercises={AddSelectedExercises} />
-            <HeatMap data={{workout: selectedEditableWorkout._id}}/>
-            <div className="workout-card">
-              {/* Header row: Title on left, button on right */}
-
-              <div className="workout-header">
-                <div className="workout-title">
-                  <textarea
-                    className="workout-title-input"
-                    value={workoutTitle}
-                    onChange={(e) => {
-                      setWorkoutTitle(e.target.value);
-                      queueWorkoutAutosave();
-
-                      const el = e.target;
-
-                      // Reset to starting height
-                      el.style.height = "2.4em";
-
-                      // Expand up to max-height
-                      const scrollHeight = el.scrollHeight;
-                      const maxHeight = parseFloat(
-                        getComputedStyle(el).maxHeight,
-                      );
-
-                      el.style.height =
-                        Math.min(scrollHeight, maxHeight) + "px";
-                    }}
-                  />
-
-                  <h3>
-                    {unixToDate(selectedEditableWorkout.startTime)}
-                  </h3>
-                </div>
-
-                <select
-                  value={selectedGymId}
-                  onChange={(e) => {
-                    setSelectedGymId(e.target.value);
-                    queueWorkoutAutosave();
-                  }}
-                  style={{
-                    width: "100%",
-                    padding: "8px 10px",
-                    borderRadius: 6,
-                  }}
-                >
-                  <option value="">None / No Gym</option>
-                  {availableGyms.map((g) => (
-                    <option key={g._id} value={g._id}>
-                      {g.name ||
-                        `${g.address || "Unnamed"} (${g._id.slice(0, 6)})`}
-                    </option>
-                  ))}
-                </select>
-
-                <button className="select-workout-button" onClick={resetWorkoutPicker}>
-                  Clear Selection
-                </button>
-              </div>
-
-              {/* Exercise Table */}
-              <div className="workout-grid">
-                <div className="cell workout-grid-header">Exercise</div>
-                <div className="cell workout-grid-header">Reps</div>
-                <div className="cell workout-grid-header">Sets</div>
-                <div className="cell workout-grid-header">Weight</div>
-                <div className="cell workout-grid-header">Completed</div>
-                <div className="cell workout-grid-header"></div>
-
-                {exercisesInProgressTable.map((ex, i) => (
-                  <React.Fragment key={i}>
-                    <div className="cell">
-                      {personalExNames[ex.exercise_id] || "Loading..."}
-                    </div>
-
-                    <div className="cell">
-                      {ex.complete ? (
-                        ex.reps
-                      ) : (
-                        <input
-                          type="number"
-                          value={ex.reps}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            updateField(
-                              i,
-                              "reps",
-                              raw === "" ? "" : Number(raw),
-                            );
-                          }}
-                          onBlur={(e) => {
-                            if (e.target.value === "") {
-                              updateField(i, "reps", 0);
-                            }
-                          }}
-                          onKeyDown={exitOnEnter}
-                        />
-                      )}
-                    </div>
-
-                    <div className="cell">
-                      {ex.complete ? (
-                        ex.sets
-                      ) : (
-                        <input
-                          type="number"
-                          value={ex.sets}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            updateField(
-                              i,
-                              "sets",
-                              raw === "" ? "" : Number(raw),
-                            );
-                          }}
-                          onBlur={(e) => {
-                            if (e.target.value === "") {
-                              updateField(i, "reps", 0);
-                            }
-                          }}
-                          onKeyDown={exitOnEnter}
-                        />
-                      )}
-                    </div>
-
-                    <div className="cell">
-                      {ex.complete ? (
-                        ex.weight
-                      ) : (
-                        <input
-                          type="text"
-                          value={ex.weight}
-                          onChange={(e) =>
-                            updateField(i, "weight", e.target.value)
-                          }
-                          onKeyDown={exitOnEnter}
-                        />
-                      )}
-                    </div>
-
-                    <div className="cell">
-                      <input
-                        type="checkbox"
-                        checked={ex.complete}
-                        onChange={() => toggleCompleted(i)}
-                      />
-                    </div>
-
-                    <div className="cell">
-                      <button
-                        className="delete-button"
-                        onClick={() => removePersonalEx(i)}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </React.Fragment>
-                ))}
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="workout-actions">
-                <div className="workout-actions-right-side">
-                  <button
-                    className={saveButtonClass}
-                    onClick={handleManualSave}
-                    disabled={saveStatus === "saving"}
-                  >
-                    {saveButtonLabel}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Timer Footer */}
-            <div className="workout-footer">
-              <div className="workout-timer-box workout-timer">
-                {formatTimeFn(time)}
-              </div>
-              <button
-                className="workout-timer-box workout-timer-button"
-                onClick={toggleTimer}
-              >
-                {isRunning ? "Stop Timer" : "Start Timer"}
-              </button>
-            </div>
-          </>
-        ) : null}
-    </div>
+    <WorkoutLandingView
+      selectedDate={selectedDate}
+      dailyWorkouts={dailyWorkouts}
+      availableGyms={availableGyms}
+      templates={cachedTemplates}
+      onSelectWorkout={handleSelectWorkout}
+      onCreateWorkout={handleCreateWorkout}
+      onDeleteWorkout={handleDeleteWorkout}
+      onToggleFavorite={handleToggleFavorite}
+      onStartFromTemplate={handleStartFromTemplate}
+    />
   );
 }
+
+export default WorkoutLogger;
