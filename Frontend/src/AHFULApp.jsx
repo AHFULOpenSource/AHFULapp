@@ -15,7 +15,6 @@ import { Profile } from "./Auth/Profile.jsx";
 import { WhoAmI } from "./Auth/WhoAmI.js";
 import { TOS } from "./TOS.jsx";
 import { Layout } from "./Layout.jsx"
-import { Settings } from "./Auth/Settings.jsx";
 import { ExploreTasks } from "./Tasks/ExploreTasks.jsx";
 import { FavoritesHub } from "./Favorites/FavoritesHub.jsx";
 import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
@@ -78,7 +77,6 @@ function AHFULApp() {
             <Route path="/ExploreFriends" element={<ExploreFriends/>}/>
             <Route path="/MeasurementLogger" element={<MeasurementLogger/>}/>
             <Route path="/ExploreTasks" element={<ExploreTasks/>}/>
-            <Route path="Settings" element={<Settings/>} />
             <Route path="/SocialWorkouts" element={<SocialWorkouts/>}/>
             </Route>
         {/* Put outside of the Layout so it doesn't show the header/navbar */}

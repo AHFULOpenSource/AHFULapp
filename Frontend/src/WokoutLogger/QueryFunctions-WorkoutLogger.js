@@ -20,10 +20,13 @@ export async function loadEquipment() {
     }
 
     const data = await res.json();
-    let arr = data;
-    if (data && Array.isArray(data.data)) arr = data.data;
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
 
-    const normalized = (arr || []).map((item, idx) => {
+    const normalized = arr.map((item, idx) => {
       if (item && typeof item === "object") {
         const value =
           item.id ?? item._id ?? item.value ?? item.name ?? String(idx);
@@ -63,10 +66,13 @@ export async function loadBodyParts() {
     }
 
     const data = await res.json();
-    let arr = data;
-    if (data && Array.isArray(data.data)) arr = data.data;
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
 
-    const normalized = (arr || []).map((item, idx) => {
+    const normalized = arr.map((item, idx) => {
       if (item && typeof item === "object") {
         const value =
           item.id ?? item._id ?? item.value ?? item.name ?? String(idx);
@@ -106,10 +112,13 @@ export async function loadTargetMuscles() {
     }
 
     const data = await res.json();
-    let arr = data;
-    if (data && Array.isArray(data.data)) arr = data.data;
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
 
-    const normalized = (arr || []).map((item, idx) => {
+    const normalized = arr.map((item, idx) => {
       if (item && typeof item === "object") {
         const value =
           item.id ?? item._id ?? item.value ?? item.name ?? String(idx);

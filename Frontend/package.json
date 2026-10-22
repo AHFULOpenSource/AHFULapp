@@ -2,18 +2,22 @@
   "name": "frontend",
   "version": "1.0.0",
   "description": "This directory holds all information required for the Frontend to render and load for the user.   Key components: All Navigation Pages for the user Custom Auth Context component for persistent authentication Graphing compnents to visual IAM Check results",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "type": "module",
   "main": "vite.config.js",
+  "directories": {
+    "test": "test"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test 'test/**/*.test.js'",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@reduxjs/toolkit": "2.12.0",
     "@vitejs/plugin-react": "6.0.2",
@@ -30,9 +34,5 @@
     "redux": "5.0.1",
     "redux-persist": "6.0.0",
     "vite": "8.0.16"
-  },
-  "devDependencies": {
-    "eslint-plugin-import": "^1.14.0",
-    "eslint-plugin-unicorn": "^72.0.0"
   }
 }

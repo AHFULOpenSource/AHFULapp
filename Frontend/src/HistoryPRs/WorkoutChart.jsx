@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import "./ExploreWorkouts.css";
-
-const API_BASE = "http://localhost:5000/api/AHFULworkouts";
+import { pullWorkouts } from "../WokoutLogger/PullWorkoutSlice.js";
 const WEEK_OPTIONS = [4, 6, 8, 12];
 
 function getWeekInfo(date) {
@@ -42,51 +41,41 @@ function aggregateWorkoutsToWeeks(workouts, numWeeks) {
     .map(([, { week, count }]) => ({ week, workouts: count }));
 }
 
-export function WorkoutChart({ defaultWeeks = 6 }) {
+export function WorkoutChart({ defaultWeeks = 6, workouts: propWorkouts = null }) {
+  const dispatch = useDispatch();
   const [weeks, setWeeks] = useState(defaultWeeks);
-  const [allWorkouts, setAllWorkouts] = useState([]);
-  const [weeklyData, setWeeklyData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const userId = useSelector((state) => state.setting.user_id);
+  const [fetchError, setFetchError] = useState(null);
 
-  const fetchWorkouts = useCallback(async () => {
-    if (!userId) {
-      setLoading(false);
-      return;
+  const reduxWorkouts = useSelector((state) => state.pullWorkout?.workouts);
+  const reduxLoading = useSelector((state) => state.pullWorkout?.loading);
+  const userId = useSelector((state) => state.setting?.user_id);
+
+  // Use props if provided, otherwise Redux store
+  const allWorkouts = useMemo(() => {
+    if (Array.isArray(propWorkouts)) return propWorkouts;
+    if (Array.isArray(reduxWorkouts)) return reduxWorkouts;
+    return [];
+  }, [propWorkouts, reduxWorkouts]);
+
+  // If Redux has no workouts yet, dispatch pullWorkouts()
+  useEffect(() => {
+    if (!propWorkouts && (!reduxWorkouts || reduxWorkouts.length === 0)) {
+      dispatch(pullWorkouts());
     }
+  }, [dispatch, propWorkouts, reduxWorkouts]);
 
+  // Fallback direct fetch if requested
+  const handleRetry = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch(`${API_BASE}/${userId}`, {credentials: "include"});
-      
-      if (!res.ok) {
-        if (res.status === 404) {
-          setAllWorkouts([]);
-          setLoading(false);
-          return;
-        }
-        throw new Error(`Server returned ${res.status}`);
-      }
-      
-      const data = await res.json();
-      setAllWorkouts(Array.isArray(data) ? data : []);
+      setFetchError(null);
+      await dispatch(pullWorkouts()).unwrap();
     } catch (err) {
-      console.error("Error fetching workouts:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setFetchError(err?.message || "Failed to load workouts");
     }
-  }, [userId]);
+  }, [dispatch]);
 
-  useEffect(() => {
-    fetchWorkouts();
-  }, [fetchWorkouts]);
-
-  useEffect(() => {
-    const filtered = aggregateWorkoutsToWeeks(allWorkouts, weeks);
-    setWeeklyData(filtered);
+  const weeklyData = useMemo(() => {
+    return aggregateWorkoutsToWeeks(allWorkouts, weeks);
   }, [allWorkouts, weeks]);
 
   const handleWeekChange = (newWeeks) => {
@@ -106,7 +95,9 @@ export function WorkoutChart({ defaultWeeks = 6 }) {
     );
   }
 
-  if (loading) {
+  const isLoading = reduxLoading && allWorkouts.length === 0;
+
+  if (isLoading) {
     return (
       <div className="workout-chart-widget">
         <div className="workout-chart-header">
@@ -119,7 +110,7 @@ export function WorkoutChart({ defaultWeeks = 6 }) {
     );
   }
 
-  if (error) {
+  if (fetchError) {
     return (
       <div className="workout-chart-widget">
         <div className="workout-chart-header">
@@ -127,7 +118,7 @@ export function WorkoutChart({ defaultWeeks = 6 }) {
         </div>
         <div className="workout-chart-error">
           <p>Error loading workouts</p>
-          <button onClick={fetchWorkouts} className="retry-btn">Retry</button>
+          <button onClick={handleRetry} className="retry-btn">Retry</button>
         </div>
       </div>
     );

@@ -10,7 +10,7 @@ export async function WhoAmI(dispatch, navigate) {
         const backendVerificationResponse = await fetch('http://localhost:5000/api/AHFULauth/whoami', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: {},
+            body: JSON.stringify({}),
             credentials: 'include'
         });
 

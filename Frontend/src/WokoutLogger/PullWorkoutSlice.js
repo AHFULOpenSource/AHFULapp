@@ -23,6 +23,9 @@ export const pullWorkouts = createAsyncThunk(
       }
 
       const data = await res.json();
+      if (!Array.isArray(data)) {
+        return [];
+      }
       return data.map((w) => ({
         _id: w._id,
         startTime: w.startTime,

@@ -1,219 +1,168 @@
-.dashboard-landing {
-  display: flex;
-  flex-direction: column;
-  align-self: center;
-}
+/* ==========================================================================
+   AHFUL Dashboard Styles
+   Responsive Viewports:
+   - Mobile (< 768px): Single continuous scrolling column
+   - Medium / Tablet (768px - 1199px): Dual-column layout (unified page scroll)
+   - Large / Desktop (>= 1200px): Modular 12-column grid view
+   ========================================================================== */
 
-.hero-eyebrow {
-  display: inline-block;
-  font-weight: 500;
-  padding: 4px 14px;
-  border-radius: 20px;
-  background: #eeedfe;
-  color: #3c3489;
-  margin-bottom: 0.5rem;
-}
-
-.section {
-  padding: 36px 24px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.section-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.section-sub {
-  color: var(--text-secondary);
-  margin-bottom: 18px;
-}
-
-.section_grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-}
-
-.section_card {
-  background: var(--input-bg);
-  padding: 20px 18px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
-  transition:
-    box-shadow 0.18s ease,
-    transform 0.12s ease,
-    border-color 0.12s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-.section_icon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  font-size: 18px;
-}
-
-.section_name {
-  color: var(--accent-blue);
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  font-size: 1.05rem;
-}
-
-.section_body {
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
-}
-
-.section_card:hover,
-.section_card:focus-within {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(31, 41, 55, 0.08);
-  border-color: rgba(34, 115, 255, 0.9);
-}
-
-.section_card:focus {
-  outline: 3px solid rgba(34, 115, 255, 0.12);
-  outline-offset: 2px;
+.dashboard-internal {
+  padding: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .streaks-wrapper {
-  justify-content: center;
   display: flex;
   gap: 16px;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-wrap: wrap;
 }
 
-/* Pill style buttons */
-.primary-cta {
-  background: var(--accent-blue);
-  color: var(--input-bg);
-  padding: 10px 18px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-weight: 700;
-  display: inline-block;
-  border: none;
+.streaks-wrapper .streak-counter {
+  flex: 1;
+  min-width: 160px;
 }
 
-.secondary-cta {
-  color: var(--accent-blue);
-  padding: 10px 18px;
-  margin-left: 12px;
-  text-decoration: none;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  font-weight: 700;
-  background: transparent;
+.dashboard-widget {
+  min-width: 0;
+  box-sizing: border-box;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.secondary-cta:hover {
-  background: var(--button-hover);
+.dashboard-widget-calendar .calendar-container {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
 }
 
-/* Internal Dashboard Styles */
-.dashboard-internal {
-  padding: 16px;
-}
-
+/* ==========================================================================
+   Desktop Viewport (>= 1200px) - Modular 12-Column Grid
+   ========================================================================== */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 350px;
+  grid-template-columns: repeat(12, 1fr);
   gap: 20px;
   align-items: start;
 }
 
-.dashboard-main-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+/* Flatten containers on desktop so all widgets participate in the 12-column grid */
+@media (min-width: 1200px) {
+  .dashboard-main-content,
+  .dashboard-side-content,
+  .dashboard-tasks-subrow {
+    display: contents;
+  }
+
+  .dashboard-widget-streaks {
+    grid-column: span 8;
+  }
+
+  .dashboard-widget-calendar {
+    grid-column: span 4;
+  }
+
+  .dashboard-widget-food-todo {
+    grid-column: span 4;
+  }
+
+  .dashboard-widget-workout-todo {
+    grid-column: span 4;
+  }
+
+  .dashboard-widget-tasks {
+    grid-column: span 4;
+  }
+
+  .dashboard-widget-food-chart {
+    grid-column: span 6;
+  }
+
+  .dashboard-widget-workout-chart {
+    grid-column: span 6;
+  }
 }
 
-.dashboard-tasks-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.dashboard-side-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-
-
-.label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-
-
-
-@media (max-width: 1024px) {
+/* ==========================================================================
+   Medium / Tablet Viewport (768px - 1199px) - Dual Column Unified Page Scroll
+   Left column for streaks and tasks, Right column for charts.
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 1199px) {
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .dashboard-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
   }
 
   .dashboard-side-content {
-    order: -1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
   }
-  
+
+  .dashboard-widget {
+    width: 100%;
+    grid-column: auto;
+  }
+
+  .dashboard-tasks-subrow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
 }
 
-@media (max-width: 768px) {
+/* ==========================================================================
+   Mobile Phone Viewport (< 768px) - Single Continuous Vertical Scroll
+   ========================================================================== */
+@media (max-width: 767px) {
   .dashboard-internal {
     padding: 12px;
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
   }
 
-  .dashboard-main-content {
-    gap: 16px;
-    order: 1;
-  }
-
+  .dashboard-main-content,
   .dashboard-side-content {
+    display: flex;
+    flex-direction: column;
     gap: 16px;
-    order: 2;
+    width: 100%;
   }
 
-  .dashboard-tasks-row {
-    grid-template-columns: 1fr;
+  .dashboard-widget {
+    width: 100%;
+    grid-column: auto;
+  }
+
+  .streaks-wrapper {
+    justify-content: center;
+  }
+
+  .streaks-wrapper .streak-counter {
+    min-width: 140px;
+  }
+
+  .dashboard-tasks-subrow {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
   }
 }
 
-@media (max-width: 1024px) {
-
-}
-
-@media (max-width: 480px) {
-  .section_grid{
-    grid-template-columns: 1fr;
-  }
-  .section {
-    padding: 18px 12px;
-  }
-  .section_icon {
-    width: 36px;
-    height: 36px;
-  }
-}

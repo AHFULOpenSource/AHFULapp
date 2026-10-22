@@ -123,6 +123,14 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
           </NavLink>
 
           <NavLink
+            to="/ExploreFriends"
+            className={({ isActive }) => (isActive ? "active" : "")}
+            onClick={handleNavClick}
+          >
+            Explore Friends
+          </NavLink>
+
+          <NavLink
             to="/Map"
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}

@@ -34,12 +34,12 @@ class PersonalExObject:
     
     @staticmethod
     def find_by_user(user_id):
-        personalEx = get_collection('personalExercise').find({"user_id": ObjectId(user_id)})
+        personalEx = get_collection('personalExercise').find({"user_id": ObjectId(user_id)}).sort("order", 1)
         return [PersonalExObject._serialize(w) for w in personalEx]
     
     @staticmethod
     def find_by_workout(workout_id):
-        personalEx = get_collection('personalExercise').find({"workout_id": ObjectId(workout_id)})
+        personalEx = get_collection('personalExercise').find({"workout_id": ObjectId(workout_id)}).sort("order", 1)
         return [PersonalExObject._serialize(w) for w in personalEx]
     
     # ── Update ──────────────────────────────────────────────────────────────────
