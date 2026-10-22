@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../siteStyles.css";
 import * as socialApi from "./socialApi";
 import { useSelector } from "react-redux";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 export function ExploreFriends() {
     // state (will be backed by backend)
@@ -12,7 +13,7 @@ export function ExploreFriends() {
     const [friends, setFriends] = useState([]);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
-    const user = useSelector((state) => state.auth.user);
+    const { user, loading: authLoading } = GetFirebaseUser();
 
     const handleAddFriend = (e) => {
         if (e && e.preventDefault) e.preventDefault();

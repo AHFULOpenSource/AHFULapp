@@ -26,9 +26,9 @@ export function CompanionAI() {
       gainNode.connect(audioContext.destination);
       gainNodeRef.current = gainNode;
 
-      console.log('Web Audio API initialized for global muting');
+      // console.log('Web Audio API initialized for global muting');
     } catch (error) {
-      console.log('Web Audio API not available:', error);
+      console.error('Web Audio API not available:', error);
     }
   }, []);
 
@@ -39,7 +39,7 @@ export function CompanionAI() {
     // Keep image static when muted
     if (isMuted && imgRef.current) {
       imgRef.current.src = '../../images/char-mouth-closed.png';
-      console.log('Image set to static (mouth closed)');
+      // console.log('Image set to static (mouth closed)');
     }
   }, [isMuted]);
 
@@ -88,7 +88,7 @@ export function CompanionAI() {
 
   const handleMuteToggle = () => {
     const newMutedState = !isMuted;
-    console.log('🔊 Mute button clicked - new state:', newMutedState ? '🔇 MUTED' : '🔊 UNMUTED');
+    // console.log('🔊 Mute button clicked - new state:', newMutedState ? '🔇 MUTED' : '🔊 UNMUTED');
 
     // Update ref immediately
     isMutedRef.current = newMutedState;
@@ -96,7 +96,7 @@ export function CompanionAI() {
     // Mute/unmute Web Speech API
     if (aiInstanceRef.current) {
       if (newMutedState) {
-        console.log('Canceling AI speech...');
+        // console.log('Canceling AI speech...');
         aiInstanceRef.current.cancelSpeech();
       }
       aiInstanceRef.current.setMuted(newMutedState);
@@ -106,7 +106,7 @@ export function CompanionAI() {
     const audioElements = document.querySelectorAll('audio');
     audioElements.forEach(audio => {
       audio.muted = newMutedState;
-      console.log('Audio element muted:', newMutedState);
+      // console.log('Audio element muted:', newMutedState);
     });
 
     // Mute/unmute Web Audio API contexts
@@ -117,7 +117,7 @@ export function CompanionAI() {
           audioContextRef.current.resume();
         }
       } catch (e) {
-        console.log('Audio context error:', e);
+        console.error('Audio context error:', e);
       }
     }
 
@@ -125,7 +125,7 @@ export function CompanionAI() {
     if (window.speechSynthesis) {
       if (newMutedState) {
         window.speechSynthesis.cancel();
-        console.log('Global speechSynthesis canceled');
+        // console.log('Global speechSynthesis canceled');
       }
     }
 

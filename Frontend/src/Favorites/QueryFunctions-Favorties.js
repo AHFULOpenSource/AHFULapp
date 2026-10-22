@@ -1,7 +1,7 @@
 export async function getWorkoutFavorites(userId) {
   try {
     const res = await fetch(
-      `https://www.ahful.app/api/AHFULworkouts/favorites/${userId}`,
+      `https://api.ahful.app/api/AHFULworkouts/favorites/${userId}`,
       {
         method: "GET",
         mode: "cors",

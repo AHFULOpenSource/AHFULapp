@@ -12,8 +12,8 @@ export const settingsInitialState = {
   locations: [],
   tutorialComplete: false,
   timezone: "EST",
-    // user's profile bio (displayed on Profile page)
-    user_bio: "",
+  // user's profile bio (displayed on Profile page)
+  user_bio: "",
   // backend keys
   _id: "",
   availableEquipment: "",
@@ -23,7 +23,7 @@ export const settingsInitialState = {
   shameLevel: "",
   updated_at: "",
   user_id: "",
-}
+};
 
 export const SettingSlice = createSlice({
     name: "setting",

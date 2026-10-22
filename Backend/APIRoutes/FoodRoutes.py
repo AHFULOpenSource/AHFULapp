@@ -45,7 +45,7 @@ def get_favorite_foods(user_id):
 
 # ── GET specific food by id ────────────────────────────
 @foodRouteBlueprint.route("/id/<id>", methods=["GET"])
-@login_required_dev
+@login_required_user
 def get_food_by_id(id):
     food, error = FoodDriver.get_food_by_id(id)
     if error:
@@ -85,13 +85,11 @@ def get_food_streak(user_id):
     return jsonify(streak_data), 200
 
 # ── GET foods by user id ────────────────────────────────────────────────────────────
-@foodRouteBlueprint.route("/<user_id>", methods=["GET"])
+@foodRouteBlueprint.route("/userid", methods=["GET"])
 @login_required_user
-def get_food_by_user(user_id):
+def get_food_by_user():
     # Own user request, devs or admins only
-    if (user_id != g.user_id) and (g.role != "Developer") and (g.role != "Admin"):
-        return jsonify({"error": "You may only access your own data"}), 403
-    food, error = FoodDriver.get_food_by_user(user_id)
+    food, error = FoodDriver.get_food_by_user(g.user_id)
     if error:
         return jsonify({"error": error}), 404
     return jsonify(food), 200

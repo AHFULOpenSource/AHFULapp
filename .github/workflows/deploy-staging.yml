@@ -45,7 +45,7 @@ jobs:
       # Search for files that contain either localhost:5000 or localhost:5173
       - name: Replace localhost URLs with Production URL
         run: |
-          echo ">>> Replacing http://localhost:5000 → https://www.ahful.app and http://localhost:5173 → https://ahful.app"
+          echo ">>> Replacing http://localhost:5000 → https://api.ahful.app and http://localhost:5173 → https://www.ahful.app"
           grep -rl \
             --exclude-dir='.git' \
             --exclude-dir='.github' \
@@ -54,8 +54,8 @@ jobs:
             -e 'http://localhost:5000' \
             -e 'http://localhost:5173' \
             . | while read file; do
-            sed -i 's|http://localhost:5000|https://www.ahful.app|g' "$file"
-            sed -i 's|http://localhost:5173|https://ahful.app|g' "$file"
+            sed -i 's|http://localhost:5000|https://api.ahful.app|g' "$file"
+            sed -i 's|http://localhost:5173|https://www.ahful.app|g' "$file"
             echo "  patched: $file"
           done
 

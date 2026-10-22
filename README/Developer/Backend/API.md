@@ -4,8 +4,8 @@ We use Swagger to document all backend API routes. The Swagger UI provides an in
 
 ### Accessing the API Docs
 
-- **Production**: [https://www.ahful.app/api/APIDocs/](https://www.ahful.app/api/APIDocs/)
-- **Local**: `https://www.ahful.app/api/APIDocs/` (when running the Flask dev server)
+- **Production**: [https://api.ahful.app/api/APIDocs/](https://www.ahful.app/api/APIDocs/)
+- **Local**: `http://localhost:5000/api/APIDocs/` (when running the Flask dev server)
 
 ### Backend Route Files
 
