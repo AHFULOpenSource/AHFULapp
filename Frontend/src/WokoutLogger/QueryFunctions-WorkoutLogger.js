@@ -3,7 +3,7 @@
 export async function loadEquipment() {
   try {
     const res = await fetch(
-      "https://www.ahful.app/api/AHFULexercises/equipments/",
+      "https://api.ahful.app/api/AHFULexercises/equipments/",
       {
         method: "GET",
         mode: "cors",
@@ -20,10 +20,13 @@ export async function loadEquipment() {
     }
 
     const data = await res.json();
-    let arr = data;
-    if (data && Array.isArray(data.data)) arr = data.data;
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
 
-    const normalized = (arr || []).map((item, idx) => {
+    const normalized = arr.map((item, idx) => {
       if (item && typeof item === "object") {
         const value =
           item.id ?? item._id ?? item.value ?? item.name ?? String(idx);
@@ -48,7 +51,7 @@ export async function loadEquipment() {
 
 export async function loadBodyParts() {
   try {
-    const res = await fetch("https://www.ahful.app/api/AHFULexercises/bodyparts/", {
+    const res = await fetch("https://api.ahful.app/api/AHFULexercises/bodyparts/", {
       method: "GET",
       mode: "cors",
       credentials: "include",
@@ -63,10 +66,13 @@ export async function loadBodyParts() {
     }
 
     const data = await res.json();
-    let arr = data;
-    if (data && Array.isArray(data.data)) arr = data.data;
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
 
-    const normalized = (arr || []).map((item, idx) => {
+    const normalized = arr.map((item, idx) => {
       if (item && typeof item === "object") {
         const value =
           item.id ?? item._id ?? item.value ?? item.name ?? String(idx);
@@ -91,7 +97,7 @@ export async function loadBodyParts() {
 
 export async function loadTargetMuscles() {
   try {
-    const res = await fetch("https://www.ahful.app/api/AHFULexercises/muscles/", {
+    const res = await fetch("https://api.ahful.app/api/AHFULexercises/muscles/", {
       method: "GET",
       mode: "cors",
       credentials: "include",
@@ -106,10 +112,13 @@ export async function loadTargetMuscles() {
     }
 
     const data = await res.json();
-    let arr = data;
-    if (data && Array.isArray(data.data)) arr = data.data;
+    const arr = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
 
-    const normalized = (arr || []).map((item, idx) => {
+    const normalized = arr.map((item, idx) => {
       if (item && typeof item === "object") {
         const value =
           item.id ?? item._id ?? item.value ?? item.name ?? String(idx);
@@ -138,7 +147,7 @@ export async function loadTargetMuscles() {
 
 export async function fetchExerciseById(exerciseId) {
   const res = await fetch(
-    `https://www.ahful.app/api/AHFULexercises/id/${exerciseId}`, {credentials: 'include'}
+    `https://api.ahful.app/api/AHFULexercises/id/${exerciseId}`, {credentials: 'include'}
   );
   if (!res.ok) {
     throw new Error(
@@ -150,7 +159,7 @@ export async function fetchExerciseById(exerciseId) {
 
 export async function fetchWorkoutById(workoutId) {
   try {
-    const res = await fetch(`https://www.ahful.app/api/AHFULworkouts/id/${workoutId}`, {credentials: 'include'});
+    const res = await fetch(`https://api.ahful.app/api/AHFULworkouts/id/${workoutId}`, {credentials: 'include'});
 
     if (res.status === 404 || res.status === 204) {
       return null;
@@ -166,7 +175,7 @@ export async function fetchWorkoutById(workoutId) {
     const data = await res.json();
     return data;
   } catch (err) {
-    console.error("fetchWorkout error:", err);
+    console.error("fetchWorkoutById error:", err);
     throw err;
   }
 }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import "../HistoryPRs/ExploreWorkouts.css";
 import "../siteStyles.css";
+import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
 
 // SocialWorkouts - social page that resembles ExploreWorkouts what is the Shared workouts a User and their friends have shared
 // Left: Shared workouts list from friends.
@@ -10,8 +11,8 @@ import "../siteStyles.css";
 
 export function SocialWorkouts() {
   const navigate = useNavigate();
-  const user = useSelector((s) => s.auth.user);
-  const userId = user?.id;
+  const { user, loading: authLoading } = GetFirebaseUser();
+  const userId = useSelector((state) => state.setting.user_id);
   const userEmail = user?.email.toLowerCase();
   const cachedExercises = useSelector((state) => state.pullExercise.exercises);
 
@@ -55,7 +56,7 @@ export function SocialWorkouts() {
     setError(null);
     try {
       // Attempt a sensible endpoint; if your backend differs update this URL
-      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/shared-workouts`, {
+      const res = await fetch(`https://api.ahful.app/api/AHFULsocial/shared-workouts`, {
         method: "GET",
         credentials: "include",
       });
@@ -80,7 +81,7 @@ export function SocialWorkouts() {
 
   const fetchWallPosts = async () => {
     try {
-      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/wall-posts`, {
+      const res = await fetch(`https://api.ahful.app/api/AHFULsocial/wall-posts`, {
         method: "GET",
         credentials: "include",
       });
@@ -104,7 +105,7 @@ export function SocialWorkouts() {
     setFriendsLoading(true);
     setFriendsError(null);
     try {
-      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/user`, {
+      const res = await fetch(`https://api.ahful.app/api/AHFULsocial/user`, {
         method: "GET",
         credentials: "include",
       });
@@ -154,7 +155,7 @@ export function SocialWorkouts() {
     setPosting(true);
     setPostError(null);
     try {
-      const res = await fetch(`https://www.ahful.app/api/AHFULsocial/wall-posts`, {
+      const res = await fetch(`https://api.ahful.app/api/AHFULsocial/wall-posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -204,7 +205,7 @@ export function SocialWorkouts() {
       setGymLoading(true);
       setGymError(null);
       try {
-        const res = await fetch(`https://www.ahful.app/api/AHFULgyms/${gymId}` , {
+        const res = await fetch(`https://api.ahful.app/api/AHFULgyms/${gymId}` , {
           method: "GET",
           credentials: "include",
         });
@@ -253,7 +254,7 @@ export function SocialWorkouts() {
       setPersonalExLoading(true);
       setPersonalExError(null);
       try {
-        const res = await fetch(`https://www.ahful.app/api/AHFULpersonalEx/workout/${workoutId}`, {
+        const res = await fetch(`https://api.ahful.app/api/AHFULpersonalEx/workout/${workoutId}`, {
           method: "GET",
           credentials: "include",
         });

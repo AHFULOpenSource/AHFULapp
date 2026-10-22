@@ -96,7 +96,7 @@ export function HeatMap({ data = {} }) {
     const selectedWorkoutID = data?.workout;
     const todaysWorkout = workouts?.find(w => w?._id === selectedWorkoutID); 
 
-    console.log('todaysWorkout:', todaysWorkout);
+    // console.log('todaysWorkout:', todaysWorkout);
 
     if (!todaysWorkout) {
       setHighlightedMuscles([]);
@@ -107,7 +107,7 @@ export function HeatMap({ data = {} }) {
       pe => pe?.workout_id === todaysWorkout._id
     ) || [];
 
-    console.log('workoutPersonalExercises:', workoutPersonalExercises);
+    // console.log('workoutPersonalExercises:', workoutPersonalExercises);
 
     if (workoutPersonalExercises.length === 0) {
       setHighlightedMuscles([]);
@@ -117,24 +117,24 @@ export function HeatMap({ data = {} }) {
     const targetMuscles = new Set();
 
     workoutPersonalExercises.forEach(pe => {
-      console.log('pe.exercise_id:', pe.exercise_id, 'type:', typeof pe.exercise_id);
+      // console.log('pe.exercise_id:', pe.exercise_id, 'type:', typeof pe.exercise_id);
       
       const exercise = exercises?.find(e => {
-        console.log('e._id:', e._id, 'type:', typeof e._id, 'match:', e._id === pe.exercise_id);
+        // console.log('e._id:', e._id, 'type:', typeof e._id, 'match:', e._id === pe.exercise_id);
         return e?._id === pe?.exercise_id;
       });
-      console.log('found exercise:', exercise);
+      // console.log('found exercise:', exercise);
       if (exercise && Array.isArray(exercise.targetMuscles)) {
-        console.log('targetMuscles:', exercise.targetMuscles);
+        // console.log('targetMuscles:', exercise.targetMuscles);
         exercise.targetMuscles.forEach(tm => {
           const slugs = mapTargetMuscleToSlug(tm);
-          console.log('mapped:', tm, '->', slugs);
+          // console.log('mapped:', tm, '->', slugs);
           slugs.forEach(s => targetMuscles.add(s));
         });
       }
     });
 
-    console.log('final highlightedMuscles:', Array.from(targetMuscles));
+    // console.log('final highlightedMuscles:', Array.from(targetMuscles));
     setHighlightedMuscles(Array.from(targetMuscles));
   }, [data, workouts, exercises, personalExercises]);
 
@@ -143,7 +143,7 @@ export function HeatMap({ data = {} }) {
     intensity: 1,
   }));
 
-  console.log('HeatMap bodyData:', bodyData);
+  // console.log('HeatMap bodyData:', bodyData);
 
   return (
     <div className="heatmap-container">

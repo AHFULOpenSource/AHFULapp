@@ -5,8 +5,6 @@ import { useState, useEffect } from "react";
 export function VerifyEmail() {
   // ----- Verification STATE MANAGEMENT ---------------------------------------------------------------------------
   //Redux Site Wide Auth State
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const theme = useSelector((state) => state.setting?.theme || "light");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -14,7 +12,6 @@ export function VerifyEmail() {
   const status = params.get("status");
   const message = params.get("message");
 
-  const [statusText, setStatusText] = useState("");
 
 // ----- Verification Page HTML ---------------------------------------------------------------------------
   return (

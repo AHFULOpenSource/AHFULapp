@@ -5,10 +5,9 @@ import "./MeasurementLogger.css";
 import "../siteStyles.css";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const API_BASE = "https://www.ahful.app/api/AHFULmeasurements";
+const API_BASE = "https://api.ahful.app/api/AHFULmeasurements";
 
 export function MeasurementLogger() {
-    const user = useSelector((state) => state.auth.user);
     const [measurements, setMeasurements] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isMetric, setIsMetric] = useState(false);
@@ -24,17 +23,7 @@ export function MeasurementLogger() {
     const [errors, setErrors] = useState("");
     const [editingId, setEditingId] = useState(null);
 
-    const getUserId = () => {
-        if (user?._id) return user._id;
-        try {
-            const stored = JSON.parse(localStorage.getItem("user_data"));
-            return stored?._id || null;
-        } catch {
-            return null;
-        }
-    };
-
-    const userId = getUserId();
+  const userId = useSelector((state) => state.setting.user_id);
 
     // Conversion functions
     const inchesToCm = (inches) => inches ? (inches * 2.54).toFixed(1) : "";

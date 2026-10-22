@@ -2367,3 +2367,33 @@ def test_delete_promo_not_found():
 
     assert deleted is None
     assert err == "Promo not found"
+
+def test_personal_ex_order_and_set_details_support():
+    # Validates input checking and allowed fields for order and setDetails
+    bad_id = "invalid-pe-id"
+    resp, err = PersonalExDriver.update_personal_ex(bad_id, {
+        "order": 1,
+        "setDetails": [{"setNumber": 1, "type": "1", "reps": 10, "weight": 135, "completed": True}]
+    })
+    assert resp is None
+    assert "Invalid personal_ex_id format" in err
+
+    resp, err = PersonalExDriver.update_personal_ex(None, {"order": 0})
+    assert resp is None
+    assert err == "You must provide a personal ex id to update"
+
+    resp, err = PersonalExDriver.create_personal_ex(
+        user_id=None,
+        exercise_id="69b22a2344f2bd681112ca8a",
+        workout_id="69d43248f826ab5daa4431af",
+        reps=10,
+        sets=3,
+        weight=100,
+        duration=0,
+        distance=0,
+        complete=False,
+        order=2,
+        setDetails=[{"setNumber": 1, "type": "W", "reps": 10, "weight": 50, "completed": True}]
+    )
+    assert resp is None
+    assert "missing a user_id" in err

@@ -8,7 +8,7 @@ from Services.SocialDriver import SocialDriver
 
 
 class NotificationScheduler:
-    def __init__(self, app=None, interval_seconds=300):
+    def __init__(self, app=None, interval_seconds=3600):
         self.interval = interval_seconds
         self.running = False
         self.thread = None

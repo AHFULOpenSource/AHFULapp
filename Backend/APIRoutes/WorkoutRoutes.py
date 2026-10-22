@@ -15,13 +15,10 @@ def get_all_workouts():
     return jsonify(workouts), 200
 
 # ── GET all workouts for a specific user ──────────────────────────────────────
-@workoutRouteBlueprint.route("/<user_id>", methods=["GET"])
+@workoutRouteBlueprint.route("/userid", methods=["GET"])
 @login_required_user
-def get_workouts_by_user(user_id):
-    # Own user request, devs or admins only
-    if (user_id != g.user_id) and (g.role != "Developer") and (g.role != "Admin"):
-        return jsonify({"error": "You may only access your own data"}), 403
-    workouts, error = WorkoutDriver.get_workouts_by_user(user_id)
+def get_workouts_by_user():
+    workouts, error = WorkoutDriver.get_workouts_by_user(g.user_id)
     if error:
         return jsonify({"error": error}), 404
     return jsonify(workouts), 200

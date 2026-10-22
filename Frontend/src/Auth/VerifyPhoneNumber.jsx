@@ -5,19 +5,8 @@ import { useState, useEffect } from "react";
 export function VerifyPhoneNumber() {
   // ----- Verification STATE MANAGEMENT ---------------------------------------------------------------------------
   //Redux Site Wide Auth State
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const theme = useSelector((state) => state.setting?.theme || "light");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [statusText, setStatusText] = useState("");
-
-  // ----- Verification Debug Functions ---------------------------------------------------------------------------
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setStatusText(`Logged in as ${user.email}`);
-      navigate("/Login", { replace: true });
-    }
-  }, [isAuthenticated, user]);
 
 // ----- Verification Page HTML ---------------------------------------------------------------------------
   return (

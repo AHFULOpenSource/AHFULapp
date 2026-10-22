@@ -3,10 +3,12 @@ import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import "./siteStyles.css";
 import { TOS } from "./TOS.jsx";
+import { auth } from "./firebase.js";
+import { GetFirebaseUser } from "./Auth/GetFirebaseUser.js";
 
 export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const user = useSelector((state) => state.auth.user);
+  const { user, loading: authLoading } = GetFirebaseUser();
+  const emailVerified = user?.emailVerified;
   const [showTOS, setShowTOS] = useState(false);
 
   const handleNavClick = () => {
@@ -18,7 +20,7 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
   return (
     <nav className={`sidebar ${isOpen ? "open" : "closed"}`} style={{ minHeight }}>
 
-      {(!isAuthenticated || !user.email_verified) ? (
+      {( !emailVerified) ? (
         <>
           <NavLink
             to="/NotVerified"
@@ -121,6 +123,14 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
           </NavLink>
 
           <NavLink
+            to="/ExploreFriends"
+            className={({ isActive }) => (isActive ? "active" : "")}
+            onClick={handleNavClick}
+          >
+            Explore Friends
+          </NavLink>
+
+          <NavLink
             to="/Map"
             className={({ isActive }) => (isActive ? "active" : "")}
             onClick={handleNavClick}
@@ -139,13 +149,13 @@ export function Navbar({ minHeight, isOpen = false, onNavClick = null }) {
 
       <TOS isOpen={showTOS} onClose={() => setShowTOS(false)} />
 
-      { (user?.roles?.includes("Admin") && user?.email_verified == true) && (<a
-        href="https://www.ahful.app/api/APIDocs"
+      {/* { (user?.roles?.includes("Admin") && user?.email_verified == true) && (<a
+        href="https://api.ahful.app/api/APIDocs"
         target="_blank"
         rel="noreferrer"
         onClick={handleNavClick}>
         API Documentation
-      </a>)}
+      </a>)} */}
     </nav>
   );
 }

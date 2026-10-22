@@ -1,5 +1,3 @@
-from google.oauth2 import id_token
-from google.auth.transport import requests
 from Services.UserDriver import UserDriver
 from Services.VerificationDriver import VerificationDriver
 from Services.UserSettingsDriver import UserSettingsDriver
@@ -7,18 +5,11 @@ from flask import jsonify, make_response, g
 from time import time
 from math import trunc
 from datetime import datetime
-
-##THIS IS SKELETON NEED TO VERIFY
-
+from firebase_admin import auth
 #Services & Drivers know how to implement business Logic related to the Route operations.  Intermediate between Routes and Objects.  Ensures validations and rules are applied before Calling Objects to interact with DB
 
-#Initalizes Google packages. 
-
 class SignInDriver:
-    def __init__(self, GOOGLE_CLIENT_ID: str):
-        self.client_id: str = GOOGLE_CLIENT_ID
-
-    def google_login(self, postAuthData):
+    def ahful_backend_firebase_login(postAuthData):
         #session_service: SessionService = current_app.session_service
 
         token = postAuthData.get("token")
@@ -26,7 +17,8 @@ class SignInDriver:
             return None, "No google token provided to the Backend.  You cannot login without something to login with.  What is this? Anarchy?"
 
         # verify JWT
-        decodedUserInfo: dict = SignInDriver.verify_google_token(self, token)
+        decodedUserInfo: dict = auth.verify_id_token(token)
+        # print(decodedUserInfo)
         if not decodedUserInfo:
             return None, "Invalid google token provided to Backend.  Dont come in here with Sloppily Copied Keys."
 
@@ -40,16 +32,19 @@ class SignInDriver:
             routeUserObject = UserDriver.create_user({
                 "name": decodedUserInfo.get("name"),
                 "email": decodedUserInfo.get("email"),
-                "email_verified": False,
+                "email_verified": decodedUserInfo.get("email_verified"),
                 "phone_number" : "", # No phone number from google, will update later with phone verification.
                 "phone_verified": False,
                 "picture": decodedUserInfo.get("picture"),
                 "updated_at": datetime.now(),
-                "last_login_time": trunc(time()),
+                "last_login_time": decodedUserInfo.get("auth_time"),
+                "last_login_method": decodedUserInfo.get("firebase").get("sign_in_provider"),
                 "last_login_expire" : decodedUserInfo.get("exp"),
                 "deactivated": False, 
                 "magic_bits" : tokenBits,
                 "roles": ["user"],
+                "firebase_id": decodedUserInfo.get("user_id")
+
 
             })
         elif routeUserObject:
@@ -58,7 +53,9 @@ class SignInDriver:
                 return None, "Your account has been disabled"
 
             # Update last login time
-            routeUserObject['last_login_time'] = trunc(time())
+            routeUserObject['last_login_time'] = decodedUserInfo.get("auth_time")
+            routeUserObject["last_login_method"] = decodedUserInfo.get("firebase").get("sign_in_provider")
+            routeUserObject["email_verified"] = decodedUserInfo.get("email_verified")
             routeUserObject["last_login_expire"] = decodedUserInfo.get("exp")
             routeUserObject['magic_bits'] = tokenBits
             
@@ -86,31 +83,11 @@ class SignInDriver:
                     UserSettingsDriver.create_default_user_settings(routeUserObject["_id"])
                 except Exception as e:
                     return None, "I'm Fried, we just tried to pull user settings on login and failed. {e} "
-            
-            # handle email response if not verified
-            # email_response = "Email already verified"
-            # if routeUserObject.get('email_verified') is False:
-            #     print("Email not verified!")
-            #     email_response, err = VerificationDriver.verify_user_email(routeUserObject.get("_id"))
-            #     if err is None:
-            #         pass
-            #     else:
-            #         return None, err
-            # print(email_response)
 
             # 1. Create the response object with the user info and flags
             response = make_response(jsonify({
-                "message": "Google Login Registered & Logged with Backend.",
-                "user_info": {
-                    "_id": routeUserObject["_id"],
-                    "name": routeUserObject["name"],
-                    "email": routeUserObject["email"],
-                    "picture": routeUserObject["picture"],
-                    "roles": routeUserObject["roles"],
-                    "last_login_time": routeUserObject["last_login_time"],
-                    "phone_verified": routeUserObject["phone_verified"],
-                    "email_verified": routeUserObject["email_verified"],
-                }
+                "backend_authenticated": True,
+                "message": "Firebase Login Registered & Session registered with Backend."
             }))
 
             # 2. Set the cookie with User ID
@@ -146,23 +123,9 @@ class SignInDriver:
             )
 
             #Log to Console & Security Logging. 
-            print (f"Logged in & set cookie(s!) for user_id: {routeUserObject['_id']}")
+            print (f"Logged in & set cookie(s!) for user_id: {routeUserObject['name']}")
             return response, None
         else:
             #Return 500 Error -- User Not Created or Found. This should never happen. 
             return None, "You didn't return a UserObject or an Error.  What in the Heavens, You literally just... Bro. "
 
-            #return [routeUserObject, email_response], None
-
-    def verify_google_token(self, token: str):
-        try:
-            idinfo = id_token.verify_oauth2_token(token, requests.Request(), self.client_id)
-            return idinfo  # Contains 'sub', 'email', 'name', etc.
-        except ValueError as e:
-            # Log the specific reason so you can diagnose
-            print(f"Token verification failed: {str(e)}")
-            return None
-        except Exception as e:
-            # Catch unexpected errors too
-            print(f"Unexpected error during token verification: {str(e)}")
-            return None

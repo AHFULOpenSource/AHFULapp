@@ -184,8 +184,12 @@ class ExerciseDriver:
             else:
                 instructions = instructions_raw if isinstance(instructions_raw, list) else []
 
-            equipment_value = formData.get("equipment", "")
-            equipments = [equipment_value] if equipment_value else []
+            equipments = formData.get("equipments")
+            if not equipments:
+                equipment_value = formData.get("equipment", "")
+                equipments = [equipment_value] if equipment_value else []
+            elif isinstance(equipments, str):
+                equipments = [equipments]
 
             exercise_data = {
                 "owner_id": ObjectId(owner_id),
