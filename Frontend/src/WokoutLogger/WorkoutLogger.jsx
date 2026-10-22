@@ -446,7 +446,7 @@ export function WorkoutLogger() {
         setDetails: ex.setDetails || [],
       }));
 
-      const res = await fetch("http://localhost:5000/api/AHFULtemplate/create", {
+      const res = await fetch("https://api.ahful.app/api/AHFULtemplate/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

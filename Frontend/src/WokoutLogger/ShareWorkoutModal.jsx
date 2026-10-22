@@ -59,7 +59,7 @@ export function ShareWorkoutModal({ workout, onClose }) {
     setStatus({ type: "", message: "" });
 
     try {
-      const res = await fetch("http://localhost:5000/api/AHFULsocial/shared-workouts", {
+      const res = await fetch("https://api.ahful.app/api/AHFULsocial/shared-workouts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
