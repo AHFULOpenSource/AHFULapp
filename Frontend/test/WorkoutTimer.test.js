@@ -32,18 +32,31 @@ function deferred() {
 
 const settleMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
 
-test('Workout timer queues autosave on running ticks only and keeps duration accrual', () => {
+test('Workout timer reaches the autosave hook through its queue wrapper on running ticks', async () => {
   // The effect must observe both elapsed time and running state: a toggle-only save goes stale.
   const effect = loggerJsx.match(/useEffect\(\(\) => \{\s*if \(isRunning\) \{?\s*queueAutosave\(\);\s*\}?\s*\}, \[time, isRunning, queueAutosave\]\);/);
   assert.ok(effect, 'running timer ticks must queue autosave');
   const body = effect[0].match(/useEffect\(\(\) => \{([\s\S]*)\}, \[/)[1];
-  let queued = 0;
+  const queueBody = loggerJsx.match(/const queueAutosave = useCallback\(\(\) => \{([\s\S]*?)\n  \}, \[triggerWorkoutAutosave\]\);/)[1];
+  let saved = 0;
+  const autosave = createAutosave(async () => { saved++; return { ok: true }; });
+  let status = 'idle';
+  const queueAutosave = new Function('setSaveStatus', 'triggerWorkoutAutosave', queueBody).bind(
+    null, (update) => { status = update(status); }, autosave.trigger
+  );
   const tick = new Function('isRunning', 'queueAutosave', body);
-  tick(false, () => queued++);
-  assert.strictEqual(queued, 0); // Paused state must not dirty another workout.
-  tick(true, () => queued++);
-  tick(true, () => queued++);
-  assert.strictEqual(queued, 2); // Repeated running ticks must each queue a save.
+  tick(false, queueAutosave);
+  assert.strictEqual(autosave.isPending(), false); // A paused tick must not queue a save.
+  tick(true, queueAutosave);
+  assert.strictEqual(autosave.isPending(), true); // Catches a disconnected queue-to-hook call.
+  assert.strictEqual(status, 'pending');
+  assert.strictEqual(await autosave.flush(), true);
+  status = 'saving';
+  tick(true, queueAutosave);
+  assert.strictEqual(status, 'saving');
+  assert.strictEqual(autosave.isPending(), true); // A tick after a flush must queue again.
+  assert.strictEqual(await autosave.flush(), true);
+  assert.strictEqual(saved, 2);
   assert.match(loggerJsx, /setTime\(\(prev\) => prev \+ 1\);[\s\S]*?\}, 1000\);/);
   assert.match(loggerJsx, /endTime: \(activeWorkout.startTime \|\| 0\) \+ timeRef.current/);
 });
@@ -56,7 +69,7 @@ test('Workout autosave retains a failed duration save for retry', async () => {
   assert.strictEqual(calls, 0); // No pending edit must not cause a write.
   autosave.trigger();
   assert.strictEqual(autosave.isPending(), true);
-  await autosave.flush();
+  assert.strictEqual(await autosave.flush(), false); // Catches reporting failure as success.
   assert.strictEqual(autosave.isPending(), true, 'failed duration save must remain pending');
   result = { ok: true };
   assert.strictEqual(await autosave.flush(), true);
