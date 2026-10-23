@@ -17,7 +17,11 @@ export function useAutosave(saveFn, { debounceMs = 2000, maxWaitMs = 10000 } = {
 
     clearTimers();
     pendingRef.current = false;
-    await saveFn();
+    const result = await saveFn();
+    if (result?.ok === false) {
+      pendingRef.current = true;
+      return false;
+    }
     return true;
   }, [clearTimers, saveFn]);
 

@@ -252,14 +252,20 @@ export function WorkoutLogger() {
     }
   }, [dispatch, userId]);
 
-  const { trigger: triggerWorkoutAutosave, flush: flushWorkoutAutosave } = useAutosave(
-    persistWorkout
-  );
+  const {
+    trigger: triggerWorkoutAutosave,
+    flush: flushWorkoutAutosave,
+    isPending: isWorkoutAutosavePending,
+  } = useAutosave(persistWorkout);
 
-  const queueAutosave = () => {
+  const queueAutosave = useCallback(() => {
     setSaveStatus((curr) => (curr === "saving" ? curr : "pending"));
     triggerWorkoutAutosave();
-  };
+  }, [triggerWorkoutAutosave]);
+
+  useEffect(() => {
+    if (isRunning) queueAutosave();
+  }, [time, isRunning, queueAutosave]);
 
   // ─── Action: Select and Open Workout (Transition to Screen 2) ────────────
   const handleSelectWorkout = useCallback(
@@ -578,7 +584,9 @@ export function WorkoutLogger() {
   };
 
   const handleBackToLanding = async () => {
+    setIsRunning(false);
     await flushWorkoutAutosave();
+    if (isWorkoutAutosavePending()) return;
     setSelectedWorkout(null);
     setExercisesInProgressTable([]);
     setActiveView("landing");
@@ -594,6 +602,7 @@ export function WorkoutLogger() {
     );
     setIsRunning(false);
     await flushWorkoutAutosave();
+    if (isWorkoutAutosavePending()) return;
     alert("Workout completed! Great effort today!");
   };
 
