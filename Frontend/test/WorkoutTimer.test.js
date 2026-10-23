@@ -119,6 +119,42 @@ test('Workout autosave retries a slow failed request while running ticks continu
   assert.ok(saves >= 2, 'continued ticks must retry within the debounce deadline');
 });
 
+test('Workout autosave follow-up and failure deadlines use the configured debounce', async () => {
+  const options = { debounceMs: 2300, maxWaitMs: 11000 };
+  for (const ok of [true, false]) {
+    const request = deferred();
+    let saves = 0;
+    const autosave = createAutosave(() => ++saves === 1 ? request.promise : { ok: true }, options);
+    autosave.trigger();
+    const saving = autosave.flush();
+    if (ok) autosave.trigger();
+    request.resolve({ ok });
+    await saving;
+    // Both settlement paths must arm exactly the configured delay, not maximum wait.
+    assert.deepStrictEqual([...autosave.timers.values()].map((timer) => timer.delay), [2300]);
+    await autosave.advance(2299);
+    assert.strictEqual(saves, 1);
+    await autosave.advance(1);
+    assert.strictEqual(saves, 2);
+    assert.strictEqual(autosave.isPending(), false);
+  }
+});
+
+test('Workout synchronous save failures remain pending for a successful retry', async () => {
+  let saves = 0;
+  const autosave = createAutosave(() => {
+    if (++saves === 1) throw new Error('Save failed');
+    return { ok: true };
+  });
+  autosave.trigger();
+  const result = await autosave.flush().catch(() => 'rejected');
+  assert.strictEqual(result, false);
+  assert.strictEqual(autosave.isPending(), true);
+  assert.strictEqual(await autosave.flush(), true);
+  assert.strictEqual(autosave.isPending(), false);
+  assert.strictEqual(saves, 2);
+});
+
 test('Workout persistence reconciles saved identities and sends current edits in the follow-up payload', async () => {
   const request = deferred();
   const exercise = (id, weight, isNew = false) => ({
