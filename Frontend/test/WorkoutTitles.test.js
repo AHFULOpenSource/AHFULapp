@@ -29,6 +29,7 @@ test('Workout creation accepts blank names, trims names, and guards in-flight su
 
   // Busy cases catch removal of either the disabled state or the handler guard.
   assert.strictEqual(new Function('newTitle', 'isCreating', `return ${disabled}`)('', true), true);
+  assert.strictEqual(new Function('newTitle', 'isCreating', `return ${disabled}`)('Leg day', true), true);
   let duplicates = 0;
   const busySubmit = new Function('newTitle', 'isCreating', 'selectedGymId', 'onCreateWorkout', 'setIsCreating', 'setNewTitle', 'setSelectedGymId', `return async (e) => {${submitBody}}`)(
     'Leg day', true, 'home', () => { duplicates++; }, () => {}, () => {}, () => {}
