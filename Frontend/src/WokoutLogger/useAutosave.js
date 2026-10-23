@@ -4,6 +4,7 @@ export function useAutosave(saveFn, { debounceMs = 2000, maxWaitMs = 10000 } = {
   const timeoutRef = useRef(null);
   const maxTimeoutRef = useRef(null);
   const pendingRef = useRef(false);
+  const inFlightRef = useRef(null);
 
   const clearTimers = useCallback(() => {
     clearTimeout(timeoutRef.current);
@@ -13,17 +14,30 @@ export function useAutosave(saveFn, { debounceMs = 2000, maxWaitMs = 10000 } = {
   }, []);
 
   const flush = useCallback(async () => {
+    if (inFlightRef.current) return inFlightRef.current;
     if (!pendingRef.current) return false;
 
     clearTimers();
     pendingRef.current = false;
-    const result = await saveFn();
-    if (result?.ok === false) {
-      pendingRef.current = true;
-      return false;
-    }
-    return true;
-  }, [clearTimers, saveFn]);
+    inFlightRef.current = Promise.resolve()
+      .then(saveFn)
+      .catch(() => ({ ok: false }))
+      .then((result) => {
+        inFlightRef.current = null;
+        if (result?.ok === false) {
+          pendingRef.current = true;
+          return false;
+        }
+        if (pendingRef.current) {
+          clearTimers();
+          timeoutRef.current = setTimeout(() => {
+            void flush();
+          }, debounceMs);
+        }
+        return true;
+      });
+    return inFlightRef.current;
+  }, [clearTimers, debounceMs, saveFn]);
 
   const trigger = useCallback(() => {
     pendingRef.current = true;

@@ -5,6 +5,33 @@ import fs from 'node:fs';
 const loggerJsx = fs.readFileSync(new URL('../src/WokoutLogger/WorkoutLogger.jsx', import.meta.url), 'utf8');
 const autosaveJs = fs.readFileSync(new URL('../src/WokoutLogger/useAutosave.js', import.meta.url), 'utf8');
 
+function createAutosave(saveFn) {
+  const timers = new Map();
+  let nextId = 0;
+  const factory = new Function('useRef', 'useCallback', 'useEffect', 'setTimeout', 'clearTimeout',
+    `${autosaveJs.replace(/^import[^\n]*\n/, '').replace('export function', 'function')}; return useAutosave;`);
+  const useAutosave = factory((current) => ({ current }), (fn) => fn, () => {},
+    (fn) => { const id = ++nextId; timers.set(id, fn); return id; }, (id) => timers.delete(id));
+  return {
+    ...useAutosave(saveFn),
+    timers,
+    runTimers: () => {
+      for (const [id, fn] of [...timers]) {
+        if (timers.delete(id)) fn();
+      }
+    },
+  };
+}
+
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+const settleMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
+
 test('Workout timer queues autosave on running ticks only and keeps duration accrual', () => {
   // The effect must observe both elapsed time and running state: a toggle-only save goes stale.
   const effect = loggerJsx.match(/useEffect\(\(\) => \{\s*if \(isRunning\) \{?\s*queueAutosave\(\);\s*\}?\s*\}, \[time, isRunning, queueAutosave\]\);/);
@@ -22,14 +49,9 @@ test('Workout timer queues autosave on running ticks only and keeps duration acc
 });
 
 test('Workout autosave retains a failed duration save for retry', async () => {
-  const timers = new Map();
-  const factory = new Function('useRef', 'useCallback', 'useEffect', 'setTimeout', 'clearTimeout',
-    `${autosaveJs.replace(/^import[^\n]*\n/, '').replace('export function', 'function')}; return useAutosave;`);
-  const useAutosave = factory((current) => ({ current }), (fn) => fn, () => {},
-    (fn) => { const id = timers.size + 1; timers.set(id, fn); return id; }, (id) => timers.delete(id));
   let result = { ok: false };
   let calls = 0;
-  const autosave = useAutosave(async () => { calls++; return result; });
+  const autosave = createAutosave(async () => { calls++; return result; });
   assert.strictEqual(await autosave.flush(), false);
   assert.strictEqual(calls, 0); // No pending edit must not cause a write.
   autosave.trigger();
@@ -40,36 +62,106 @@ test('Workout autosave retains a failed duration save for retry', async () => {
   assert.strictEqual(await autosave.flush(), true);
   assert.strictEqual(autosave.isPending(), false); // Successful retry must clear pending.
   assert.strictEqual(calls, 2);
-  assert.strictEqual(timers.size, 0);
+  assert.strictEqual(autosave.timers.size, 0);
   result = undefined;
   autosave.trigger();
   assert.strictEqual(await autosave.flush(), true);
   assert.strictEqual(autosave.isPending(), false); // A save without a result remains a success.
-});
 
-test('Workout finish reports completion only after a successful flush', async () => {
-  const body = loggerJsx.match(/const handleFinishWorkout = async \(\) => \{([\s\S]*?)\n  \};/)[1];
-  for (const pending of [false, true]) {
-    let completed = 0;
-    const finish = new Function('setExercisesInProgressTable', 'setIsRunning', 'flushWorkoutAutosave', 'isWorkoutAutosavePending', 'alert', `return async () => {${body}}`)(
-      () => {}, () => {}, async () => {}, () => pending, () => completed++
-    );
-    await finish();
-    assert.strictEqual(completed, pending ? 0 : 1); // Failed saves must not announce success.
+  for (const outcome of ['success', 'failure', 'rejection']) {
+    const request = deferred();
+    let saves = 0;
+    let joinedSettled = false;
+    const shared = createAutosave(() => { saves++; return request.promise; });
+    shared.trigger();
+    const first = shared.flush().catch(() => 'rejected');
+    const joined = shared.flush().then((value) => { joinedSettled = true; return value; }, () => 'rejected');
+    await settleMicrotasks();
+    try {
+      assert.strictEqual(joinedSettled, false, 'joined flush must wait for settlement');
+      if (outcome === 'rejection') request.reject(new Error('Save failed'));
+      else request.resolve({ ok: outcome === 'success' });
+      const expected = outcome === 'success';
+      assert.deepStrictEqual(await Promise.all([first, joined]), [expected, expected]);
+      assert.strictEqual(shared.isPending(), !expected);
+      shared.trigger();
+      await shared.flush().catch(() => 'rejected');
+      assert.strictEqual(saves, 2, 'settlement must release the active request for another save');
+    } finally {
+      request.resolve({ ok: true });
+      await Promise.all([first, joined]);
+    }
   }
 });
 
-test('Workout navigation stops the timer, flushes before switching, and stays on failed saves', async () => {
-  const body = loggerJsx.match(/const handleBackToLanding = async \(\) => \{([\s\S]*?)\n  \};/)[1];
-  for (const pending of [false, true]) {
-    const events = [];
-    const back = new Function('setIsRunning', 'flushWorkoutAutosave', 'isWorkoutAutosavePending', 'setSelectedWorkout', 'setExercisesInProgressTable', 'setActiveView', `return async () => {${body}}`)(
-      (value) => events.push(['running', value]), async () => events.push(['flush']), () => pending,
-      (value) => events.push(['workout', value]), (value) => events.push(['exercises', value]), (value) => events.push(['view', value])
-    );
-    await back();
-    // Failure must preserve the active workout; success must leave only after flushing.
-    assert.deepStrictEqual(events, pending ? [['running', false], ['flush']] :
-      [['running', false], ['flush'], ['workout', null], ['exercises', []], ['view', 'landing']]);
+for (const [actionName, handlerName] of [['Back', 'handleBackToLanding'], ['Finish', 'handleFinishWorkout']]) {
+  test(`${actionName} joins an unresolved save and proceeds only on clean settlement`, async () => {
+    const body = loggerJsx.match(new RegExp(`const ${handlerName} = async \\(\\) => \\{([\\s\\S]*?)\\n  \\};`))[1];
+    for (const outcome of ['success', 'failure', 'rejection', 'queued']) {
+      const request = deferred();
+      let saves = 0;
+      const autosave = createAutosave(() => { saves++; return request.promise; });
+      autosave.trigger();
+      autosave.runTimers(); // Start an automatic save before the user's action.
+      await settleMicrotasks();
+      const events = [];
+      let running = true;
+      let activeWorkout = 'original';
+      let flushes = 0;
+      let actionSettled = false;
+      const action = new Function('setIsRunning', 'flushWorkoutAutosave', 'isWorkoutAutosavePending', 'setSelectedWorkout', 'setExercisesInProgressTable', 'setActiveView', 'alert', `return async () => {${body}}`)(
+        (value) => { running = value; }, () => { flushes++; return autosave.flush(); }, autosave.isPending,
+        (value) => { activeWorkout = value; }, () => {}, (value) => events.push(value), () => events.push('completed')
+      );
+      const acting = action().then(() => { actionSettled = true; });
+      await settleMicrotasks();
+      try {
+        assert.strictEqual(running, false, `${actionName} must stop the timer`);
+        assert.strictEqual(flushes, 1, `${actionName} must flush`);
+        // These assertions catch removed awaits and a flush that fails to join an active save.
+        assert.deepStrictEqual(events, [], `${actionName} must wait before visible action`);
+        assert.strictEqual(activeWorkout, 'original');
+        assert.strictEqual(actionSettled, false, `${actionName} must await settlement`);
+        if (outcome === 'queued') autosave.trigger();
+        if (outcome === 'rejection') request.reject(new Error('Save failed'));
+        else request.resolve({ ok: outcome !== 'failure' });
+        await acting;
+        assert.strictEqual(saves, 1, 'joining must not start a second request');
+        const clean = outcome === 'success';
+        assert.strictEqual(autosave.isPending(), !clean);
+        assert.deepStrictEqual(events, clean ? [actionName === 'Back' ? 'landing' : 'completed'] : []);
+        assert.strictEqual(activeWorkout, clean && actionName === 'Back' ? null : 'original');
+      } finally {
+        request.resolve({ ok: true });
+        await acting;
+      }
+    }
+  });
+}
+
+test('Workout autosave preserves queued edits and schedules a follow-up after an active save', async () => {
+  const request = deferred();
+  let saves = 0;
+  const autosave = createAutosave(() => ++saves === 1 ? request.promise : { ok: true });
+  autosave.trigger();
+  const saving = autosave.flush();
+  await settleMicrotasks();
+  autosave.trigger();
+  autosave.runTimers(); // Both edit deadlines can elapse before the first request settles.
+  await settleMicrotasks();
+  try {
+    assert.strictEqual(saves, 1, 'queued edits must not overlap the active request');
+    request.resolve({ ok: true });
+    assert.strictEqual(await saving, true);
+    assert.strictEqual(autosave.isPending(), true, 'queued edits must survive success');
+    assert.ok(autosave.timers.size > 0, 'queued edits must get another save deadline');
+    autosave.runTimers();
+    await settleMicrotasks();
+    assert.strictEqual(saves, 2, 'queued edits must reach a follow-up save');
+    assert.strictEqual(autosave.isPending(), false);
+    assert.strictEqual(autosave.timers.size, 0);
+  } finally {
+    request.resolve({ ok: true });
+    await saving;
   }
 });
