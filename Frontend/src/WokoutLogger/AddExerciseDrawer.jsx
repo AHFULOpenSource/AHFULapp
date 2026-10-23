@@ -84,7 +84,12 @@ export function AddExerciseDrawer({ isOpen, onClose, onSelectExercise }) {
         const matchEquipment = eqList.some((eq) =>
           String(eq).toLowerCase().includes(q)
         );
-        return matchName || matchMuscles || matchEquipment;
+        const matchBodyParts =
+          e.bodyParts &&
+          (Array.isArray(e.bodyParts)
+            ? e.bodyParts.some((part) => String(part).toLowerCase().includes(q))
+            : String(e.bodyParts).toLowerCase().includes(q));
+        return matchName || matchMuscles || matchEquipment || matchBodyParts;
       });
     }
 
