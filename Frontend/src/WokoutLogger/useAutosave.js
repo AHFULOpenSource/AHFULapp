@@ -14,7 +14,10 @@ export function useAutosave(saveFn, { debounceMs = 2000, maxWaitMs = 10000 } = {
   }, []);
 
   const flush = useCallback(async () => {
-    if (inFlightRef.current) return inFlightRef.current;
+    if (inFlightRef.current) {
+      clearTimers();
+      return inFlightRef.current;
+    }
     if (!pendingRef.current) return false;
 
     clearTimers();
@@ -26,6 +29,11 @@ export function useAutosave(saveFn, { debounceMs = 2000, maxWaitMs = 10000 } = {
         inFlightRef.current = null;
         if (result?.ok === false) {
           pendingRef.current = true;
+          clearTimers();
+          // Keep retries bounded while triggers reset the debounce timer.
+          maxTimeoutRef.current = setTimeout(() => {
+            void flush();
+          }, debounceMs);
           return false;
         }
         if (pendingRef.current) {

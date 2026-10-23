@@ -5,20 +5,39 @@ import fs from 'node:fs';
 const loggerJsx = fs.readFileSync(new URL('../src/WokoutLogger/WorkoutLogger.jsx', import.meta.url), 'utf8');
 const autosaveJs = fs.readFileSync(new URL('../src/WokoutLogger/useAutosave.js', import.meta.url), 'utf8');
 
-function createAutosave(saveFn) {
+function createAutosave(saveFn, options) {
   const timers = new Map();
   let nextId = 0;
+  let now = 0;
   const factory = new Function('useRef', 'useCallback', 'useEffect', 'setTimeout', 'clearTimeout',
     `${autosaveJs.replace(/^import[^\n]*\n/, '').replace('export function', 'function')}; return useAutosave;`);
   const useAutosave = factory((current) => ({ current }), (fn) => fn, () => {},
-    (fn) => { const id = ++nextId; timers.set(id, fn); return id; }, (id) => timers.delete(id));
+    (fn, delay) => {
+      const id = ++nextId;
+      timers.set(id, { fn, delay, at: now + delay });
+      return id;
+    }, (id) => timers.delete(id));
   return {
-    ...useAutosave(saveFn),
+    ...useAutosave(saveFn, options),
     timers,
     runTimers: () => {
-      for (const [id, fn] of [...timers]) {
-        if (timers.delete(id)) fn();
+      for (const [id, timer] of [...timers]) {
+        if (timers.delete(id)) timer.fn();
       }
+    },
+    advance: async (ms) => {
+      const end = now + ms;
+      for (let fired = 0; ; fired++) {
+        const next = [...timers].filter(([, timer]) => timer.at <= end)
+          .sort((a, b) => a[1].at - b[1].at)[0];
+        if (!next) break;
+        assert.ok(fired < 1000, 'timer callbacks must make progress');
+        now = next[1].at;
+        timers.delete(next[0]);
+        next[1].fn();
+        await settleMicrotasks();
+      }
+      now = end;
     },
   };
 }
@@ -59,6 +78,45 @@ test('Workout timer reaches the autosave hook through its queue wrapper on runni
   assert.strictEqual(saved, 2);
   assert.match(loggerJsx, /setTime\(\(prev\) => prev \+ 1\);[\s\S]*?\}, 1000\);/);
   assert.match(loggerJsx, /endTime: \(activeWorkout.startTime \|\| 0\) \+ timeRef.current/);
+});
+
+test('Workout autosave clears old deadlines when joining an active request', async () => {
+  const request = deferred();
+  const autosave = createAutosave(() => request.promise);
+  autosave.trigger();
+  const saving = autosave.flush();
+  autosave.trigger();
+  const joined = autosave.flush();
+  try {
+    // A join must release both timer handles, even when no new request starts.
+    assert.strictEqual(autosave.timers.size, 0, 'joining must clear earlier deadlines');
+  } finally {
+    request.resolve({ ok: true });
+    await Promise.all([saving, joined]);
+  }
+});
+
+test('Workout autosave retries a slow failed request while running ticks continue', async () => {
+  const request = deferred();
+  let saves = 0;
+  const options = { debounceMs: 2300, maxWaitMs: 11000 };
+  const autosave = createAutosave(() => ++saves === 1 ? request.promise : { ok: true }, options);
+  autosave.trigger();
+  const saving = autosave.flush();
+  await settleMicrotasks();
+  for (let tick = 0; tick < 12; tick++) {
+    autosave.trigger();
+    await autosave.advance(1000);
+  }
+  assert.strictEqual(saves, 1);
+  request.resolve({ ok: false });
+  assert.strictEqual(await saving, false);
+  // Ticks reset debounce, so retry needs a deadline they cannot postpone.
+  for (let tick = 0; tick < 3; tick++) {
+    autosave.trigger();
+    await autosave.advance(1000);
+  }
+  assert.ok(saves >= 2, 'continued ticks must retry within the debounce deadline');
 });
 
 test('Workout autosave retains a failed duration save for retry', async () => {
