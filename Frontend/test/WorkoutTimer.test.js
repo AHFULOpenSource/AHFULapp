@@ -119,6 +119,57 @@ test('Workout autosave retries a slow failed request while running ticks continu
   assert.ok(saves >= 2, 'continued ticks must retry within the debounce deadline');
 });
 
+test('Workout persistence reconciles saved identities and sends current edits in the follow-up payload', async () => {
+  const request = deferred();
+  const exercise = (id, weight, isNew = false) => ({
+    ...(isNew ? {} : { _id: id }), id, exercise_id: 'shared-catalog',
+    setDetails: [{ weight, reps: 5, completed: false }],
+  });
+  const tableRef = { current: [exercise('personal-a', 10), exercise('temp-b', 30, true), exercise('personal-c', 60)] };
+  const persistBody = loggerJsx.match(/const persistWorkout = useCallback\(async \(\) => \{([\s\S]*?)\n  \}, \[dispatch, userId\]\);/)[1];
+  let batch = 0;
+  const writes = [];
+  const bindings = {
+    workoutRef: { current: { _id: 'workout', title: 'Workout', startTime: 100 } },
+    workoutTitleRef: { current: 'Workout' }, selectedGymIdRef: { current: 'home' },
+    exercisesInProgressTableRef: tableRef, personalExToRemoveRef: { current: {} }, timeRef: { current: 20 },
+    userId: 'user', setSaveStatus: () => {},
+    createPersonalExercise: async (payload) => {
+      writes.push({ batch, method: 'create', payload });
+      if (batch === 1) await request.promise;
+      return { personal_ex_id: batch === 1 ? 'saved-b' : 'saved-d' };
+    },
+    updatePersonalExercise: async (id, payload) => {
+      writes.push({ batch, method: 'update', id, payload });
+      if (batch === 1) await request.promise;
+    },
+    deletePersonalExercise: async () => {}, updateWorkout: async () => {},
+    setExercisesInProgressTable: (value) => {
+      tableRef.current = typeof value === 'function' ? value(tableRef.current) : value;
+    },
+    setPersonalExToRemove: () => {}, dispatch: () => {}, pullWorkouts: () => {}, pullPersonalExercises: () => {},
+  };
+  const persist = new Function(...Object.keys(bindings), `return async () => {${persistBody}}`)(...Object.values(bindings));
+  const autosave = createAutosave(() => { batch++; return persist(); });
+  autosave.trigger();
+  const saving = autosave.flush();
+  await settleMicrotasks();
+  tableRef.current = [exercise('temp-b', 40, true), exercise('temp-d', 50, true), exercise('personal-a', 20)];
+  autosave.trigger();
+  request.resolve();
+  assert.strictEqual(await saving, true);
+  await autosave.advance(2000);
+  // Distinct personal identities share a catalog ID; reordering must not swap their saved IDs.
+  assert.deepStrictEqual(writes.filter((write) => write.batch === 2).map(({ method, id, payload }) => ({
+    method, id, weight: payload.weight, order: payload.order, setDetails: payload.setDetails,
+  })), [
+    { method: 'update', id: 'saved-b', weight: 40, order: 0, setDetails: [{ weight: 40, reps: 5, completed: false }] },
+    { method: 'create', id: undefined, weight: 50, order: 1, setDetails: [{ weight: 50, reps: 5, completed: false }] },
+    { method: 'update', id: 'personal-a', weight: 20, order: 2, setDetails: [{ weight: 20, reps: 5, completed: false }] },
+  ]);
+  assert.deepStrictEqual(tableRef.current.map((ex) => ex.id), ['saved-b', 'saved-d', 'personal-a']);
+});
+
 test('Workout autosave retains a failed duration save for retry', async () => {
   let result = { ok: false };
   let calls = 0;
