@@ -75,7 +75,9 @@ input[type="number"] {
   padding: 20px;
   box-shadow: var(--shadow-sm);
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Calendar Card */
@@ -418,6 +420,8 @@ input[type="number"] {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* Top Bar */
@@ -476,6 +480,7 @@ input[type="number"] {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .workout-timer-pill {
@@ -1034,6 +1039,26 @@ input[type="number"] {
 
 /* Mobile Responsive Adjustments for Set Table */
 @media (max-width: 600px) {
+  .active-workout-container {
+    padding: 12px 10px 90px;
+    overflow-x: hidden;
+  }
+
+  .topbar-right {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .topbar-action-btn {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+  }
+
+  .workout-timer-pill {
+    padding: 5px 8px;
+    font-size: 0.85rem;
+  }
+
   .set-table th {
     padding: 4px 2px;
     font-size: 0.72rem;
@@ -1189,6 +1214,14 @@ input[type="number"] {
 @media (max-width: 768px) {
   .mobile-fab-add-exercise {
     display: flex;
+  }
+
+  .add-exercise-trigger-btn {
+    display: none !important;
+  }
+
+  .bottom-add-exercise-bar {
+    display: none !important;
   }
 }
 
