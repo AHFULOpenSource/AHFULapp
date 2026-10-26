@@ -180,7 +180,12 @@ export function WorkoutLogger() {
           // Derive representative weight/reps for backward compatibility
           const lastSet = Array.isArray(ex.setDetails) ? ex.setDetails[ex.setDetails.length - 1] : null;
           const weight = lastSet?.weight !== undefined && lastSet?.weight !== "" ? lastSet.weight : ex.weight || 0;
-          const reps = lastSet?.reps !== undefined ? lastSet.reps : ex.reps || 10;
+          const reps = lastSet?.reps !== undefined && lastSet?.reps !== "" ? Number(lastSet.reps) : ex.reps || 10;
+
+          const normalizedSetDetails = (ex.setDetails || []).map((s) => ({
+            ...s,
+            reps: s.reps !== undefined && s.reps !== "" ? Number(s.reps) : 10,
+          }));
 
           const peData = isNew
             ? {
@@ -194,7 +199,7 @@ export function WorkoutLogger() {
                 sets: totalSets,
                 weight,
                 order: idx,
-                setDetails: ex.setDetails || [],
+                setDetails: normalizedSetDetails,
               }
             : {
                 complete: isComplete,
@@ -204,7 +209,7 @@ export function WorkoutLogger() {
                 sets: totalSets,
                 weight,
                 order: idx,
-                setDetails: ex.setDetails || [],
+                setDetails: normalizedSetDetails,
               };
 
           if (isNew) {
@@ -283,15 +288,27 @@ export function WorkoutLogger() {
         .filter((pe) => pe?.workout_id === workout._id)
         .sort((a, b) => (a.order || 0) - (b.order || 0))
         .map((pe, idx) => {
-          let setDetails = Array.isArray(pe.setDetails) && pe.setDetails.length > 0 ? pe.setDetails : null;
+          let setDetails =
+            Array.isArray(pe.setDetails) && pe.setDetails.length > 0
+              ? pe.setDetails.map((s) => ({
+                  ...s,
+                  isDefaultReps:
+                    s.isDefaultReps !== undefined
+                      ? s.isDefaultReps
+                      : !s.reps || s.reps === 10,
+                }))
+              : null;
           if (!setDetails) {
             const count = Math.max(1, Number(pe.sets) || 1);
+            const hasSpecificReps =
+              pe.reps !== undefined && pe.reps !== null && pe.reps !== 10;
             setDetails = Array.from({ length: count }, (_, sIdx) => ({
               id: `set-${sIdx + 1}`,
               setNum: sIdx + 1,
               setType: sIdx === 0 && count > 1 ? "W" : "N",
               weight: pe.weight !== undefined && pe.weight !== null ? pe.weight : "",
-              reps: pe.reps || 10,
+              reps: hasSpecificReps ? pe.reps : "",
+              isDefaultReps: !hasSpecificReps,
               completed: Boolean(pe.complete),
               prev: "-",
             }));
@@ -476,9 +493,9 @@ export function WorkoutLogger() {
     const newIdx = exercisesInProgressTable.length;
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const defaultSets = [
-      { id: `s1-${Date.now()}`, setNum: 1, setType: "W", weight: "", reps: 10, completed: false, prev: "-" },
-      { id: `s2-${Date.now() + 1}`, setNum: 2, setType: "N", weight: "", reps: 10, completed: false, prev: "-" },
-      { id: `s3-${Date.now() + 2}`, setNum: 3, setType: "N", weight: "", reps: 10, completed: false, prev: "-" },
+      { id: `s1-${Date.now()}`, setNum: 1, setType: "W", weight: "", reps: "", isDefaultReps: true, completed: false, prev: "-" },
+      { id: `s2-${Date.now() + 1}`, setNum: 2, setType: "N", weight: "", reps: "", isDefaultReps: true, completed: false, prev: "-" },
+      { id: `s3-${Date.now() + 2}`, setNum: 3, setType: "N", weight: "", reps: "", isDefaultReps: true, completed: false, prev: "-" },
     ];
 
     const newPersonalEx = {
