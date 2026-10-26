@@ -61,9 +61,7 @@ export function WorkoutLandingView({
         {/* Left Column: Calendar & Daily Workouts List */}
         <div className="workout-landing-col-main">
           {/* Calendar Widget */}
-          <div className="workout-card calendar-card-wrapper">
-            <Calendar />
-          </div>
+          <Calendar />
 
           {/* Quick Create Form */}
           <div className="workout-card quick-create-card">

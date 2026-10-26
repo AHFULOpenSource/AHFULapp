@@ -80,10 +80,6 @@ input[type="number"] {
   overflow: hidden;
 }
 
-/* Calendar Card */
-.calendar-card-wrapper {
-  padding: 16px;
-}
 
 /* Quick Create Section */
 .quick-create-card h3 {

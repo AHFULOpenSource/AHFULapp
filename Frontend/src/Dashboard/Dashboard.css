@@ -33,11 +33,6 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.dashboard-widget-calendar .calendar-container {
-  max-width: 100%;
-  width: 100%;
-  margin: 0 auto;
-}
 
 /* ==========================================================================
    Desktop Viewport (>= 1200px) - Modular 12-Column Grid
