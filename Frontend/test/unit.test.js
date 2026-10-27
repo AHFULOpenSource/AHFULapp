@@ -196,7 +196,7 @@ test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) =
       'utf8'
     );
     assert.ok(landingJsx.includes('workout-landing-container'));
-    assert.ok(landingJsx.includes('calendar-card-wrapper'));
+    assert.ok(landingJsx.includes('<Calendar'));
     assert.ok(landingJsx.includes('selectedDate'));
     assert.ok(landingJsx.includes('workouts-list-card'));
     assert.ok(landingJsx.includes('quick-create-card'));
