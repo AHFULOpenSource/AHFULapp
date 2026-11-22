@@ -21,7 +21,7 @@ export function WorkoutLandingView({
 
   const handleCreateSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!newTitle.trim()) return;
+    if (isCreating) return;
 
     setIsCreating(true);
     try {
@@ -97,7 +97,7 @@ export function WorkoutLandingView({
                   type="submit"
                   id="create-new-workout-button"
                   className="quick-create-btn"
-                  disabled={!newTitle.trim() || isCreating}
+                  disabled={isCreating}
                 >
                   {isCreating ? "Creating..." : "Create Workout"}
                 </button>

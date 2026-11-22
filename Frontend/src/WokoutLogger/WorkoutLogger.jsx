@@ -169,8 +169,9 @@ export function WorkoutLogger() {
     setSaveStatus("saving");
     try {
       // 1. Save all exercises currently in the table
+      const exercisesToSave = exercisesInProgressTableRef.current;
       const savedExercises = await Promise.all(
-        exercisesInProgressTableRef.current.map(async (ex, idx) => {
+        exercisesToSave.map(async (ex, idx) => {
           const isNew = !ex._id;
           const totalSets = Array.isArray(ex.setDetails) ? ex.setDetails.length : ex.sets || 1;
           const isComplete = Array.isArray(ex.setDetails)
@@ -219,7 +220,15 @@ export function WorkoutLogger() {
       );
 
       // Keep exercisesInProgressTable in sync with assigned IDs
-      setExercisesInProgressTable(savedExercises);
+      const savedById = new Map(
+        exercisesToSave.map((ex, idx) => [ex._id || ex.id, savedExercises[idx]])
+      );
+      setExercisesInProgressTable((current) =>
+        current.map((ex) => {
+          const saved = savedById.get(ex._id || ex.id);
+          return saved ? { ...ex, _id: saved._id, id: saved.id } : ex;
+        })
+      );
 
       // 2. Delete exercises marked for removal
       const deleteRequests = Object.values(personalExToRemoveRef.current)
@@ -252,14 +261,20 @@ export function WorkoutLogger() {
     }
   }, [dispatch, userId]);
 
-  const { trigger: triggerWorkoutAutosave, flush: flushWorkoutAutosave } = useAutosave(
-    persistWorkout
-  );
+  const {
+    trigger: triggerWorkoutAutosave,
+    flush: flushWorkoutAutosave,
+    isPending: isWorkoutAutosavePending,
+  } = useAutosave(persistWorkout);
 
-  const queueAutosave = () => {
+  const queueAutosave = useCallback(() => {
     setSaveStatus((curr) => (curr === "saving" ? curr : "pending"));
     triggerWorkoutAutosave();
-  };
+  }, [triggerWorkoutAutosave]);
+
+  useEffect(() => {
+    if (isRunning) queueAutosave();
+  }, [time, isRunning, queueAutosave]);
 
   // ─── Action: Select and Open Workout (Transition to Screen 2) ────────────
   const handleSelectWorkout = useCallback(
@@ -578,7 +593,9 @@ export function WorkoutLogger() {
   };
 
   const handleBackToLanding = async () => {
+    setIsRunning(false);
     await flushWorkoutAutosave();
+    if (isWorkoutAutosavePending()) return;
     setSelectedWorkout(null);
     setExercisesInProgressTable([]);
     setActiveView("landing");
@@ -594,6 +611,7 @@ export function WorkoutLogger() {
     );
     setIsRunning(false);
     await flushWorkoutAutosave();
+    if (isWorkoutAutosavePending()) return;
     alert("Workout completed! Great effort today!");
   };
 
