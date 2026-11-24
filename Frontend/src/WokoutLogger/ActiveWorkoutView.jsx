@@ -53,7 +53,7 @@ export function ActiveWorkoutView({
           if (s.completed) {
             completed += 1;
             const w = parseFloat(s.weight) || 0;
-            const r = parseInt(s.reps, 10) || 0;
+            const r = parseInt(s.reps, 10) || 10;
             volume += w * r;
           }
         });
@@ -63,7 +63,7 @@ export function ActiveWorkoutView({
         if (ex.complete) {
           completed += count;
           const w = parseFloat(ex.weight) || 0;
-          const r = parseInt(ex.reps, 10) || 0;
+          const r = parseInt(ex.reps, 10) || 10;
           volume += w * r * count;
         }
       }
