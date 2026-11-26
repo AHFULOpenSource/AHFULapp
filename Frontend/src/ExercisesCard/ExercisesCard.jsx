@@ -6,7 +6,7 @@ import {
   loadBodyParts,
   loadEquipment,
   loadTargetMuscles,
-} from "../WokoutLogger/QueryFunctions-WorkoutLogger.js";
+} from "../WorkoutLogger/QueryFunctions-WorkoutLogger.js";
 
 export function ExercisesCard({ AddSelectedExercises = () => {} }) {
   const cachedExercises = useSelector((state) => state.pullExercise?.exercises);

@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 
-const loggerJsx = fs.readFileSync(new URL('../src/WokoutLogger/WorkoutLogger.jsx', import.meta.url), 'utf8');
-const autosaveJs = fs.readFileSync(new URL('../src/WokoutLogger/useAutosave.js', import.meta.url), 'utf8');
+const loggerJsx = fs.readFileSync(new URL('../src/WorkoutLogger/WorkoutLogger.jsx', import.meta.url), 'utf8');
+const autosaveJs = fs.readFileSync(new URL('../src/WorkoutLogger/useAutosave.js', import.meta.url), 'utf8');
 
 function createAutosave(saveFn, options) {
   const timers = new Map();

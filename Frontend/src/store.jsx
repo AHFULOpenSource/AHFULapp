@@ -17,7 +17,7 @@ import { normalizeSelectedDate, toLocalDateString } from "./Calendar/UseCalendar
 import settingsReducer from "./Auth/SettingsSlice";
 import pullExerciseReducer from "./ExercisesCard/PullExerciseSlice";
 import pullTemplateReducer from "./Templates/PullTemplateSlice.js";
-import pullWorkoutReducer from "./WokoutLogger/PullWorkoutSlice.js";
+import pullWorkoutReducer from "./WorkoutLogger/PullWorkoutSlice.js";
 import pullPersonalExerciseReducer from "./HistoryPRs/PullPersonalExerciseSlice.js";
 import pullUserFoodReducer from "./Food/PullUserFoodSlice.js";
 

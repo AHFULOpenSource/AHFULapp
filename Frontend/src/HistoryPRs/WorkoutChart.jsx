@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import "./ExploreWorkouts.css";
-import { pullWorkouts } from "../WokoutLogger/PullWorkoutSlice.js";
+import { pullWorkouts } from "../WorkoutLogger/PullWorkoutSlice.js";
 const WEEK_OPTIONS = [4, 6, 8, 12];
 
 function getWeekInfo(date) {

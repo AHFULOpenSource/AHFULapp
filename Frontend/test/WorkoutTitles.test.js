@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 
-const landingJsx = fs.readFileSync(new URL('../src/WokoutLogger/WorkoutLandingView.jsx', import.meta.url), 'utf8');
-const loggerJsx = fs.readFileSync(new URL('../src/WokoutLogger/WorkoutLogger.jsx', import.meta.url), 'utf8');
+const landingJsx = fs.readFileSync(new URL('../src/WorkoutLogger/WorkoutLandingView.jsx', import.meta.url), 'utf8');
+const loggerJsx = fs.readFileSync(new URL('../src/WorkoutLogger/WorkoutLogger.jsx', import.meta.url), 'utf8');
 
 test('Workout creation accepts blank names, trims names, and guards in-flight submissions', async () => {
   const submitBody = landingJsx.match(/const handleCreateSubmit = async \(e\) => \{([\s\S]*?)\n  \};/)[1];

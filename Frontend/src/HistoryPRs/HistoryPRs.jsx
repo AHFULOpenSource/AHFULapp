@@ -10,7 +10,7 @@ import {
   toggleWorkoutFavorite
 } from "../QueryFunctions.js";
 import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
-import { selectWorkouts } from "../WokoutLogger/PullWorkoutSlice.js";
+import { selectWorkouts } from "../WorkoutLogger/PullWorkoutSlice.js";
 
 /**
  * History & PRs (Personal Exercise Records) - Workout History exploration and Personal Exercise history page

@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import "../siteStyles.css";
 import { DashboardWorkoutTodoItem } from "./DashboardWorkoutTodoItem";
-import { selectWorkouts } from "../WokoutLogger/PullWorkoutSlice.js";
+import { selectWorkouts } from "../WorkoutLogger/PullWorkoutSlice.js";
 
 export function DashboardWorkoutTodoList() {
   const workouts = useSelector(selectWorkouts);
