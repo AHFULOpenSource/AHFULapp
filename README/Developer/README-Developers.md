@@ -8,7 +8,7 @@
 
 ## Developer Documentation
 
-- [Frontend Setup](Frontend/FrontendSetup.md) -- Installing dependencies, running the dev server, ESLint
+- [Frontend Setup](Frontend/FrontendSetup.md) -- Installing dependencies, running the dev server, testing, CSS conventions
 - [Frontend File Structure](Frontend/FileStructure.md) -- Directory layout and component organization
 - [Backend Setup](Backend/BackendSetup.md) -- Virtual environment, Flask setup, environment variables
 - [Backend File Structure](Backend/FileStructure.md) -- Backend directory layout
@@ -39,7 +39,8 @@ We host documentation for backend routes with Swagger. See more at: https://www.
 
 ## Testing
 
-There is a small test suite under `Backend/tests/`. See [Backend Testing](Backend/Testing.md) for full details.
+- **Frontend**: Node test suites under `Frontend/test/` (run `npm test` inside `Frontend/`). See [Frontend Setup](Frontend/FrontendSetup.md).
+- **Backend**: Pytest integration suite under `Backend/tests/`. See [Backend Testing](Backend/Testing.md) for full details.
 
 ## This is an Open Source project, Contributions are welcome!
 
@@ -62,12 +63,12 @@ There is a small test suite under `Backend/tests/`. See [Backend Testing](Backen
 ## Troubleshooting
 
 - If the backend fails to connect to the database, verify your `.env` is updated with the current SECRETS
-- If the frontend fails to connect to Google or Firebase, verify your `.env` is updated with the current SECRETS
+- If the frontend fails to connect to Firebase Authentication or Messaging, verify `Frontend/.env` is updated with the current SECRETS
 - If the frontend fails to compile, remove `node_modules/` and run `npm install` again. Ensure your Node version matches the one required by `Frontend/package.json`.
 
 ## External APIs
 
-- Google OAuth 2.0 -- https://developers.google.com/identity/protocols/oauth2/web-server#python
+- Firebase Authentication -- https://firebase.google.com/docs/auth
 - FoodData Central (USDA) -- https://fdc.nal.usda.gov/api-guide
 - Firebase Cloud Messaging -- https://firebase.google.com/docs/cloud-messaging/
 
