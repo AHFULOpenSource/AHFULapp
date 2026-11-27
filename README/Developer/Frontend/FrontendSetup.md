@@ -48,6 +48,11 @@ npm run build
 
 Output will be in the `dist/` folder.
 
+### Images & Static Assets (`images/` vs. `public/`)
+
+- **UI/component images (`Frontend/images/`)**: `import` these directly in JS/JSX/CSS so Vite verifies paths at build time and outputs cache-busted hashed files into `dist/assets/`.
+- **Fixed-URL / OS / Firebase assets (`Frontend/public/`)**: Keep the folder lowercase `public/`. Vite copies files here verbatim into `dist/` without hashing—use this only for files fetched at root-relative URLs like `/firebase-messaging-sw.js`, `/manifest.webmanifest`, `/apple-touch-icon.png`, and PWA/notification icons. See [Frontend File Structure](FileStructure.md#static-assets--images-images-vs-public) for details on how this interacts with Vite and Firebase Hosting.
+
 ### Testing
 
 Run the Frontend test suite from `Frontend/`:

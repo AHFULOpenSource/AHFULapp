@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./CompanionAI.css";
 import { initCompanionAI } from "./CompanionAI.js";
+import closedMouthImg from '../../images/char-mouth-closed.png';
 
 export function CompanionAI() {
   const textRef = useRef(null);
@@ -38,7 +39,7 @@ export function CompanionAI() {
 
     // Keep image static when muted
     if (isMuted && imgRef.current) {
-      imgRef.current.src = '../../images/char-mouth-closed.png';
+      imgRef.current.src = closedMouthImg;
       // console.log('Image set to static (mouth closed)');
     }
   }, [isMuted]);
@@ -142,7 +143,7 @@ export function CompanionAI() {
         <img
           ref={imgRef}
           id="ai-character-image"
-          src="../../images/char-mouth-closed.png"
+          src={closedMouthImg}
           alt="WakuWaku"
         />
       </div>

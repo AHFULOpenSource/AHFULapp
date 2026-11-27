@@ -13,7 +13,7 @@ Frontend/
 ├── package-lock.json
 ├── package.json                                    --- Dependencies and npm scripts (dev, build, preview, test, lint)
 ├── vite.config.js                                  --- Vite Config (port 5173, COOP header for auth popups)
-├── images/                                         ### Images Dir
+├── images/                                         ### Bundled UI/component images (imported in code; Vite hashes into dist/assets/)
 │   ├── AHFULFlex.png
 │   ├── char-mouth-closed.png                       --- Companion mascot asset
 │   ├── char-mouth-open.png                         --- Companion mascot asset
@@ -22,9 +22,8 @@ Frontend/
 │   └── Login/                                      ### Login Image Assets Dir
 │       ├── Backgrounds/
 │       └── GoogleIcons/
-├── public/                                         ### Public File Dir (for Firebase & static assets)
-│   ├── firebase-messaging-sw.js                    --- Service Worker functions for Firebase
-│   └── images/Login/                               --- Public login background images
+├── public/                                         ### Root-served public static assets (copied verbatim into dist/ without hashing)
+│   └── firebase-messaging-sw.js                    --- Service Worker functions for Firebase
 ├── test/                                           ### Frontend Tests Dir (run with `npm test` via `node --test`)
 │   ├── unit.test.js                                --- Utilities, CSS/theme tokens, layout, profile, and WorkoutLogger checks
 │   ├── WorkoutSearch.test.js                       --- Exercise search & filtering unit tests
@@ -159,3 +158,15 @@ Frontend/
 - **Theme Tokens (`Frontend/src/Stylesheets/Themes/`)**: `Lightmode.css` (`:root`) and `Darkmode.css` (`.dark`) define shared CSS custom properties (`--color-*`, `--gradient-*`, `--text-*`, `--border-*`, `--radius-*`, `--shadow-*`, `--accent-*`, `--calendar-*`, `--input-*`, `--button-*`, `--error-bg`, `--warning-bg`, `--success-bg`, `--highlight-*`).
 - **Global Styles (`Frontend/src/siteStyles.css`)**: Shared containers (`.solo-page-container`, `.dual-page-container`, `.dual-page-sub-left`, `.dual-page-sub-right`), footer, global input/button/table defaults, header, sidebar navbar, loading/TOS overlays, task favorite/recurring badges, and responsive breakpoints (`1024px`, `768px`, `480px`).
 - **Feature Styles (`Frontend/src/<Feature>/*.css`)**: Co-located feature stylesheets inside each feature folder (`ExercisesCard/`, `SocialWall/`, and `Templates/` currently rely on global styles without a dedicated `.css` file).
+
+### Static Assets & Images (`images/` vs. `public/`)
+
+To avoid duplicate images and broken production paths, place assets based on how they are referenced:
+
+- **`Frontend/images/` (Bundled component & UI assets)**
+  - Use for images imported in React/JS/CSS (such as login backgrounds and Companion AI sprites) or linked in `index.html`.
+  - Vite validates imported paths at build time, omits unimported files from `dist/`, and outputs content-hashed filenames under `dist/assets/` for safe long-term caching.
+- **`Frontend/public/` (Root-served, unhashed static assets — lowercase `public/`)**
+  - Use for files that browsers, mobile OSes, manifests, or service workers fetch at fixed root-relative URLs (such as `firebase-messaging-sw.js`, `manifest.webmanifest`, iOS `apple-touch-icon.png`, Android/PWA icons, and notification icons).
+  - Vite copies everything in `Frontend/public/` verbatim into the root of `Frontend/dist/` without hashing (and cannot be `import`ed from JS). Always reference them with root-relative paths (e.g. `/apple-touch-icon.png`).
+  - **Firebase Hosting behavior (`Frontend/firebase.json`)**: Firebase serves `dist/` and checks exact static files on disk before applying the `"**" -> "/index.html"` SPA rewrite. Any root-URL asset must exist in `Frontend/public/` (so it lands in `dist/`), otherwise Firebase serves `index.html` instead of the asset.
