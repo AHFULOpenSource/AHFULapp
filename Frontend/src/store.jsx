@@ -20,6 +20,7 @@ import pullTemplateReducer from "./Templates/PullTemplateSlice.js";
 import pullWorkoutReducer from "./WorkoutLogger/PullWorkoutSlice.js";
 import pullPersonalExerciseReducer from "./HistoryPRs/PullPersonalExerciseSlice.js";
 import pullUserFoodReducer from "./Food/PullUserFoodSlice.js";
+import socialWallReducer from "./SocialWall/SocialWallSlice.js";
 
 // Native localStorage adapter for redux-persist (avoids CJS/ESM bundling quirks)
 const storage = {
@@ -56,6 +57,7 @@ export const store = configureStore({
       pullPersonalExerciseReducer
     ),
     pullUserFood: persistReducer({ key: "pullUserFood", storage }, pullUserFoodReducer),
+    socialWall: persistReducer({ key: "socialWall", storage }, socialWallReducer),
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

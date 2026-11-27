@@ -1,10 +1,13 @@
 import { auth } from "../firebase.js";
 import { signOut } from "firebase/auth";
+import { store } from "../store.jsx";
+import { clearSocialWall } from "../SocialWall/SocialWallSlice.js";
 
 /**
  * Handles the logout process for AHFUL users. This function performs the following steps:
  * 1. Sends a POST request to the backend logout endpoint to invalidate the session/cookie.
- * 2. Signs out the user from Firebase authentication.
+ * 2. Clears cached Social Wall messages from Redux.
+ * 3. Signs out the user from Firebase authentication.
  */
 export async function HandleAHFULSignOut() {
   // Backend logout endpoint
@@ -19,8 +22,8 @@ export async function HandleAHFULSignOut() {
       credentials: "include",
     });
 
-    //TODO: UPDATE REDUX
-    //setIsLoggedIn(false);
+    // Clear Social Wall cache on logout
+    store.dispatch(clearSocialWall());
 
     // Sign out of Firebase auth as well
     await signOut(auth);
