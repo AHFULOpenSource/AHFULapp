@@ -17,13 +17,15 @@ Frontend/
 │   ├── AHFULFlex.png
 │   ├── char-mouth-closed.png                       --- Companion mascot asset
 │   ├── char-mouth-open.png                         --- Companion mascot asset
-│   ├── Flex.ico                                    --- Tab Icon
-│   ├── heatmap.png
 │   └── Login/                                      ### Login Image Assets Dir
 │       ├── Backgrounds/
 │       └── GoogleIcons/
-├── public/                                         ### Root-served public static assets (copied verbatim into dist/ without hashing)
-│   └── firebase-messaging-sw.js                    --- Service Worker functions for Firebase
+├── public/                                         ### Root-served static assets (copied verbatim into dist/ without hashing)
+│   ├── apple-touch-icon.png                        --- iOS home screen icon (180x180)
+│   ├── favicon.ico                                 --- Browser tab icon (16x16, 32x32)
+│   ├── firebase-messaging-sw.js                    --- Service Worker functions for Firebase
+│   ├── manifest.webmanifest                        --- Web app manifest (Android / PWA metadata & icons)
+│   └── icons/                                      --- PNG favicons & PWA home screen icons (32, 192, 512, maskable)
 ├── test/                                           ### Frontend Tests Dir (run with `npm test` via `node --test`)
 │   ├── unit.test.js                                --- Utilities, CSS/theme tokens, layout, profile, and WorkoutLogger checks
 │   ├── WorkoutSearch.test.js                       --- Exercise search & filtering unit tests
