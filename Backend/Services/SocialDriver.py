@@ -1,4 +1,7 @@
 from datetime import datetime
+import hashlib
+import hmac
+import os
 import re
 from bson import ObjectId, errors as bson_errors
 
@@ -329,6 +332,71 @@ class SocialDriver:
         except Exception as e:
             return None, str(e)
 
+    _CONVERSATION_ID_RE = re.compile(r"^dm_[0-9a-f]{24}$")
+
+    @staticmethod
+    def _get_conversation_secret():
+        secret = os.getenv("CONVERSATION_ID_SECRET") or "ahful-dev-conversation-secret"
+        return secret.encode("utf-8")
+
+    @staticmethod
+    def build_dm_conversation_id(userId1, userId2):
+        """Derive a symmetric, non-reversible conversation ID for two user IDs."""
+        firstId, secondId = sorted([str(userId1), str(userId2)])
+        digest = hmac.new(
+            SocialDriver._get_conversation_secret(),
+            f"{firstId}:{secondId}".encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()[:24]
+        return f"dm_{digest}"
+
+    @staticmethod
+    def _get_cached_user_summary(targetUserId, userCache):
+        if not targetUserId:
+            return None
+        key = str(targetUserId)
+        if key not in userCache:
+            userDoc = UserObject.find_by_id(key)
+            userCache[key] = SocialDriver._build_user_summary(userDoc)
+        return userCache[key]
+
+    @staticmethod
+    def _format_post_for_client(post, viewerUserId, userCache):
+        """Enrich post summaries and strip internal user IDs before returning to client."""
+        if not post:
+            return None
+        ownerId = post.get("owner_user_id")
+        sharedToId = post.get("shared_to_user_id")
+        isPublic = bool(post.get("is_public"))
+
+        formatted = dict(post)
+        formatted["owner"] = SocialDriver._get_cached_user_summary(ownerId, userCache)
+        formatted["shared_to_user"] = (
+            None if isPublic else SocialDriver._get_cached_user_summary(sharedToId, userCache)
+        )
+        formatted["is_mine"] = str(ownerId) == str(viewerUserId)
+        formatted["conversation_id"] = (
+            None
+            if (isPublic or not ownerId or not sharedToId)
+            else SocialDriver.build_dm_conversation_id(ownerId, sharedToId)
+        )
+        formatted.pop("owner_user_id", None)
+        formatted.pop("shared_to_user_id", None)
+        return formatted
+
+    @staticmethod
+    def _resolve_peer_id_from_conversation_id(userId, conversationId):
+        if (
+            not isinstance(conversationId, str)
+            or not SocialDriver._CONVERSATION_ID_RE.match(conversationId)
+        ):
+            return None
+        peerIds = SocialPostsObject.find_private_peer_ids(userId)
+        for peerId in peerIds:
+            if SocialDriver.build_dm_conversation_id(userId, peerId) == conversationId:
+                return peerId
+        return None
+
     @staticmethod
     def get_wall_posts_for_user(user_id):
         if not user_id:
@@ -342,18 +410,119 @@ class SocialDriver:
                 return None, "User not found"
 
             posts = SocialPostsObject.find_for_wall(user_id)
-            enriched = []
+            userCache = {}
+            return [
+                SocialDriver._format_post_for_client(post, user_id, userCache)
+                for post in (posts or [])
+            ], None
+        except Exception as e:
+            return None, str(e)
 
-            for post in posts or []:
-                owner = None
-                if post.get("owner_user_id"):
-                    owner = UserObject.find_by_id(post.get("owner_user_id"))
+    @staticmethod
+    def get_public_wall_posts(viewer_user_id):
+        if not viewer_user_id:
+            return None, "viewer_user_id is required"
+        oid, err = SocialDriver._validate_obj_id(viewer_user_id, "viewer_user_id")
+        if err:
+            return None, err
+        try:
+            user = UserObject.find_by_id(oid)
+            if not user:
+                return None, "User not found"
 
-                post_entry = dict(post)
-                post_entry["owner"] = SocialDriver._build_user_summary(owner)
-                enriched.append(post_entry)
+            posts = SocialPostsObject.find_public()
+            userCache = {}
+            return [
+                SocialDriver._format_post_for_client(post, viewer_user_id, userCache)
+                for post in (posts or [])
+            ], None
+        except Exception as e:
+            return None, str(e)
 
-            return enriched, None
+    @staticmethod
+    def get_private_conversations_for_user(user_id):
+        if not user_id:
+            return None, "user_id is required"
+        oid, err = SocialDriver._validate_obj_id(user_id, "user_id")
+        if err:
+            return None, err
+        try:
+            user = UserObject.find_by_id(oid)
+            if not user:
+                return None, "User not found"
+
+            rawSummaries = SocialPostsObject.find_conversation_summaries_for_user(user_id)
+            userCache = {}
+            conversations = []
+            for summary in rawSummaries:
+                peerId = summary.get("peer_user_id")
+                peerSummary = SocialDriver._get_cached_user_summary(peerId, userCache)
+                if not peerSummary:
+                    continue
+                conversationId = SocialDriver.build_dm_conversation_id(user_id, peerId)
+                lastMsg = SocialDriver._format_post_for_client(
+                    summary.get("last_message"), user_id, userCache
+                )
+                conversations.append(
+                    {
+                        "conversation_id": conversationId,
+                        "type": "direct",
+                        "title": peerSummary.get("name") or peerSummary.get("email"),
+                        "peer_user": peerSummary,
+                        "participants": [peerSummary],
+                        "last_message": lastMsg,
+                        "last_message_at": summary.get("last_message_at"),
+                        "message_count": summary.get("message_count", 0),
+                    }
+                )
+            return conversations, None
+        except Exception as e:
+            return None, str(e)
+
+    @staticmethod
+    def get_conversation_messages(user_id, conversation_id, since=None):
+        if not user_id:
+            return None, "user_id is required"
+        oid, err = SocialDriver._validate_obj_id(user_id, "user_id")
+        if err:
+            return None, err
+        if not conversation_id:
+            return None, "conversation_id is required"
+
+        sinceInt = None
+        if since is not None and since != "":
+            try:
+                sinceInt = int(since)
+            except (TypeError, ValueError):
+                return None, "Invalid since timestamp"
+
+        try:
+            user = UserObject.find_by_id(oid)
+            if not user:
+                return None, "User not found"
+
+            peerId = SocialDriver._resolve_peer_id_from_conversation_id(user_id, conversation_id)
+            if not peerId:
+                return None, "Conversation not found"
+
+            userCache = {}
+            peerSummary = SocialDriver._get_cached_user_summary(peerId, userCache)
+            if not peerSummary:
+                return None, "Conversation partner not found"
+
+            posts = SocialPostsObject.find_conversation(user_id, peerId, since=sinceInt)
+            messages = [
+                SocialDriver._format_post_for_client(post, user_id, userCache)
+                for post in (posts or [])
+            ]
+            return {
+                "conversation_id": conversation_id,
+                "type": "direct",
+                "title": peerSummary.get("name") or peerSummary.get("email"),
+                "peer_user": peerSummary,
+                "participants": [peerSummary],
+                "messages": messages,
+            }, None
         except Exception as e:
             return None, str(e)
 
@@ -411,12 +580,14 @@ class SocialDriver:
     def create_wall_post(owner_user_id, notes, is_public=False, shared_to_user_email=None):
         if not owner_user_id:
             return None, "owner_user_id is required"
-        if not notes:
+        if not isinstance(notes, str) or not notes.strip():
             return None, "notes is required"
 
         owner_oid, err = SocialDriver._validate_obj_id(owner_user_id, "owner_user_id")
         if err:
             return None, err
+
+        isPublicFlag = bool(is_public)
 
         try:
             owner_user = UserObject.find_by_id(owner_oid)
@@ -424,7 +595,10 @@ class SocialDriver:
                 return None, "Owner user not found"
 
             to_user = None
-            if shared_to_user_email:
+            if not isPublicFlag:
+                if not shared_to_user_email:
+                    return None, "shared_to_user_email is required for private messages"
+
                 normalized_email = SocialDriver._normalize_email(shared_to_user_email)
                 if not normalized_email:
                     return None, "shared_to_user_email is invalid"
@@ -432,6 +606,9 @@ class SocialDriver:
                 to_user = SocialDriver._find_user_by_email_case_insensitive(normalized_email)
                 if not to_user:
                     return None, "User with that email was not found"
+
+                if str(owner_user.get("_id")) == str(to_user.get("_id")):
+                    return None, "You cannot send a private message to yourself"
 
                 friendship = SocialObject.find_between_emails(
                     SocialDriver._normalize_email(owner_user.get("email")),
@@ -441,12 +618,41 @@ class SocialDriver:
                     return None, "You can only share posts with confirmed friends"
 
             post_id = SocialPostsObject.create(
-                notes=notes,
+                notes=notes.strip(),
                 owner_user_id=owner_oid,
-                is_public=is_public,
+                is_public=isPublicFlag,
                 shared_to_user_id=to_user.get("_id") if to_user else None,
             )
             post = SocialPostsObject.find_by_id(post_id)
-            return post, None
+            userCache = {}
+            return SocialDriver._format_post_for_client(post, owner_user_id, userCache), None
+        except Exception as e:
+            return None, str(e)
+
+    @staticmethod
+    def delete_wall_post(post_id, acting_user_id, acting_role=None):
+        """Delete a social wall post or private message owned by acting_user_id."""
+        if not post_id:
+            return None, "post_id is required"
+        if not acting_user_id:
+            return None, "acting_user_id is required"
+
+        postOid, err = SocialDriver._validate_obj_id(post_id, "post_id")
+        if err:
+            return None, err
+
+        try:
+            post = SocialPostsObject.find_by_id(postOid)
+            if not post:
+                return None, "Post not found"
+
+            if (
+                acting_role not in ("Developer", "Admin")
+                and str(post.get("owner_user_id")) != str(acting_user_id)
+            ):
+                return None, "You may only delete your own posts"
+
+            deleted = SocialPostsObject.delete(postOid)
+            return {"deleted": deleted, "post_id": str(post_id)}, None
         except Exception as e:
             return None, str(e)

@@ -21,13 +21,113 @@ class SocialPostsObject:
 
     @staticmethod
     def find_for_wall(user_id):
+        """Return all public posts plus private posts sent or received by user_id."""
+        uid = ObjectId(user_id)
         query = {
             "$or": [
                 {"is_public": True},
-                {"shared_to_user_id": ObjectId(user_id)},
+                {"is_public": False, "shared_to_user_id": uid},
+                {"is_public": False, "owner_user_id": uid},
             ]
         }
-        posts = get_collection("socialPosts").find(query)
+        posts = get_collection("socialPosts").find(query).sort([("created_at", -1), ("_id", -1)])
+        return [SocialPostsObject._serialize(p) for p in posts]
+
+    @staticmethod
+    def find_public(limit=100):
+        """Return global public posts sorted newest-first."""
+        posts = (
+            get_collection("socialPosts")
+            .find({"is_public": True})
+            .sort([("created_at", -1), ("_id", -1)])
+            .limit(limit)
+        )
+        return [SocialPostsObject._serialize(p) for p in posts]
+
+    @staticmethod
+    def find_private_peer_ids(user_id):
+        """Return distinct peer ObjectId strings for private posts involving user_id."""
+        uid = ObjectId(user_id)
+        pipeline = [
+            {
+                "$match": {
+                    "is_public": False,
+                    "$or": [{"owner_user_id": uid}, {"shared_to_user_id": uid}],
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "$cond": [
+                            {"$eq": ["$owner_user_id", uid]},
+                            "$shared_to_user_id",
+                            "$owner_user_id",
+                        ]
+                    }
+                }
+            },
+        ]
+        docs = get_collection("socialPosts").aggregate(pipeline)
+        return [str(doc["_id"]) for doc in docs if doc.get("_id")]
+
+    @staticmethod
+    def find_conversation_summaries_for_user(user_id):
+        """Aggregate 1-on-1 private conversation summaries sorted by latest message."""
+        uid = ObjectId(user_id)
+        pipeline = [
+            {
+                "$match": {
+                    "is_public": False,
+                    "$or": [{"owner_user_id": uid}, {"shared_to_user_id": uid}],
+                }
+            },
+            {"$sort": {"created_at": -1, "_id": -1}},
+            {
+                "$group": {
+                    "_id": {
+                        "$cond": [
+                            {"$eq": ["$owner_user_id", uid]},
+                            "$shared_to_user_id",
+                            "$owner_user_id",
+                        ]
+                    },
+                    "last_message": {"$first": "$$ROOT"},
+                    "last_message_at": {"$first": "$created_at"},
+                    "message_count": {"$sum": 1},
+                }
+            },
+            {"$sort": {"last_message_at": -1}},
+        ]
+        summaries = []
+        for doc in get_collection("socialPosts").aggregate(pipeline):
+            peerId = doc.get("_id")
+            if not peerId:
+                continue
+            summaries.append(
+                {
+                    "peer_user_id": str(peerId),
+                    "last_message": SocialPostsObject._serialize(doc.get("last_message")),
+                    "last_message_at": doc.get("last_message_at"),
+                    "message_count": doc.get("message_count", 0),
+                }
+            )
+        return summaries
+
+    @staticmethod
+    def find_conversation(user_id, peer_user_id, since=None):
+        """Return chronological 1-on-1 private posts between user_id and peer_user_id."""
+        uid = ObjectId(user_id)
+        pid = ObjectId(peer_user_id)
+        query = {
+            "is_public": False,
+            "$or": [
+                {"owner_user_id": uid, "shared_to_user_id": pid},
+                {"owner_user_id": pid, "shared_to_user_id": uid},
+            ],
+        }
+        if since is not None:
+            query["created_at"] = {"$gt": int(since)}
+        posts = get_collection("socialPosts").find(query).sort([("created_at", 1), ("_id", 1)])
         return [SocialPostsObject._serialize(p) for p in posts]
 
     @staticmethod

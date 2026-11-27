@@ -127,6 +127,41 @@ def get_wall_posts_for_user():
     return jsonify(posts), 200
 
 
+@socialRouteBlueprint.route("/wall-posts/public", methods=["GET"])
+@login_required_user
+def get_public_wall_posts():
+    """Return global public wall posts for the authenticated user."""
+    posts, error = SocialDriver.get_public_wall_posts(g.user_id)
+    if error:
+        return jsonify({"error": error}), 400
+    return jsonify(posts), 200
+
+
+@socialRouteBlueprint.route("/conversations", methods=["GET"])
+@login_required_user
+def get_private_conversations():
+    """Return active 1-on-1 private conversation summaries for the current user."""
+    conversations, error = SocialDriver.get_private_conversations_for_user(g.user_id)
+    if error:
+        return jsonify({"error": error}), 400
+    return jsonify(conversations), 200
+
+
+@socialRouteBlueprint.route("/conversations/<conversationId>", methods=["GET"])
+@login_required_user
+def get_conversation_messages(conversationId):
+    """Return chronological messages for an opaque conversationId."""
+    sinceParam = request.args.get("since")
+    payload, error = SocialDriver.get_conversation_messages(
+        g.user_id, conversationId, since=sinceParam
+    )
+    if error:
+        notFoundErrors = ("Conversation not found", "Conversation partner not found")
+        statusCode = 404 if error in notFoundErrors else 400
+        return jsonify({"error": error}), statusCode
+    return jsonify(payload), 200
+
+
 @socialRouteBlueprint.route("/wall-posts", methods=["POST"])
 @login_required_user
 def create_wall_post():
@@ -147,3 +182,19 @@ def create_wall_post():
     if error:
         return jsonify({"error": error}), 400
     return jsonify(post), 201
+
+
+@socialRouteBlueprint.route("/wall-posts/<postId>", methods=["DELETE"])
+@login_required_user
+def delete_wall_post(postId):
+    """Delete a public post or private message owned by the current user."""
+    result, error = SocialDriver.delete_wall_post(
+        post_id=postId, acting_user_id=g.user_id, acting_role=g.role
+    )
+    if error:
+        if error == "Post not found":
+            return jsonify({"error": error}), 404
+        if error == "You may only delete your own posts":
+            return jsonify({"error": error}), 403
+        return jsonify({"error": error}), 400
+    return jsonify(result), 200
