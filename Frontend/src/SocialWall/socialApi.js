@@ -95,10 +95,124 @@ export async function deleteFriendship(friendshipId) {
   }
 }
 
+export async function getSharedWorkouts() {
+  try {
+    const res = await fetch(`${BASE}/shared-workouts`, {
+      method: "GET",
+      credentials: "include",
+      mode: "cors",
+      headers: { Accept: "application/json" },
+    });
+    const data = await safeJson(res);
+    if (!res.ok) return { error: (data && data.error) || `Server ${res.status}` };
+    return { success: true, data: Array.isArray(data) ? data : [] };
+  } catch (err) {
+    console.error("getSharedWorkouts error:", err);
+    return { error: err.message || "Network error" };
+  }
+}
+
+export async function getPublicWallPosts() {
+  try {
+    const res = await fetch(`${BASE}/wall-posts/public`, {
+      method: "GET",
+      credentials: "include",
+      mode: "cors",
+      headers: { Accept: "application/json" },
+    });
+    const data = await safeJson(res);
+    if (!res.ok) return { error: (data && data.error) || `Server ${res.status}` };
+    return { success: true, data: Array.isArray(data) ? data : [] };
+  } catch (err) {
+    console.error("getPublicWallPosts error:", err);
+    return { error: err.message || "Network error" };
+  }
+}
+
+export async function getConversations() {
+  try {
+    const res = await fetch(`${BASE}/conversations`, {
+      method: "GET",
+      credentials: "include",
+      mode: "cors",
+      headers: { Accept: "application/json" },
+    });
+    const data = await safeJson(res);
+    if (!res.ok) return { error: (data && data.error) || `Server ${res.status}` };
+    return { success: true, data: Array.isArray(data) ? data : [] };
+  } catch (err) {
+    console.error("getConversations error:", err);
+    return { error: err.message || "Network error" };
+  }
+}
+
+export async function getConversationMessages(conversationId, since = null) {
+  try {
+    const query = since !== null && since !== undefined ? `?since=${encodeURIComponent(since)}` : "";
+    const res = await fetch(`${BASE}/conversations/${encodeURIComponent(conversationId)}${query}`, {
+      method: "GET",
+      credentials: "include",
+      mode: "cors",
+      headers: { Accept: "application/json" },
+    });
+    const data = await safeJson(res);
+    if (!res.ok) return { error: (data && data.error) || `Server ${res.status}` };
+    return { success: true, data };
+  } catch (err) {
+    console.error("getConversationMessages error:", err);
+    return { error: err.message || "Network error" };
+  }
+}
+
+export async function createWallPost({ notes, isPublic, sharedToUserEmail }) {
+  try {
+    const res = await fetch(`${BASE}/wall-posts`, {
+      method: "POST",
+      credentials: "include",
+      mode: "cors",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        notes,
+        is_public: Boolean(isPublic),
+        shared_to_user_email: isPublic ? null : sharedToUserEmail,
+      }),
+    });
+    const data = await safeJson(res);
+    if (!res.ok) return { error: (data && data.error) || `Server ${res.status}` };
+    return { success: true, data };
+  } catch (err) {
+    console.error("createWallPost error:", err);
+    return { error: err.message || "Network error" };
+  }
+}
+
+export async function deleteWallPost(postId) {
+  try {
+    const res = await fetch(`${BASE}/wall-posts/${encodeURIComponent(postId)}`, {
+      method: "DELETE",
+      credentials: "include",
+      mode: "cors",
+      headers: { Accept: "application/json" },
+    });
+    const data = await safeJson(res);
+    if (!res.ok) return { error: (data && data.error) || `Server ${res.status}` };
+    return { success: true, data };
+  } catch (err) {
+    console.error("deleteWallPost error:", err);
+    return { error: err.message || "Network error" };
+  }
+}
+
 export default {
   getPendingForCurrentUser,
   getFriendsForCurrentUser,
   createFriendRequest,
   acceptFriendRequest,
   deleteFriendship,
+  getSharedWorkouts,
+  getPublicWallPosts,
+  getConversations,
+  getConversationMessages,
+  createWallPost,
+  deleteWallPost,
 };

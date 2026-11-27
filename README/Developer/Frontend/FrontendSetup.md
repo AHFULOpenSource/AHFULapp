@@ -48,8 +48,27 @@ npm run build
 
 Output will be in the `dist/` folder.
 
-### ESLint
+### Images & Static Assets (`images/` vs. `public/`)
 
+- **UI/component images (`Frontend/images/`)**: `import` these directly in JS/JSX/CSS so Vite verifies paths at build time and outputs cache-busted hashed files into `dist/assets/`.
+- **Fixed-URL / OS / Firebase assets (`Frontend/public/`)**: Keep the folder lowercase `public/`. Vite copies files here verbatim into `dist/` without hashing—use this only for files fetched at root-relative URLs like `/firebase-messaging-sw.js`, `/manifest.webmanifest`, `/apple-touch-icon.png`, and PWA/notification icons. See [Frontend File Structure](FileStructure.md#static-assets--images-images-vs-public) for details on how this interacts with Vite and Firebase Hosting.
+
+### Testing
+
+Run the Frontend test suite from `Frontend/`:
+
+```bash
+npm test
+```
+
+This runs Node's built-in test runner (`node --test 'test/**/*.test.js'`) against the test files in `Frontend/test/` (`unit.test.js`, `WorkoutSearch.test.js`, `WorkoutTimer.test.js`, and `WorkoutTitles.test.js`).
+
+### Linting & Formatting (Work in Progress)
+
+- Follow the naming and code style conventions in [Coding Style & Linting](../CodingStyle.md) when creating new files or features.
+- `Frontend/eslint.config.cjs` defines the target ESLint rules (PascalCase filenames and camelCase variables), and `Frontend/biome.json` is also present in the repository; the linting setup is currently in progress.
+
+Current ES Lint Setup:
 - **Check imports and naming conventions**
   ```bash
   npx eslint "src/**/*.{js,jsx,ts,tsx}"
@@ -65,22 +84,31 @@ Output will be in the `dist/` folder.
 
 ### Environment Variables
 
-You may need a `.env` file in the `Frontend/` root with API keys for Firebase, Google OAuth, etc. Ask your team for the required values.
+Create a `.env` file in `Frontend/` with the Firebase configuration keys used by `Frontend/src/firebase.js` (ask your team for the project values — never commit `.env`):
 
-### CSS Contribution Information
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_MEASUREMENT_ID`
 
-- Start with theme pages under `Stylesheets/Themes/`
-- Use design tokens (`var(--...)`) for all colors, text, borders, spacing, etc.
-- Never hardcode colors or font sizes
-- Structure layouts using flexbox or grid
-- Keep components consistent (background, border, radius, shadow)
-- Use padding for internal spacing, margin for separation
-- Avoid stacking large vertical padding (prevents extra lines)
-- Let `.dark` handle dark mode automatically (don't duplicate styles)
-- Reuse existing classes before creating new ones
-- Keep styles modular (component-specific CSS files)
-- Follow consistent naming (`.component-name`, `.component-element`)
-- Test styles in both color modes before finalizing
+### CSS & Styling Structure
+
+- **Theme tokens**: Defined in `Frontend/src/Stylesheets/Themes/Lightmode.css` (`:root`) and `Frontend/src/Stylesheets/Themes/Darkmode.css` (`.dark`), covering `--color-*`, `--gradient-*`, `--text-*`, `--border-*`, `--radius-*`, `--shadow-*`, and component-specific variables.
+- **Global stylesheet**: `Frontend/src/siteStyles.css` contains shared layout containers (`.solo-page-container`, `.dual-page-container`, `.dual-page-sub-left`, `.dual-page-sub-right`), footer, global input/button/table defaults, header, sidebar navbar, loading/TOS styles, and responsive media queries (`1024px`, `768px`, `480px`).
+- **Feature stylesheets**: Feature-specific styles live alongside each feature under `Frontend/src/<Feature>/` (for example `WorkoutLogger.css`, `Dashboard.css`, `Auth.css`, `Calendar.css`).
+- **Guidelines for changes**:
+  - Use design tokens (`var(--...)`) from `Frontend/src/Stylesheets/Themes/` rather than hardcoding colors or font sizes
+  - Structure layouts using flexbox or grid
+  - Keep components consistent (background, border, radius, shadow)
+  - Use padding for internal spacing, margin for separation
+  - Avoid stacking large vertical padding (prevents extra lines)
+  - Let `.dark` in `Darkmode.css` handle dark mode overrides automatically (don't duplicate theme logic)
+  - Reuse existing classes in `siteStyles.css` before creating new ones
+  - Keep new feature styles modular in feature-specific CSS files using consistent naming (`.component-name`, `.component-element`)
+  - Test styles in both light and dark modes before finalizing
 
 ### Muscle Map Library
 

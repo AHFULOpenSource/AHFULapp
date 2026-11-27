@@ -173,7 +173,7 @@ onMessage(messaging, (payload) => {
 
   new Notification(payload.notification.title, {
     body: payload.notification.body,
-    icon: '/icon.png'
+    icon: '/icons/icon-192.png'
   });
   
   // Firebase does NOT auto-show a notification in the foreground

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 
-const drawerJsx = fs.readFileSync(new URL('../src/WokoutLogger/AddExerciseDrawer.jsx', import.meta.url), 'utf8');
+const drawerJsx = fs.readFileSync(new URL('../src/WorkoutLogger/AddExerciseDrawer.jsx', import.meta.url), 'utf8');
 const filterBody = drawerJsx.match(/const filteredExercises = useMemo\(\(\) => \{([\s\S]*?)\n  \}, \[cachedExercises/)[1];
 const filter = new Function('cachedExercises', 'activeTab', 'selectedMuscle', 'selectedEquipment', 'searchTerm', filterBody);
 

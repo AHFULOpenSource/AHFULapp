@@ -29,14 +29,13 @@ The backend organizes routes by domain under `Backend/APIRoutes/`:
 
 The project integrates with several external services. Some require configuration via environment variables.
 
-### Google OAuth 2.0 — User Authentication
+### Firebase Authentication — User Authentication
 
-- **Purpose**: User sign-in via Google accounts
-- **Endpoint**: `https://accounts.google.com/o/oauth2/v2/auth` (frontend), `https://oauth2.googleapis.com/tokeninfo` (backend verification)
-- **Auth method**: OAuth 2.0 (Client ID + JWT ID token verification)
-- **Libraries used**: `@react-oauth/google` (frontend), `google-auth` / `google-auth-oauthlib` (backend)
-- **Config vars**: `GOOGLE_CLIENT_ID` (backend), `VITE_GOOGLE_CLIENT_ID` (frontend)
-- **Usage**: Frontend `GoogleOAuthProvider` wraps the app; backend `SignInDriver.verify_google_token()` validates the token
+- **Purpose**: User sign-up, sign-in (Email/Password and Google Sign-In), and email verification emails
+- **Auth method**: Firebase Authentication on the frontend issues a Firebase ID token, which the backend verifies using Firebase Admin SDK and exchanges for session cookies
+- **Libraries used**: `firebase` (`firebase/auth` on frontend), `firebase-admin` (`firebase_admin.auth` on backend)
+- **Config vars**: `VITE_FIREBASE_*` keys (frontend `.env`), `firebaseSecret.json` (backend service account certificate)
+- **Usage**: Frontend handlers in `Frontend/src/Auth/` (`HandleAHFULEmailLogin.js`, `HandleAHFULEmailSignUp.js`, `HandleAHFULGoogleLogin.js`) authenticate against Firebase and send the ID token to `POST /api/AHFULauth/firebase-login`; backend `SignInDriver.ahful_backend_firebase_login()` calls `auth.verify_id_token()` and manages the user session. Email verification emails are also handled directly by Firebase Authentication (`sendEmailVerification()` in `Frontend/src/Auth/NotVerified.jsx`).
 
 ### Firebase Cloud Messaging — Push Notifications
 
@@ -55,15 +54,6 @@ The project integrates with several external services. Some require configuratio
 - **Auth method**: Google Cloud Application Default Credentials (ADC)
 - **Libraries used**: `google-adk` (v1.28.1), `google-genai`
 - **Usage**: Backend `character.py` defines an `LlmAgent`; `ChatRoutes.py` processes messages via `InMemoryRunner`
-
-### Gmail API — Email Notifications
-
-- **Purpose**: Send verification emails and transactional emails to users
-- **Endpoint**: `https://gmail.googleapis.com/gmail/v1/users/me/messages/send`
-- **Auth method**: OAuth 2.0 user credentials (stored in `token.json`)
-- **Libraries used**: `googleapiclient` (via `google-auth-oauthlib`)
-- **Config vars**: `GMAIL_SENDER_ADDRESS`
-- **Usage**: Backend `EmailDriver.py` builds a Gmail service and sends MIME messages
 
 ### Gmail SMTP — Email Fallback
 
@@ -97,7 +87,7 @@ The project integrates with several external services. Some require configuratio
 - **Purpose**: Reverse geocoding (lat/lng to address) and forward geocoding (address to lat/lng) for gym locations
 - **Endpoint**: `https://nominatim.openstreetmap.org/reverse` / `search`
 - **Auth method**: None (free tier; requires User-Agent header)
-- **Usage**: Frontend `QueryFunctions.js` provides `reverseGeocode()` and `forwardGeocode()` functions
+- **Usage**: Frontend `Frontend/src/Gyms/QueryFunctions-Gym.js` provides `reverseGeocode()` and `forwardGeocode()` functions
 
 ### OpenStreetMap Tiles — Map Display
 

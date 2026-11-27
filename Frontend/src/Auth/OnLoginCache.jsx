@@ -2,8 +2,9 @@ import { store } from "../store"; // adjust to your actual store path
 import { pullExercises } from "../ExercisesCard/PullExercise";
 import { pullPersonalExercises } from "../HistoryPRs/PullPersonalExerciseSlice.js";
 import { pullTemplates } from "../Templates/PullTemplateSlice.js";
-import { pullWorkouts } from "../WokoutLogger/PullWorkoutSlice.js";
+import { pullWorkouts } from "../WorkoutLogger/PullWorkoutSlice.js";
 import { pullUserFood } from "../Food/PullUserFoodSlice.js";
+import { pullPublicPosts, pullConversations } from "../SocialWall/SocialWallSlice.js";
 
 export function onLoginCache() {
   // console.log("onLoginCache fired")
@@ -11,6 +12,8 @@ export function onLoginCache() {
   store.dispatch(pullPersonalExercises());
   store.dispatch(pullTemplates());
   store.dispatch(pullUserFood());
+  store.dispatch(pullPublicPosts());
+  store.dispatch(pullConversations());
 
   pullExercises().catch((err) => console.error("Exercise Cache error:", err));
 }

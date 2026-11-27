@@ -30,84 +30,88 @@ def firebase_backend_route():
 
 # ── POST Log Out ────────────────────────────────────────────────────────────
 @signInRouteBlueprint.route('/logout', methods=['POST'])
-@login_required_user
 def logout():
-    session_id = request.cookies.get('session_id')
-    userData, err = UserDriver.get_user_by_id(session_id)
-    if userData:
-        userData["last_login_expire"] = 0
-        UserDriver.update_user_info(dataToBeUpdated=userData)
+    sessionId = request.cookies.get('session_id')
+    magicBits = request.cookies.get('magic_bits')
+    if sessionId and magicBits:
+        userData, err = VerificationDriver.confirm_user_unverified(sessionId, magicBits[-32:])
+        if userData and not err:
+            userData["last_login_expire"] = 0
+            UserDriver.update_user_info(dataToBeUpdated=userData)
 
-    # Clear cookie on logout (instruct browser to remove)
+    # Clear cookies on logout (instruct browser to remove)
     response = make_response(jsonify({"message": "Logout successful"}), 200)
-    response.set_cookie(
-        'session_id', 
-        '', 
-        httponly=True, 
-        secure=True, 
-        samesite='Strict', 
-        max_age=0, 
-        path='/')
-    
-    response.set_cookie(
-        'magic_bits', 
-        '', 
-        httponly=True, 
-        secure=True, 
-        samesite='Strict', 
-        max_age=0, 
-        path='/')
-    
+    for cookieName in ('session_id', 'magic_bits', 'user_settings'):
+        response.set_cookie(
+            cookieName,
+            '',
+            httponly=True,
+            secure=True,
+            samesite='Strict',
+            max_age=0,
+            path='/',
+        )
+
     return response
 
-#── GET whoami (Logged in or not) ────────────────────────────────────────────────────────────
+#── POST whoami (Logged in or not) ────────────────────────────────────────────────────────────
 @signInRouteBlueprint.route('/whoami', methods=['POST'])
 def whoami():
     try:
-        currTime = trunc(time())
-        user_id = request.cookies.get("session_id")
+        userId = request.cookies.get("session_id")
+        magicBits = request.cookies.get("magic_bits")
 
-        # Validate session by user id from cookie
-        routeUserObject, error = UserDriver.get_user_by_id(user_id)
-        if not routeUserObject:
-            return jsonify({"backend_authenticated": False, "error": "No session cookie found. 2. Please Sign in."}), 200
+        if not userId or not magicBits:
+            return jsonify({
+                "backend_authenticated": False,
+                "expired": False,
+                "error": "No session cookie found. Please Sign in.",
+            }), 200
 
-        # Check expiry stored on server
-        foundExpiryTime = routeUserObject["last_login_expire"]
-        # Normalize any Rouge foundExpiryTime (treat non-numeric as expired)
+        # Validate session, magic_bits, account status, and expiry on server
+        routeUserObject, err = VerificationDriver.confirm_user_unverified(userId, magicBits[-32:])
+        if err or not routeUserObject:
+            errText = err or "Session invalid."
+            isExpired = "too old" in errText.lower()
+            return jsonify({
+                "backend_authenticated": False,
+                "expired": isExpired,
+                "error": "Session expired. Please Sign in again." if isExpired else errText,
+            }), 200
+
         try:
-            foundExpiryTime = int(foundExpiryTime)
+            foundExpiryTime = int(routeUserObject.get("last_login_expire") or 0)
         except Exception:
             foundExpiryTime = 0
 
-        if currTime > foundExpiryTime:
-            return jsonify({"backend_authenticated": False, "error": "Session expired.  Please Sign in again."}), 200
+        retrievedUserSettings, settingsErr = UserSettingsDriver.get_user_settings(userId)
 
-        #Successful Auth, return user info
-        retrievedUserSettings, settings_err = UserSettingsDriver.get_user_settings(user_id)
-
-        # 1. Create the response object with the user info and flags
         response = make_response(jsonify({
             "backend_authenticated": True,
+            "email_verified": bool(routeUserObject.get("email_verified", False)),
+            "expires_at": foundExpiryTime,
             "message": "Session Cookie Verified & Logged with Backend.",
         }))
 
-        # 2. Set the cookie with security flags
-        # We store ONLY the session/user ID here
-        #Magic Bits and session are not refreshed here. 
-        response.set_cookie(
-            'user_settings',        # Cookie name
-            retrievedUserSettings["_id"],# Cookie value
-            httponly=True,       # Prevents JS access (XSS protection)
-            secure=True,         # Ensures cookie is sent over HTTPS only
-            samesite='Strict',      # CSRF protection (use 'Strict' for high security)
-            max_age=3600         # Expiration in seconds (e.g., 1 hour)
-        )
+        if retrievedUserSettings and not settingsErr and retrievedUserSettings.get("_id"):
+            response.set_cookie(
+                'user_settings',
+                retrievedUserSettings["_id"],
+                httponly=True,
+                secure=True,
+                samesite='Strict',
+                max_age=3600,
+                path='/',
+            )
+            print(
+                f"Settings Retrieved with Session Cookie: "
+                f"{retrievedUserSettings['_id']} for user: {userId}"
+            )
 
-        #Log to Console & Security Logging. 
-        print (f"Settings Retrieved with Session Cookie: {retrievedUserSettings['_id']} for user: {user_id}")
         return response
 
     except Exception as e:
         print(f"Error in whoami route: {e}")
-        return jsonify({"error": f"Whatever you sent was not properly handeled yet.  Read more here: {e}."}), 500
+        return jsonify({
+            "error": f"Whatever you sent was not properly handeled yet.  Read more here: {e}."
+        }), 500

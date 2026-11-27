@@ -85,8 +85,12 @@ class SignInDriver:
                     return None, "I'm Fried, we just tried to pull user settings on login and failed. {e} "
 
             # 1. Create the response object with the user info and flags
+            expiresAt = int(routeUserObject.get("last_login_expire") or 0)
+            emailVerified = bool(routeUserObject.get("email_verified", False))
             response = make_response(jsonify({
                 "backend_authenticated": True,
+                "email_verified": emailVerified,
+                "expires_at": expiresAt,
                 "message": "Firebase Login Registered & Session registered with Backend."
             }))
 
@@ -98,7 +102,8 @@ class SignInDriver:
                 httponly=True,       # Prevents JS access (XSS protection)
                 secure=True,         # Ensures cookie is sent over HTTPS only
                 samesite='Strict',      # CSRF protection (use 'Strict' for high security)
-                max_age=3600         # Expiration in seconds (e.g., 1 hour)
+                max_age=3600,        # Expiration in seconds (e.g., 1 hour)
+                path='/'
             )
 
             # 3. Set the cookie with User Settings ID
@@ -109,7 +114,8 @@ class SignInDriver:
                 httponly=True,       # Prevents JS access (XSS protection)
                 secure=True,         # Ensures cookie is sent over HTTPS only
                 samesite='Strict',      # CSRF protection (use 'Strict' for high security)
-                max_age=3600         # Expiration in seconds (e.g., 1 hour)
+                max_age=3600,        # Expiration in seconds (e.g., 1 hour)
+                path='/'
             )
 
             # 4. Set MagicBits Cookie with Token.
@@ -119,7 +125,8 @@ class SignInDriver:
                 httponly=True,       # Prevents JS access (XSS protection)
                 secure=True,         # Ensures cookie is sent over HTTPS only
                 samesite='Strict',      # CSRF protection (use 'Strict' for high security)
-                max_age=3600         # Expiration in seconds (e.g., 1 hour)
+                max_age=3600,        # Expiration in seconds (e.g., 1 hour)
+                path='/'
             )
 
             #Log to Console & Security Logging. 

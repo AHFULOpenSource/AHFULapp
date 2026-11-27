@@ -99,7 +99,6 @@ Place a `.env` file in the root of `Backend/` with all required keys. Ask your t
 - `MONGODB_URI` -- MongoDB connection string
 - `MONGODB_NAME` -- Database name
 - `SECRET_KEY` -- Flask secret key
-- Google OAuth credentials
 - Firebase credentials
 
 ### Troubleshooting

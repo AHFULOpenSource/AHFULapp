@@ -1,34 +1,45 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import "../HistoryPRs/ExploreWorkouts.css";
 import "../siteStyles.css";
+import "./SocialWall.css";
 import { GetFirebaseUser } from "../Auth/GetFirebaseUser.js";
+import * as socialApi from "./socialApi.js";
+import { PublicWallTab } from "./PublicWallTab.jsx";
+import { PrivateMessagesTab } from "./PrivateMessagesTab.jsx";
+import {
+  syncCacheUser,
+  pullPublicPosts,
+  pullConversations,
+  pullConversationThread,
+  selectPublicPosts,
+  selectConversations,
+  selectSocialWallLoadingPublic,
+  selectSocialWallLoadingConversations,
+  selectSocialWallLoadingThread,
+} from "./SocialWallSlice.js";
 
-// SocialWorkouts - social page that resembles ExploreWorkouts what is the Shared workouts a User and their friends have shared
-// Left: Shared workouts list from friends.
-// Right: Wall posts (friends' shared posts or public Posts)
+// SocialWorkouts - full-width tabbed Social hub: Public Wall, Private Messages, and Shared Workouts.
 
 export function SocialWorkouts() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = GetFirebaseUser();
-  const userId = useSelector((state) => state.setting.user_id);
-  const userEmail = user?.email.toLowerCase();
+  const dispatch = useDispatch();
+  const { user } = GetFirebaseUser();
+  const userEmail = user?.email?.toLowerCase() || "";
   const cachedExercises = useSelector((state) => state.pullExercise.exercises);
+  const publicPosts = useSelector(selectPublicPosts);
+  const conversations = useSelector(selectConversations);
+  const loadingPublic = useSelector(selectSocialWallLoadingPublic);
+  const loadingConversations = useSelector(selectSocialWallLoadingConversations);
+  const loadingThread = useSelector(selectSocialWallLoadingThread);
 
+  const [activeTab, setActiveTab] = useState("public");
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [sharedWorkouts, setSharedWorkouts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
-  const [wallPosts, setWallPosts] = useState([]);
-  const [friends, setFriends] = useState([]);
-  const [friendsLoading, setFriendsLoading] = useState(false);
-  const [friendsError, setFriendsError] = useState(null);
-  const [postNotes, setPostNotes] = useState("");
-  const [postIsPublic, setPostIsPublic] = useState(false);
-  const [postTargetEmail, setPostTargetEmail] = useState("");
-  const [posting, setPosting] = useState(false);
-  const [postError, setPostError] = useState(null);
   const [gymDetails, setGymDetails] = useState(null);
   const [gymLoading, setGymLoading] = useState(false);
   const [gymError, setGymError] = useState(null);
@@ -54,140 +65,34 @@ export function SocialWorkouts() {
   const fetchShared = async () => {
     setLoading(true);
     setError(null);
-    try {
-      // Attempt a sensible endpoint; if your backend differs update this URL
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/shared-workouts`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status} ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        setSharedWorkouts([]);
-      } else {
-        setSharedWorkouts(data);
-      }
-    } catch (err) {
-      console.warn("fetchShared failed:", err);
-      setError(String(err));
-    } finally {
-      setLoading(false);
+    const res = await socialApi.getSharedWorkouts();
+    if (res.error) {
+      console.warn("fetchShared failed:", res.error);
+      setError(String(res.error));
+      setSharedWorkouts([]);
+    } else {
+      setSharedWorkouts(Array.isArray(res.data) ? res.data : []);
     }
-  };
-
-  const fetchWallPosts = async () => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/wall-posts`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status} ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        setWallPosts([]);
-      } else {
-        setWallPosts(data);
-      }
-    } catch (err) {
-      console.warn("fetchWallPosts failed:", err);
-    }
-  };
-
-  const fetchFriends = async () => {
-    setFriendsLoading(true);
-    setFriendsError(null);
-    try {
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/user`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status} ${res.statusText}`);
-      }
-
-      const data = await res.json();
-      if (!Array.isArray(data)) {
-        setFriends([]);
-        return;
-      }
-
-      const friendEmails = data
-        .map((friendship) => {
-          const email1 = (friendship?.User1Email || "").toLowerCase();
-          const email2 = (friendship?.User2Email || "").toLowerCase();
-          if (email1 && email1 !== userEmail) return email1;
-          if (email2 && email2 !== userEmail) return email2;
-          return null;
-        })
-        .filter(Boolean);
-
-      setFriends([...new Set(friendEmails)]);
-    } catch (err) {
-      console.warn("fetchFriends failed:", err);
-      setFriendsError("Unable to load friends.");
-      setFriends([]);
-    } finally {
-      setFriendsLoading(false);
-    }
-  };
-
-
-  const createWallPost = async () => {
-    if (!postNotes.trim()) {
-      setPostError("Please enter post notes.");
-      return;
-    }
-
-    if (!postIsPublic && !postTargetEmail) {
-      setPostError("Select a friend or mark the post as public.");
-      return;
-    }
-
-    setPosting(true);
-    setPostError(null);
-    try {
-      const res = await fetch(`http://localhost:5000/api/AHFULsocial/wall-posts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          notes: postNotes.trim(),
-          is_public: postIsPublic,
-          shared_to_user_email: postIsPublic ? null : postTargetEmail,
-        }),
-      });
-
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody?.error || `Server returned ${res.status} ${res.statusText}`);
-      }
-
-      await res.json().catch(() => ({}));
-      setPostNotes("");
-      setPostIsPublic(false);
-      setPostTargetEmail("");
-      fetchWallPosts();
-    } catch (err) {
-      setPostError(String(err));
-    } finally {
-      setPosting(false);
-    }
+    setLoading(false);
   };
 
   useEffect(() => {
+    if (userEmail) {
+      dispatch(syncCacheUser(userEmail));
+    }
+  }, [dispatch, userEmail]);
+
+  useEffect(() => {
     fetchShared();
-    fetchWallPosts();
-    fetchFriends();
-  }, [userId]);
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (activeTab === "public") {
+      dispatch(pullPublicPosts());
+    } else if (activeTab === "private") {
+      dispatch(pullConversations());
+    }
+  }, [dispatch, activeTab]);
 
   useEffect(() => {
     let isActive = true;
@@ -287,108 +192,123 @@ export function SocialWorkouts() {
     };
   }, [selectedWorkout?.workout_id, selectedWorkout?._id]);
 
-  const getPostTimestamp = (post) => post?.created_at || post?.ts || null;
+  const handleRefresh = () => {
+    if (activeTab === "public") {
+      dispatch(pullPublicPosts({ force: true }));
+    } else if (activeTab === "private") {
+      dispatch(pullConversations({ force: true }));
+      if (selectedConversationId) {
+        dispatch(
+          pullConversationThread({
+            conversationId: selectedConversationId,
+            force: true,
+          })
+        );
+      }
+    } else {
+      fetchShared();
+    }
+  };
+
+  const isRefreshing =
+    (activeTab === "public" && loadingPublic) ||
+    (activeTab === "private" && (loadingConversations || loadingThread)) ||
+    (activeTab === "workouts" && loading);
 
   return (
     <div className="explore-root">
-      <header className="explore-header">
-        <h1>Social — Shared Workouts & Wall</h1>
-        <div className="header-controls">
+      <header className="explore-header" style={{ flexWrap: "wrap", gap: 12 }}>
+        <h1>Social — Shared Workouts &amp; Wall</h1>
+
+        <div className="header-controls" style={{ flexWrap: "wrap" }}>
+          <div className="social-top-nav" role="tablist" aria-label="Social sections">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "public"}
+              className={`social-wall-tab-btn ${activeTab === "public" ? "active" : ""}`}
+              onClick={() => setActiveTab("public")}
+            >
+              Public Wall ({publicPosts.length})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "private"}
+              className={`social-wall-tab-btn ${activeTab === "private" ? "active" : ""}`}
+              onClick={() => setActiveTab("private")}
+            >
+              Private Messages ({conversations.length})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "workouts"}
+              className={`social-wall-tab-btn ${activeTab === "workouts" ? "active" : ""}`}
+              onClick={() => setActiveTab("workouts")}
+            >
+              Shared Workouts ({sharedWorkouts.length})
+            </button>
+          </div>
+
           <button className="refresh-btn" onClick={() => navigate("/ExploreFriends")}>
             Explore Friends
           </button>
-          <button onClick={fetchShared} disabled={loading} className="refresh-btn">
-            {loading ? "Refreshing..." : "Refresh"}
+          <button onClick={handleRefresh} disabled={isRefreshing} className="refresh-btn">
+            {isRefreshing ? "Refreshing..." : "Refresh"}
           </button>
         </div>
       </header>
 
-      <div className="explore-content">
-        <div className="explore-left">
-          {error && <div className="explore-error">Failed to load shared workouts</div>}
+      <div className="social-full-panel">
+        {activeTab === "public" && (
+          <div className="social-wall-card">
+            <PublicWallTab />
+          </div>
+        )}
 
-          {!error && sharedWorkouts.length === 0 && (
-            <div className="explore-empty">No shared workouts yet. When friends share workouts they'll appear here.</div>
-          )}
+        {activeTab === "private" && (
+          <div className="social-wall-card">
+            <PrivateMessagesTab
+              userEmail={userEmail}
+              selectedConversationId={selectedConversationId}
+              onSelectConversation={setSelectedConversationId}
+            />
+          </div>
+        )}
 
-          <div className="exercise-list">
-            {sharedWorkouts.map((w, idx) => (
-              <div
-                key={w._id || idx}
-                className="exercise-item"
-                onClick={() => setSelectedWorkout(w)}
-                role="button"
-                tabIndex={0}
-              >
-                <div className="exercise-main">
-                  <div className="exercise-name">{w.title || "Untitled Workout"}</div>
-                  <div className="exercise-meta">
-                    {w.startTime && <span>Start: {formatDate(w.startTime)}</span>}
-                    {w.endTime && <span> • Duration: {calculateDuration(w.startTime, w.endTime)}</span>}
-                    {w.sharedBy && w.sharedBy.name && <span> • Shared by: {w.sharedBy.name}</span>}
+        {activeTab === "workouts" && (
+          <div>
+            {error && <div className="explore-error">Failed to load shared workouts</div>}
+
+            {!error && sharedWorkouts.length === 0 && (
+              <div className="explore-empty">
+                No shared workouts yet. When friends share workouts they&apos;ll appear here.
+              </div>
+            )}
+
+            <div className="exercise-list">
+              {sharedWorkouts.map((w, idx) => (
+                <div
+                  key={w._id || idx}
+                  className="exercise-item"
+                  onClick={() => setSelectedWorkout(w)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <div className="exercise-main">
+                    <div className="exercise-name">{w.title || "Untitled Workout"}</div>
+                    <div className="exercise-meta">
+                      {w.startTime && <span>Start: {formatDate(w.startTime)}</span>}
+                      {w.endTime && <span> • Duration: {calculateDuration(w.startTime, w.endTime)}</span>}
+                      {w.sharedBy && w.sharedBy.name && <span> • Shared by: {w.sharedBy.name}</span>}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="explore-right">
-          {/* Wall Section */}
-          <div className="wh-chart-section" style={{ marginBottom: 16 }}>
-            <div className="wh-chart-heading">Wall</div>
-            <div style={{ marginBottom: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              <textarea
-                className="task-input"
-                rows={3}
-                placeholder="Share an update with your friends..."
-                value={postNotes}
-                onChange={(e) => setPostNotes(e.target.value)}
-              />
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <input type="checkbox" checked={postIsPublic} onChange={(e) => setPostIsPublic(e.target.checked)} />
-                  Make public
-                </label>
-                <select
-                  className="task-input"
-                  value={postTargetEmail}
-                  onChange={(e) => setPostTargetEmail(e.target.value)}
-                  disabled={postIsPublic || friendsLoading}
-                >
-                  <option value="">Share to a friend</option>
-                  {friends.map((email) => (
-                    <option key={email} value={email}>
-                      {email}
-                    </option>
-                  ))}
-                </select>
-                <button className="refresh-btn" onClick={createWallPost} disabled={posting}>
-                  {posting ? "Posting..." : "Post"}
-                </button>
-              </div>
-              {friendsError && <div className="explore-error">{friendsError}</div>}
-              {postError && <div className="explore-error">{postError}</div>}
+              ))}
             </div>
-            {wallPosts.length === 0 ? (
-                <div className="wh-status">No posts yet. Your friends' posts will show up here.</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {wallPosts.map((p) => (
-                    <article key={p._id || p.id} style={{ background: "var(--color-surface)", padding: 12, borderRadius: 8 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <strong>{p?.owner?.name || p.author || "Friend"}</strong>
-                        <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>
-                          {formatDate(getPostTimestamp(p))}
-                        </span>
-                      </div>
-                      <p style={{ marginTop: 8 }}>{p.notes || p.text}</p>
-                    </article>
-                  ))}
-                </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Modal for workout detail */}

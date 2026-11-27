@@ -6,14 +6,13 @@ export async function FetchUserSettings(dispatch) {
         credentials: "include",
     });
 
-    if (foundUserSettingsResponse){
+    if (foundUserSettingsResponse.ok) {
         const settingsJson = await foundUserSettingsResponse.json();
-        
-        // console.log("WhoAmI: Found User Settings Response:", settingsJson);
         dispatch(setSettings(settingsJson));
-    }else{
-        throw new Error(
-        "Failed to fetch settings" + foundUserSettingsResponse.status,
-        );
+        return settingsJson;
     }
+
+    throw new Error(
+        "Failed to fetch settings: " + foundUserSettingsResponse.status,
+    );
 }

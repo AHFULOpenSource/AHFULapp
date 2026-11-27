@@ -192,7 +192,7 @@ test('Theme Tokens & CSS Verification', async (t) => {
 test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) => {
   await t.test('WorkoutLandingView.jsx defines calendar, workout list, quick add, and templates', () => {
     const landingJsx = fs.readFileSync(
-      path.join(__dirname, '../src/WokoutLogger/WorkoutLandingView.jsx'),
+      path.join(__dirname, '../src/WorkoutLogger/WorkoutLandingView.jsx'),
       'utf8'
     );
     assert.ok(landingJsx.includes('workout-landing-container'));
@@ -207,7 +207,7 @@ test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) =
 
   await t.test('ActiveWorkoutView.jsx defines header controls, HeatMap, exercise cards, and drawer trigger', () => {
     const activeJsx = fs.readFileSync(
-      path.join(__dirname, '../src/WokoutLogger/ActiveWorkoutView.jsx'),
+      path.join(__dirname, '../src/WorkoutLogger/ActiveWorkoutView.jsx'),
       'utf8'
     );
     assert.ok(activeJsx.includes('active-workout-container'));
@@ -224,7 +224,7 @@ test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) =
 
   await t.test('ExerciseSetTable.jsx supports set types, BW toggle, lock-in done button, and reordering', () => {
     const tableJsx = fs.readFileSync(
-      path.join(__dirname, '../src/WokoutLogger/ExerciseSetTable.jsx'),
+      path.join(__dirname, '../src/WorkoutLogger/ExerciseSetTable.jsx'),
       'utf8'
     );
     assert.ok(tableJsx.includes('set-type-select'));
@@ -238,7 +238,7 @@ test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) =
 
   await t.test('AddExerciseDrawer.jsx supports search and category tabs', () => {
     const drawerJsx = fs.readFileSync(
-      path.join(__dirname, '../src/WokoutLogger/AddExerciseDrawer.jsx'),
+      path.join(__dirname, '../src/WorkoutLogger/AddExerciseDrawer.jsx'),
       'utf8'
     );
     assert.ok(drawerJsx.includes('drawer-backdrop'));
@@ -254,7 +254,7 @@ test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) =
 
   await t.test('CreateExerciseModal.jsx allows creating and saving custom exercises', () => {
     const createModalJsx = fs.readFileSync(
-      path.join(__dirname, '../src/WokoutLogger/CreateExerciseModal.jsx'),
+      path.join(__dirname, '../src/WorkoutLogger/CreateExerciseModal.jsx'),
       'utf8'
     );
     assert.ok(createModalJsx.includes('create-exercise-modal-content'));
@@ -267,7 +267,7 @@ test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) =
 
   await t.test('ShareWorkoutModal.jsx allows sharing workout with friends via email', () => {
     const shareJsx = fs.readFileSync(
-      path.join(__dirname, '../src/WokoutLogger/ShareWorkoutModal.jsx'),
+      path.join(__dirname, '../src/WorkoutLogger/ShareWorkoutModal.jsx'),
       'utf8'
     );
     assert.ok(shareJsx.includes('share-modal-content'));
@@ -278,7 +278,7 @@ test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) =
 
   await t.test('WorkoutLogger.jsx coordinates view switching and autosave', () => {
     const loggerJsx = fs.readFileSync(
-      path.join(__dirname, '../src/WokoutLogger/WorkoutLogger.jsx'),
+      path.join(__dirname, '../src/WorkoutLogger/WorkoutLogger.jsx'),
       'utf8'
     );
     assert.ok(loggerJsx.includes('activeView'));
@@ -291,7 +291,7 @@ test('Workout Logger Rework - Two-Screen Architecture & Components', async (t) =
 
   await t.test('WorkoutLogger.css provides comprehensive responsive styles for both screens', () => {
     const loggerCss = fs.readFileSync(
-      path.join(__dirname, '../src/WokoutLogger/WorkoutLogger.css'),
+      path.join(__dirname, '../src/WorkoutLogger/WorkoutLogger.css'),
       'utf8'
     );
     assert.ok(loggerCss.includes('.workout-landing-container'));
