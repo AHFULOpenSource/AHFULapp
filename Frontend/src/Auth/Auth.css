@@ -405,3 +405,119 @@
   color: var(--text-secondary);
   font-size: clamp(12px, 1.5vw, 14px);
 }
+
+/* Session Expiry Notice & "Are You Still There?" Modal */
+.session-notice-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--warning-bg);
+  border: 1px solid var(--accent-yellow);
+  color: #664d03;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.session-notice-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.session-expiry-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000010;
+}
+
+.session-expiry-modal {
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border: var(--border-thin);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  max-width: 420px;
+  width: 100%;
+  padding: 24px;
+}
+
+.session-expiry-modal h2 {
+  margin: 0 0 10px;
+  font-size: var(--text-xl);
+  color: var(--text-primary);
+}
+
+.session-expiry-message {
+  margin: 0 0 16px;
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.session-expiry-countdown {
+  font-weight: 700;
+  color: var(--accent-red);
+  font-variant-numeric: tabular-nums;
+}
+
+.session-expiry-error {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--error-bg);
+  color: var(--accent-red-dark);
+  font-size: var(--text-sm);
+}
+
+.session-expiry-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.session-expiry-stay-btn,
+.session-expiry-logout-btn {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.session-expiry-stay-btn {
+  background: var(--accent-blue);
+  color: #ffffff;
+}
+
+.session-expiry-stay-btn:hover:not(:disabled) {
+  background: var(--accent-blue-dark);
+}
+
+.session-expiry-logout-btn {
+  background: var(--button-bg);
+  color: var(--text-primary);
+  border: var(--border-thin);
+}
+
+.session-expiry-logout-btn:hover:not(:disabled) {
+  background: var(--button-hover);
+}
+
+.session-expiry-stay-btn:disabled,
+.session-expiry-logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

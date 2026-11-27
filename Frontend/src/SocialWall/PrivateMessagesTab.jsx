@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as socialApi from "./socialApi.js";
+import { selectAuthStatus } from "../Auth/AuthSlice.js";
 import {
   pullConversations,
   pullConversationThread,
@@ -27,6 +28,7 @@ export function PrivateMessagesTab({
   onSelectConversation,
 }) {
   const dispatch = useDispatch();
+  const authStatus = useSelector(selectAuthStatus);
   const conversations = useSelector(selectConversations);
   const messagesByConversationId = useSelector(selectMessagesByConversationId);
   const loadingConversations = useSelector(selectSocialWallLoadingConversations);
@@ -72,7 +74,14 @@ export function PrivateMessagesTab({
 
   // Visibility-aware periodic polling for active private messages
   useEffect(() => {
+    if (authStatus !== "authenticated") {
+      return;
+    }
+
     const syncPrivateData = () => {
+      if (authStatus !== "authenticated") {
+        return;
+      }
       if (typeof document !== "undefined" && document.visibilityState !== "visible") {
         return;
       }
@@ -104,7 +113,7 @@ export function PrivateMessagesTab({
         document.removeEventListener("visibilitychange", handleVisibility);
       }
     };
-  }, [dispatch, selectedConversationId]);
+  }, [dispatch, selectedConversationId, authStatus]);
 
   const handleSelectConversation = (conversationId) => {
     setDraftEmail(null);

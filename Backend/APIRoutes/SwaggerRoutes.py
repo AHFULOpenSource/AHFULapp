@@ -3145,8 +3145,10 @@ swaggerConfig = {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "Login successful" },
-                    "user_info": { "type": "object", "description": "User information object" }
+                    "backend_authenticated": { "type": "boolean", "example": True },
+                    "email_verified": { "type": "boolean", "example": True },
+                    "expires_at": { "type": "integer", "example": 1764220000 },
+                    "message": { "type": "string", "example": "Firebase Login Registered & Session registered with Backend." }
                   }
                 }
               }
@@ -3182,25 +3184,37 @@ swaggerConfig = {
       }
     },
 
-    "/AHFULauth/logout": {
+    "/AHFULauth/whoami": {
       "post": {
-        "summary": "Logout user (Logged in)",
+        "summary": "Check active backend session cookies (Public)",
         "tags": ["Auth"],
-        "security":[{"userIdHeader":[]},{"bearerAuth":[]}],
-        "requestBody": {
-          "required": True,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["logout_email"],
-                "properties": {
-                  "logout_email": { "type": "string", "format": "email", "description": "Email of user to logout", "example": "user@example.com" }
+        "responses": {
+          "200": {
+            "description": "Session verification status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "backend_authenticated": { "type": "boolean", "example": True },
+                    "email_verified": { "type": "boolean", "example": True },
+                    "expires_at": { "type": "integer", "example": 1764220000 },
+                    "expired": { "type": "boolean", "example": False },
+                    "message": { "type": "string", "example": "Session Cookie Verified & Logged with Backend." },
+                    "error": { "type": "string", "example": "Session expired. Please Sign in again." }
+                  }
                 }
               }
             }
           }
-        },
+        }
+      }
+    },
+
+    "/AHFULauth/logout": {
+      "post": {
+        "summary": "Logout user and clear session cookies",
+        "tags": ["Auth"],
         "responses": {
           "200": {
             "description": "Logout successful",
@@ -3210,19 +3224,6 @@ swaggerConfig = {
                   "type": "object",
                   "properties": {
                     "message": { "type": "string", "example": "Logout successful" }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Logout failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": { "type": "string", "example": "Logout failed" }
                   }
                 }
               }
@@ -4361,6 +4362,120 @@ swaggerConfig = {
               }
             }
           }
+        }
+      }
+    },
+
+    "/AHFULsocial/wall-posts": {
+      "get": {
+        "summary": "Get all wall posts visible to current user (public + sent/received private)",
+        "tags": ["Social"],
+        "security": [{"userIdHeader": []}, {"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Wall posts returned (user IDs stripped; includes is_mine and conversation_id)"
+          },
+          "400": { "description": "Invalid request" }
+        }
+      },
+      "post": {
+        "summary": "Create a public wall post or private message to a confirmed friend",
+        "tags": ["Social"],
+        "security": [{"userIdHeader": []}, {"bearerAuth": []}],
+        "requestBody": {
+          "required": True,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "notes": { "type": "string" },
+                  "is_public": { "type": "boolean" },
+                  "shared_to_user_email": { "type": "string", "format": "email" }
+                },
+                "required": ["notes"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Wall post or private message created" },
+          "400": { "description": "Validation or friendship error" }
+        }
+      }
+    },
+
+    "/AHFULsocial/wall-posts/public": {
+      "get": {
+        "summary": "Get global public wall posts sorted newest-first",
+        "tags": ["Social"],
+        "security": [{"userIdHeader": []}, {"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Public wall posts returned" },
+          "400": { "description": "Invalid request" }
+        }
+      }
+    },
+
+    "/AHFULsocial/wall-posts/{post_id}": {
+      "delete": {
+        "summary": "Delete a public post or private message owned by the current user",
+        "tags": ["Social"],
+        "security": [{"userIdHeader": []}, {"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "required": True,
+            "description": "Social post ObjectId",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Post deleted" },
+          "403": { "description": "Forbidden - only owner or Admin/Developer may delete" },
+          "404": { "description": "Post not found" }
+        }
+      }
+    },
+
+    "/AHFULsocial/conversations": {
+      "get": {
+        "summary": "Get active 1-on-1 private conversation summaries for current user",
+        "tags": ["Social"],
+        "security": [{"userIdHeader": []}, {"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Conversation summaries returned" },
+          "400": { "description": "Invalid request" }
+        }
+      }
+    },
+
+    "/AHFULsocial/conversations/{conversation_id}": {
+      "get": {
+        "summary": "Get chronological messages for an opaque 1-on-1 conversation_id",
+        "tags": ["Social"],
+        "security": [{"userIdHeader": []}, {"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": True,
+            "description": "Opaque conversation identifier (dm_<24-hex>)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": False,
+            "description": "Optional Unix timestamp to fetch only newer messages",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Conversation metadata and chronological messages" },
+          "400": { "description": "Invalid parameters" },
+          "404": { "description": "Conversation not found" }
         }
       }
     },

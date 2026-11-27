@@ -28,7 +28,6 @@ export function Header({ onMenuToggle = null, isMenuOpen = false, onNavClick = n
   const handleLogout = async () => {
     try {
       await HandleAHFULSignOut();
-      dispatch(setSettings(settingsInitialState));
       navigate("/");
     } catch (err) {
       console.error("Failed to sign out:", err);

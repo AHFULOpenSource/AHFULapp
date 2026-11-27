@@ -2,35 +2,36 @@ import { auth } from "../firebase.js";
 import { signOut } from "firebase/auth";
 import { store } from "../store.jsx";
 import { clearSocialWall } from "../SocialWall/SocialWallSlice.js";
+import { resetAppSession } from "./AuthSlice.js";
 
 /**
  * Handles the logout process for AHFUL users. This function performs the following steps:
- * 1. Sends a POST request to the backend logout endpoint to invalidate the session/cookie.
- * 2. Clears cached Social Wall messages from Redux.
- * 3. Signs out the user from Firebase authentication.
+ * 1. Immediately resets Redux session/user caches so protected routes unmount and stop polling.
+ * 2. Sends a POST request to the backend logout endpoint to invalidate the session/cookies.
+ * 3. Clears cached Social Wall messages from Redux.
+ * 4. Signs out the user from Firebase authentication.
  */
-export async function HandleAHFULSignOut() {
-  // Backend logout endpoint
+export async function HandleAHFULSignOut({ sessionNotice = null } = {}) {
   const backendPOSTURL = `http://localhost:5000/api/AHFULauth/logout`;
 
+  // Synchronously clear UI session & cached user slices first
+  store.dispatch(clearSocialWall());
+  store.dispatch(resetAppSession({ sessionNotice }));
+
   try {
-    // Notify backend to invalidate the session/cookie
-    const backendResponse = await fetch(backendPOSTURL, {
+    await fetch(backendPOSTURL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: {},
+      body: JSON.stringify({}),
       credentials: "include",
     });
-
-    // Clear Social Wall cache on logout
-    store.dispatch(clearSocialWall());
-
-    // Sign out of Firebase auth as well
-    await signOut(auth);
-
-    // console.log("AHFUL Logout Completed successfully.");
   } catch (error) {
-    //Catch Spooky Errors that should never occur because you shouldnt log out before login
+    console.error("Backend logout error:", error);
+  }
+
+  try {
+    await signOut(auth);
+  } catch (error) {
     console.error("👻 Logout Error:, ", error);
   }
 }

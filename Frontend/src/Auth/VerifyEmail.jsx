@@ -28,7 +28,7 @@ export function VerifyEmail() {
           <>
             <h2>Verification failed</h2>
             <p>{message || "Your verification link may be invalid or expired."}</p>
-            <button onClick={() => navigate("/Login")}>
+            <button onClick={() => navigate("/")}>
               Go to Login
             </button>
           </>

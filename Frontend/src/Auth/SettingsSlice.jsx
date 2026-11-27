@@ -36,6 +36,7 @@ export const SettingSlice = createSlice({
     setSettings: (state, action) => {
         return { ...state, ...action.payload };
     },
+    settingsLogout: () => settingsInitialState,
     }
 });
 

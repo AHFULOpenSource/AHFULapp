@@ -1,50 +1,80 @@
-import { setSettings } from './SettingsSlice.jsx';
-import { auth } from "../firebase.js"
-import { useSelector, useDispatch } from "react-redux";
+import { reload, signOut } from "firebase/auth";
+import { auth } from "../firebase.js";
 import { FetchUserSettings } from "./FetchUserSettings.js";
+import {
+  resetAppSession,
+  setAuthenticated,
+  setUnverified,
+} from "./AuthSlice.js";
+import { completeBackendLogin } from "./CompleteBackendLogin.js";
 
+/**
+ * Verifies the active Firebase user against the backend session cookie on startup/refresh.
+ * Preserves the current browser route instead of forcing navigation to /Dashboard.
+ */
+export async function WhoAmI(dispatch, { currentUser } = {}) {
+  const firebaseUser = currentUser ?? auth.currentUser;
 
-export async function WhoAmI(dispatch, navigate) {
+  if (!firebaseUser) {
+    dispatch(resetAppSession());
+    return { status: "unauthenticated" };
+  }
+
   try {
-        // Call the backend to check if the user is authenticated with Cookies.
-        const backendVerificationResponse = await fetch('http://localhost:5000/api/AHFULauth/whoami', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-            credentials: 'include'
-        });
+    const backendVerificationResponse = await fetch(
+      "http://localhost:5000/api/AHFULauth/whoami",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+        credentials: "include",
+      }
+    );
 
-        //Assign Variables for Backend Response
-        const backenUserData = await backendVerificationResponse.json();
-        const backendUserAuthenticated = await backenUserData.backend_authenticated;
-        const backendUserDataMessage = await backenUserData.message;
+    if (!backendVerificationResponse.ok) {
+      dispatch(resetAppSession());
+      await signOut(auth).catch(() => {});
+      return { status: "unauthenticated" };
+    }
 
-        // Assign Variable for Firebase Auth Response
-        const firebaseAuth = auth.currentUser;
+    const backendUserData = await backendVerificationResponse.json();
+    if (!backendUserData?.backend_authenticated) {
+      // Only show an expiry notice when the backend explicitly reports an expired session
+      // (never when cookies are simply absent).
+      const sessionNotice = backendUserData?.expired
+        ? "Your session expired. Please sign in again."
+        : null;
+      dispatch(resetAppSession({ sessionNotice }));
+      await signOut(auth).catch(() => {});
+      return { status: "unauthenticated" };
+    }
 
-        // If backend WhoAmI fails to return (network or missing cookies) ,send them to the Login page.
-        // If Firebase Auth Fails to return (user not logged in), send them to the Login page.
-        if (!backendUserAuthenticated) {
-            navigate('/');
-            console.error("WhoAmI Backend Authentication Failed response. Nothing came back");
-            return;
-        } else if (!firebaseAuth) {
-            navigate('/');
-            console.error("WhoAmI Firebase Authentication Failed response. firebase is empty");
-            return;
-        }else if (!firebaseAuth.emailVerified) {
-            navigate('/NotVerified');
-            console.error("WhoAmI Firebase Authentication Failed response. Email is not verified");
-            return;
-        }else {
+    if (!firebaseUser.emailVerified) {
+      await reload(firebaseUser).catch(() => {});
+      if (firebaseUser.emailVerified) {
+        const refreshedData = await completeBackendLogin(firebaseUser, dispatch, null);
+        return {
+          status: "authenticated",
+          expiresAt: refreshedData?.expires_at ?? null,
+        };
+      }
 
-            // Fetch User Settings from backend and update Redux
-            FetchUserSettings(dispatch); 
-            // console.log("User Settings fetched and updated in Redux by WhoAmI successfully.");
-            navigate('/Dashboard');
+      dispatch(setUnverified({ expiresAt: backendUserData.expires_at ?? null }));
+      return {
+        status: "unverified",
+        expiresAt: backendUserData.expires_at ?? null,
+      };
+    }
 
-        }
+    await FetchUserSettings(dispatch);
+    dispatch(setAuthenticated({ expiresAt: backendUserData.expires_at ?? null }));
+    return {
+      status: "authenticated",
+      expiresAt: backendUserData.expires_at ?? null,
+    };
   } catch (err) {
-        console.error("WhoAmI Failed and Caught this Error:", err);
+    console.error("WhoAmI Failed and Caught this Error:", err);
+    dispatch(resetAppSession());
+    return { status: "unauthenticated" };
   }
 }

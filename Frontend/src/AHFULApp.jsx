@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { WorkoutLogger } from "./WorkoutLogger/WorkoutLogger.jsx";
 import { HistoryPRsPage } from "./HistoryPRs/HistoryPRs.jsx";
@@ -13,8 +13,7 @@ import { AIChat } from "./AIChat/AIChat.jsx";
 import { MeasurementLogger } from "./MeasurementLogger/MeasurementLogger.jsx";
 import { Profile } from "./Auth/Profile.jsx";
 import { WhoAmI } from "./Auth/WhoAmI.js";
-import { TOS } from "./TOS.jsx";
-import { Layout } from "./Layout.jsx"
+import { Layout } from "./Layout.jsx";
 import { ExploreTasks } from "./Tasks/ExploreTasks.jsx";
 import { FavoritesHub } from "./Favorites/FavoritesHub.jsx";
 import { ExploreFriends } from "./SocialWall/ExploreFriends.jsx";
@@ -25,15 +24,19 @@ import "./Stylesheets/Themes/Lightmode.css";
 import "./Stylesheets/Themes/Darkmode.css";
 import { GetFirebaseUser } from "./Auth/GetFirebaseUser.js";
 import { Loading } from "./Loading.jsx";
-
-
+import {
+  resetAppSession,
+  selectAuthStatus,
+  selectIsLoggingIn,
+} from "./Auth/AuthSlice.js";
+import { SessionExpiryModal } from "./Auth/SessionExpiryModal.jsx";
 
 function AHFULApp() {
   const theme = useSelector((state) => state.setting.theme);
+  const authStatus = useSelector(selectAuthStatus);
+  const isLoggingIn = useSelector(selectIsLoggingIn);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { user, loading: authLoading } = GetFirebaseUser();
-
 
   // Apply theme globally - runs on all pages
   useEffect(() => {
@@ -44,48 +47,74 @@ function AHFULApp() {
     }
   }, [theme]);
 
-  // Apply WhoAmI Check globally - runs on all navigate and dispatch calls. 
-  //Logs out user if firebase auth state is signed out, or completed WhoAmI if signed in.
+  // Verify backend cookie session on startup/refresh and react to external Firebase sign-out
   useEffect(() => {
-    // If auth is still loading, don't run WhoAmI to check session yet. Wait until Firebase is fully loaded.
-    if (authLoading) return;
+    if (authLoading || isLoggingIn) return;
 
-    // Firebase says the user is signed in — verify against backend + pull settings
-    WhoAmI(dispatch, navigate);
+    if (!user) {
+      if (authStatus !== "unauthenticated") {
+        dispatch(resetAppSession());
+      }
+      return;
+    }
 
-  }, [user]);
+    if (authStatus === "checking") {
+      WhoAmI(dispatch, { currentUser: user });
+    }
+  }, [authLoading, user, isLoggingIn, authStatus, dispatch]);
 
-  if (authLoading) {
+  if (authLoading || authStatus === "checking") {
     return <Loading />;
+  }
+
+  if (authStatus === "unauthenticated") {
+    return (
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/EmailVerification" element={<VerifyEmail />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
+
+  if (authStatus === "unverified") {
+    return (
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/NotVerified" element={<NotVerified />} />
+          <Route path="/EmailVerification" element={<VerifyEmail />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/NotVerified" replace />} />
+      </Routes>
+    );
   }
 
   return (
     <>
+      <SessionExpiryModal />
       <Routes>
-        <Route element={<Layout/>}>
-          <Route path="/Profile" element={<Profile/>}/>
-          <Route path="/NotVerified" element={<NotVerified/>}/>
-          <Route path="/Dashboard" element={<Dashboard/>}/>
-            <Route path="/Favorites" element={<FavoritesHub/>}/>
-            <Route path="/WorkoutLogger" element={<WorkoutLogger/>} />
-            <Route path="/Templates" element={<Templates/>} />
-            <Route path="/HistoryPRs" element={<HistoryPRsPage/>}/>
-            <Route path="/FoodLog" element={<FoodLog/>}/>
-            <Route path="/EmailVerification" element={<VerifyEmail/>}/>
-            <Route path="/AIChat" element={<AIChat/>}/>
-            <Route path="/Map" element={<Map/>}/>
-            <Route path="/ExploreFriends" element={<ExploreFriends/>}/>
-            <Route path="/MeasurementLogger" element={<MeasurementLogger/>}/>
-            <Route path="/ExploreTasks" element={<ExploreTasks/>}/>
-            <Route path="/SocialWorkouts" element={<SocialWorkouts/>}/>
-            </Route>
-        {/* Put outside of the Layout so it doesn't show the header/navbar */}
-        <Route path="/" element={<Login/>}/>
+        <Route element={<Layout />}>
+          <Route path="/Profile" element={<Profile />} />
+          <Route path="/Dashboard" element={<Dashboard />} />
+          <Route path="/Favorites" element={<FavoritesHub />} />
+          <Route path="/WorkoutLogger" element={<WorkoutLogger />} />
+          <Route path="/Templates" element={<Templates />} />
+          <Route path="/HistoryPRs" element={<HistoryPRsPage />} />
+          <Route path="/FoodLog" element={<FoodLog />} />
+          <Route path="/EmailVerification" element={<VerifyEmail />} />
+          <Route path="/AIChat" element={<AIChat />} />
+          <Route path="/Map" element={<Map />} />
+          <Route path="/ExploreFriends" element={<ExploreFriends />} />
+          <Route path="/MeasurementLogger" element={<MeasurementLogger />} />
+          <Route path="/ExploreTasks" element={<ExploreTasks />} />
+          <Route path="/SocialWorkouts" element={<SocialWorkouts />} />
+        </Route>
+        <Route path="/" element={<Navigate to="/Dashboard" replace />} />
+        <Route path="/NotVerified" element={<Navigate to="/Dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/Dashboard" replace />} />
       </Routes>
-
     </>
   );
-
 }
 
-export default AHFULApp
+export default AHFULApp;

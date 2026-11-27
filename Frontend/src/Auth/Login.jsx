@@ -11,11 +11,13 @@ import { TOS } from "../TOS.jsx";
 import {  HandleAHFULEmailSignUp } from "./HandleAHFULEmailSignUp.js";
 import { HandleAHFULGoogleLogin } from "./HandleAHFULGoogleLogin.js";
 import { HandleAHFULEmailLogin } from "./HandleAHFULEmailLogin.js";
+import { clearSessionNotice, selectSessionNotice } from "./AuthSlice.js";
 
 
 export function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const sessionNotice = useSelector(selectSessionNotice);
   const [statusText, setStatusText] = useState("");
   const [showContent, setShowContent] = useState(false);
   const [showScrollText, setShowScrollText] = useState(true);
@@ -84,11 +86,12 @@ export function Login() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    setLoginError(null);
+    dispatch(clearSessionNotice());
 
     try{
-      const user = await HandleAHFULEmailLogin(navigate, dispatch, email, password );
+      await HandleAHFULEmailLogin(navigate, dispatch, email, password);
       onLoginCache(); // Call the onLoginCache function after successful login
-      
     }catch (error) {
       console.error('Login Login Page Failed:', error);
       setLoginError(error);
@@ -98,10 +101,11 @@ export function Login() {
 
   const handleSignUpSubmit = async (e) => {
     e.preventDefault();
+    setLoginError(null);
+    dispatch(clearSessionNotice());
 
     try{
-      const user = await HandleAHFULEmailSignUp(navigate, email, password );
-      
+      await HandleAHFULEmailSignUp(navigate, dispatch, email, password);
     }catch (error) {
       console.error('Sign up on the Login Page Failed:', error);
       setLoginError(error);
@@ -126,6 +130,19 @@ export function Login() {
           </div>
 
           <div className="solo-page-container">
+            {sessionNotice && (
+              <div className="session-notice-banner" role="alert">
+                <span>{sessionNotice}</span>
+                <button
+                  type="button"
+                  className="session-notice-close"
+                  onClick={() => dispatch(clearSessionNotice())}
+                  aria-label="Dismiss session notice"
+                >
+                  ×
+                </button>
+              </div>
+            )}
             <form onSubmit={handleLoginSubmit}>
               <input
                 id="login-email"
@@ -168,12 +185,14 @@ export function Login() {
               className="login-google-button"
               type="button"
               onClick={async () => {
+                setLoginError(null);
+                dispatch(clearSessionNotice());
                 try {
                   await HandleAHFULGoogleLogin(navigate, dispatch);
                   onLoginCache(); // Call the onLoginCache function after successful login
-                  navigate('/Dashboard');
                 } catch (error) {
                   console.error('Sign in failed:', error);
+                  setLoginError(error);
                 }
               }}
             >
